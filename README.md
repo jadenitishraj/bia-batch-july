@@ -23,8 +23,13 @@ cd bia-batch-july
 
 ## 1. The slides — start here
 
-Open [`presentations/index.html`](presentations/index.html) in your browser. That page links to
-all five decks. Inside a deck, use the **Slides** menu at the top or just press the arrow keys.
+**Nothing to download: <https://jadenitishraj.github.io/bia-batch-july/>**
+
+That page links to all five decks. Inside a deck, use the **Slides** menu at the top or just
+press the arrow keys, and **← Home** to come back.
+
+If you have cloned the repo, the same page is [`presentations/index.html`](presentations/index.html)
+— open it straight from your file manager, no server needed.
 
 | Deck | For | Covers |
 | --- | --- | --- |

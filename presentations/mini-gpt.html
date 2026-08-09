@@ -11,6 +11,31 @@
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <style>
+        /* The "← Home" button that floats in the top left corner. */
+        .home-link {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 999;
+            font: 600 11px 'JetBrains Mono', monospace;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 5px;
+            background: rgba(10, 10, 20, .78);
+            backdrop-filter: blur(8px);
+            color: #a8a3b8;
+            text-decoration: none;
+            transition: all .18s;
+        }
+
+        .home-link:hover {
+            color: #fff;
+            border-color: #a78bfa;
+            background: rgba(167, 139, 250, .18);
+        }
+
         :root {
             --bg: #0a0a14;
             --bg-2: #11111f;
@@ -1235,6 +1260,9 @@
 </head>
 
 <body>
+
+    <!-- Back to the deck index. Floats above the page, out of the way. -->
+    <a class="home-link" href="index.html" title="Back to all decks">← Home</a>
 
     <!-- ===== HERO ===== -->
     <section class="hero">
