@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Building a Tool-Calling Agent — LangChain, FastAPI, React</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#8b5cf6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 15% 50%, rgba(139,92,246,.08), transparent 25%),radial-gradient(circle at 85% 30%, rgba(99,102,241,.08), transparent 25%);background-attachment:fixed;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* ===== top site nav ===== */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--violet)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#e7e1ff;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:360px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--violet);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--sky));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:86vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(42px,7.6vw,88px);margin-bottom:28px;background:linear-gradient(135deg,var(--violet),var(--indigo),var(--sky));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:48px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* tabs */
+.tabs{position:sticky;top:57px;z-index:50;background:rgba(8,8,12,.91);backdrop-filter:blur(14px);border-bottom:1px solid var(--card-border);padding:14px 0}
+.tabs-inner{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tab-btn{font:600 11.5px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:4px;color:var(--ink-dim);cursor:pointer;transition:all .2s}
+.tab-btn:hover{color:var(--ink);background:rgba(255,255,255,.055)}
+.tab-btn.active{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* slide */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+.stage{padding:64px 0 84px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:36px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:60px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:870px}
+
+/* body */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:880px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.22);border-radius:4px;padding:2px 6px;color:#d6ccff}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+
+/* vocab */
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#d6ccff;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* concept cards -> modal */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--sky);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--violet)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--sky);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--violet)}
+
+/* code block */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:18px 0;overflow:hidden}
+.codeblock .cb-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.codeblock .cb-title{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.codeblock pre{margin:0;padding:16px 18px;overflow-x:auto}
+.codeblock code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#cfd3e0;white-space:pre}
+.cmt{color:#6a6a85}.kw{color:#c4b5fd}.str{color:#7fd4a0}.flg{color:#7cc5f0}
+
+/* table */
+.cmp{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px}
+.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--card-border)}
+.cmp th{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.cmp td{color:var(--ink-dim);font-weight:300}
+.cmp td:first-child{color:var(--ink);font-weight:500}
+.cmp tr:hover td{background:rgba(255,255,255,.02)}
+.yes{color:var(--emerald);font-weight:600}.no{color:var(--rose);font-weight:600}
+
+/* diagram */
+.diagram{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:26px 22px;margin:22px 0}
+.diagram .dg-cap{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);text-align:center;margin-top:16px}
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.node{background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;padding:11px 15px;font:600 13px 'Inter Tight',sans-serif;color:var(--ink);text-align:center;min-width:96px}
+.node.sky{background:rgba(14,165,233,.13);border-color:rgba(14,165,233,.34)}
+.node.em{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
+.node.am{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.node.ro{background:rgba(244,63,94,.13);border-color:rgba(244,63,94,.36)}
+.arrow{color:var(--ink-faint);font-size:18px}
+.box-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.mbox{flex:1;min-width:150px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.mbox .mb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.mbox .mb-d{font-size:13px;color:var(--ink-dim);font-weight:300}
+
+/* nested rings diagram */
+.rings{display:flex;align-items:center;justify-content:center;padding:10px 0}
+.ring{border:1px solid;border-radius:14px;padding:18px;text-align:center;width:100%}
+.ring .rl{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px;display:block}
+.r1{border-color:rgba(14,165,233,.35);background:rgba(14,165,233,.04)}.r1>.rl{color:var(--sky)}
+.r2{border-color:rgba(99,102,241,.35);background:rgba(99,102,241,.05)}.r2>.rl{color:var(--indigo)}
+.r3{border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06)}.r3>.rl{color:var(--violet)}
+.r4{border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.07);padding:16px}.r4>.rl{color:var(--rose);margin-bottom:6px}
+.r4 .rd{font-size:13.5px;color:var(--ink-dim);font-weight:300}
+
+/* timeline */
+.tl{margin:22px 0;border-left:1px solid var(--card-border);padding-left:0}
+.tl-item{display:grid;grid-template-columns:78px 1fr;gap:18px;padding:0 0 22px 20px;position:relative;border-left:2px solid rgba(139,92,246,.25);margin-left:6px}
+.tl-item:last-child{border-left-color:transparent;padding-bottom:4px}
+.tl-item::before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--violet);box-shadow:0 0 0 4px rgba(139,92,246,.14)}
+.tl-item.big::before{background:var(--rose);box-shadow:0 0 0 5px rgba(244,63,94,.18)}
+.tl-yr{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--violet);padding-top:2px}
+.tl-item.big .tl-yr{color:var(--rose)}
+.tl-t{font-size:16.5px;color:var(--ink);font-weight:600;line-height:1.3;margin-bottom:5px}
+.tl-d{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+
+/* two-column compare */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.duo-col{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-radius:9px;padding:20px}
+.duo-col.a{border-top:3px solid var(--sky)}
+.duo-col.b{border-top:3px solid var(--amber)}
+.duo-col h5{font-family:'Fraunces',serif;font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:4px;color:var(--ink)}
+.duo-col .dsub{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px}
+.duo-col ul{margin:0}
+.duo-col li{font-size:14.5px;margin-bottom:8px}
+
+/* step list */
+.steps{counter-reset:st;margin:20px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--card-border)}
+.step:last-child{border-bottom:none}
+.step .sn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#fff;background:color-mix(in srgb,var(--accent) 40%,transparent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.step .st{font-size:16.5px;color:var(--ink);font-weight:600;margin-bottom:6px}
+.step .sd{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.step .codeblock{margin:12px 0 0}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:18px 0}
+.quiz .q{font-size:16.5px;color:var(--ink);font-weight:500;margin-bottom:14px}
+.quiz .opt{display:block;width:100%;text-align:left;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:7px;padding:12px 16px;margin-bottom:9px;color:var(--ink-dim);font-size:15px;cursor:pointer;transition:all .15s;font-family:'Inter Tight',sans-serif}
+.quiz .opt:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.quiz .opt.correct{border-color:var(--emerald);background:rgba(16,185,129,.12);color:var(--ink)}
+.quiz .opt.wrong{border-color:var(--rose);background:rgba(244,63,94,.1)}
+.quiz .explain{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6;margin-top:10px;padding-top:12px;border-top:1px solid var(--card-border);display:none}
+.quiz .explain.show{display:block}.quiz .explain strong{color:var(--ink)}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(4,4,8,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex;animation:fadeIn .25s ease}
+.modal{max-width:820px;width:100%;max-height:88vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 34%,var(--card-border));border-radius:10px;padding:34px 36px 30px;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.65);}
+.modal .m-cat{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.modal .m-q{font-family:'Fraunces',serif;font-weight:800;font-size:26px;line-height:1.15;letter-spacing:-.02em;margin-bottom:6px}
+.modal .m-hint{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:20px}
+.modal .m-body{font-size:15.5px;color:var(--ink-dim);font-weight:300;line-height:1.68}
+.modal .m-body p{margin-bottom:13px}.modal .m-body strong{color:var(--ink);font-weight:600}
+.modal .m-body ul{list-style:none;margin:6px 0 14px}
+.modal .m-body li{padding-left:22px;position:relative;margin-bottom:8px}
+.modal .m-body li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1px solid var(--card-border);background:rgba(255,255,255,.04);color:var(--ink-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:2}
+.modal-close:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,transparent)}
+
+.foot{padding:50px 0 80px;text-align:center;border-top:1px solid var(--card-border);color:var(--ink-faint);font-size:14px}
+
+/* bottom slide pager */
+.pager{display:flex;justify-content:space-between;gap:12px;padding:26px 0 70px}
+.pager button{flex:1;max-width:340px;text-align:left;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;padding:16px 20px;cursor:pointer;transition:all .18s;font-family:'Inter Tight',sans-serif}
+.pager button:hover{background:rgba(255,255,255,.05);border-color:var(--accent);transform:translateY(-2px)}
+.pager button.rt{text-align:right}
+.pager .pg-l{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.pager .pg-t{font-family:'Fraunces',serif;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.pager button:disabled{opacity:.25;pointer-events:none}
+
+/* widget */
+.widget{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:24px 0}
+.widget .w-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:6px}
+.widget .w-title{font-family:'Fraunces',serif;font-weight:800;font-size:20px;letter-spacing:-.02em;margin-bottom:16px;color:var(--ink)}
+.widget label{display:block;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+.widget input[type=range]{width:100%;accent-color:var(--violet);margin-bottom:6px}
+.widget .w-val{font-family:'JetBrains Mono',monospace;color:#d6ccff;font-weight:700}
+.widget select{background:#11111a;color:var(--ink);border:1px solid var(--card-border);border-radius:6px;padding:9px 12px;font-family:'Inter Tight',sans-serif;font-size:14px;margin-bottom:10px;width:100%}
+.w-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.w-out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.w-out .wo{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.w-out .wo .wo-n{font-family:'Fraunces',serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--ink)}
+.w-out .wo .wo-l{font:600 9.5px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:4px}
+.verdict{margin-top:16px;padding:14px 16px;border-radius:8px;font-size:15px;font-weight:300;border:1px solid}
+.v-ok{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);color:var(--ink-dim)}
+.v-tight{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3);color:var(--ink-dim)}
+.v-no{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.32);color:var(--ink-dim)}
+.verdict strong{color:var(--ink);font-weight:600}
+
+@media(max-width:900px){
+  .stats,.vocab-grid,.code-cards,.duo,.w-grid{grid-template-columns:1fr}
+  .stage-header,.body-wrap{grid-template-columns:1fr}
+  .dropmenu{min-width:280px}
+  .nav-prevnext{display:none}
+  .modal{padding:28px 22px 24px}
+  .cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}
+  .tabs{top:55px}
+  .tl-item{grid-template-columns:1fr;gap:4px}
+  .pager{flex-direction:column}.pager button{max-width:none}
+  .w-out{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body style="--accent:var(--emerald)">
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="brand" href="#" onclick="go(0);return false;">Building a <em>tool-calling agent</em></a>
+    <div class="dropdown" id="chDrop">
+      <button class="dropbtn" id="chDropBtn">Slides <span class="chev">▾</span></button>
+      <div class="dropmenu" id="dropMenu"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-prevnext">
+      <button id="btnPrev" onclick="go(cur-1)">← Prev</button>
+      <button id="btnNext" onclick="go(cur+1)">Next →</button>
+    </div>
+  </div>
+  <div class="rail"><div class="rail-fill" id="railFill"></div></div>
+</nav>
+
+<!-- ================= SLIDE 0 · TITLE ================= -->
+<section class="slide active" data-title="What we are building">
+<div class="hero"><div class="container">
+  <div class="stage-num">Hands-on session · LangChain + FastAPI + React</div>
+  <h1 class="display">A Chatbot<br><em>That Can</em><br>Actually Do Things</h1>
+  <p class="sub">We build one small project end to end: a chatbot that calls tools, answers from our own JSON documents, remembers you across restarts, and shows every single step it took. Every file is small enough to read in one sitting.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">15</div><div class="label">Tools the agent can call</div></div>
+    <div class="stat"><div class="num">4</div><div class="label">Message types to understand</div></div>
+    <div class="stat"><div class="num">2</div><div class="label">Kinds of memory</div></div>
+    <div class="stat"><div class="num">0</div><div class="label">Lines of loop we write ourselves</div></div>
+  </div>
+</div></div>
+<div class="container">
+  <div class="prose" style="max-width:880px;padding-bottom:20px">
+    <h3>The road today</h3>
+    <div class="code-cards">
+      <div class="code-card" onclick="go(1)"><span class="cc-ico">01</span><div><div class="cc-t">The project map</div><div class="cc-s">Which file does what</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(2)"><span class="cc-ico">02</span><div><div class="cc-t">What an agent is</div><div class="cc-s">Model + tools + a loop</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(3)"><span class="cc-ico">03</span><div><div class="cc-t">The system prompt</div><div class="cc-s">The job description</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(4)"><span class="cc-ico">04</span><div><div class="cc-t">Tools</div><div class="cc-s">A function the model may call</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(5)"><span class="cc-ico">05</span><div><div class="cc-t">The tool registry</div><div class="cc-s">One list, one place</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(6)"><span class="cc-ico">06</span><div><div class="cc-t">How tool calls travel</div><div class="cc-s">The four messages</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(7)"><span class="cc-ico">07</span><div><div class="cc-t">Short term memory</div><div class="cc-s">This conversation</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(8)"><span class="cc-ico">08</span><div><div class="cc-t">Long term memory</div><div class="cc-s">A JSON file that survives</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(9)"><span class="cc-ico">09</span><div><div class="cc-t">Answering from our data</div><div class="cc-s">The corpus and search</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(10)"><span class="cc-ico">10</span><div><div class="cc-t">FastAPI</div><div class="cc-s">How a request reaches the agent</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(11)"><span class="cc-ico">11</span><div><div class="cc-t">The React screen</div><div class="cc-s">Chat plus a phase panel</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(12)"><span class="cc-ico">12</span><div><div class="cc-t">Run it live</div><div class="cc-s">The demo script</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(13)"><span class="cc-ico">13</span><div><div class="cc-t">The framework landscape</div><div class="cc-s">LangChain, LangGraph, CrewAI, AutoGen</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(14)"><span class="cc-ico">14</span><div><div class="cc-t">Which one, when</div><div class="cc-s">Choosing and build order</div></div><span class="cc-go">Open</span></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">How to use this deck</span>
+      <p>Use the <strong>Slides</strong> menu at the top, or press the arrow keys. Every slide keeps going down, so scroll to the bottom before moving on. Code you see here is the real code in <code class="inl">simple_agent_chatbot/</code> — not pseudocode.</p>
+    </div>
+  </div>
+  <div class="pager"><button disabled></button><button class="rt" onclick="go(1)"><div class="pg-l">Next slide →</div><div class="pg-t">The project map</div></button></div>
+</div>
+</section>
+
+<!-- ================= SLIDE 1 ================= -->
+<section class="slide" data-title="The project map">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">01</div>
+    <div>
+      <h2 class="stage-title">The Project Map</h2>
+      <p class="stage-kicker">Nine small Python files, each with one job. If you can say what a file does in one sentence, the file is the right size.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Every file, one sentence</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">simple_agent_chatbot/</span></div>
+      <pre><code>backend/
+  main.py                <span class="cmt"># FastAPI. The door. React talks to this.</span>
+  agent.py               <span class="cmt"># The agent = model + tools + system prompt</span>
+  prompts.py             <span class="cmt"># The system prompt text</span>
+  trace.py               <span class="cmt"># Turns messages into printable phases</span>
+  short_term_memory.py   <span class="cmt"># This conversation, kept in RAM</span>
+  long_term_memory.py    <span class="cmt"># Facts saved forever, in a JSON file</span>
+  test_agent.py          <span class="cmt"># Run the agent in the terminal, no UI</span>
+  tools/
+    registry.py          <span class="cmt"># THE REGISTRY. Every tool in one list.</span>
+    math_tools.py        <span class="cmt"># add, subtract, multiply, divide, percent_of</span>
+    data_tools.py        <span class="cmt"># search our JSON documents</span>
+    memory_tools.py      <span class="cmt"># remember_fact, recall_facts, forget_everything</span>
+    text_tools.py        <span class="cmt"># time, word count, uppercase, reverse</span>
+data/
+  corpus.json            <span class="cmt"># The documents the bot answers from</span>
+  long_term_memory.json  <span class="cmt"># Grows as the user says "remember..."</span>
+frontend/
+  src/App.jsx            <span class="cmt"># Chat on the left, agent phases on the right</span></code></pre>
+    </div>
+
+    <h3>Why split it up at all?</h3>
+    <p>You could write this in one file. It would work. It would also be the file nobody wants to open in three weeks.</p>
+    <ul>
+      <li><strong>You change one thing at a time.</strong> Adding a tool means touching two files, never twelve.</li>
+      <li><strong>You can explain one thing at a time.</strong> This deck has a slide per file because the code has a file per idea.</li>
+      <li><strong>You can test one thing at a time.</strong> <code class="inl">test_agent.py</code> runs the agent with no API and no browser in the way.</li>
+    </ul>
+
+    <div class="callout co-note"><span class="co-tag">The rule we followed</span>
+      <p>A file is allowed to know about the files <em>below</em> it, never the ones above. <code class="inl">main.py</code> knows about <code class="inl">agent.py</code>. <code class="inl">agent.py</code> knows about the tools. <strong>No tool has ever heard of FastAPI.</strong> That is why you can run the whole agent from the terminal without a server.</p>
+    </div>
+
+    <h4>The three layers</h4>
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">Transport</div><div class="mb-d"><code class="inl">main.py</code> and React. Moves JSON around. <em>Knows nothing about AI.</em></div></div>
+      <div class="mbox"><div class="mb-t">Brain</div><div class="mb-d"><code class="inl">agent.py</code>, <code class="inl">prompts.py</code>, memory. Decides what happens.</div></div>
+      <div class="mbox"><div class="mb-t">Hands</div><div class="mb-d"><code class="inl">tools/</code>. Plain Python functions. <em>They do not know an AI exists.</em></div></div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(0)"><div class="pg-l">← Previous</div><div class="pg-t">What we are building</div></button>
+    <button class="rt" onclick="go(2)"><div class="pg-l">Next slide →</div><div class="pg-t">What an agent is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 2 ================= -->
+<section class="slide" data-title="What an agent is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">02</div>
+    <div>
+      <h2 class="stage-title">What An Agent Actually Is</h2>
+      <p class="stage-kicker">A normal LLM call is a question and an answer. An agent is that same call, put inside a loop, with permission to ask for help.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Chatbot versus agent</h3>
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>Plain chatbot</h5>
+        <div class="dsub">one step</div>
+        <ul>
+          <li>You ask, it answers.</li>
+          <li>Everything comes out of the model's head.</li>
+          <li>Ask it today's date and it guesses.</li>
+          <li>Ask it your refund policy and it invents one.</li>
+        </ul>
+      </div>
+      <div class="duo-col b">
+        <h5>Agent</h5>
+        <div class="dsub">a loop</div>
+        <ul>
+          <li>You ask. It may ask <em>you</em> to run a function first.</li>
+          <li>Your code runs, the answer goes back in.</li>
+          <li>Date comes from <code class="inl">datetime.now()</code>. Real.</li>
+          <li>Policy comes from your JSON file. Real.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>The loop, in words</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">Send everything to the model</div><div class="sd">System prompt, the conversation so far, and the list of tools it is allowed to use.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">The model replies one of two ways</div><div class="sd">Either plain text — done — or "call <code class="inl">multiply</code> with a=12, b=8".</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">If it asked for a tool, run it</div><div class="sd">Your Python function runs. The return value is added to the message list.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">Go back to step 1</div><div class="sd">Now the model can see the tool result. It may answer, or ask for another tool.</div></div></div>
+    </div>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Question</div><span class="arrow">→</span>
+        <div class="node">Model decides</div><span class="arrow">→</span>
+        <div class="node am">Asks for a tool</div><span class="arrow">→</span>
+        <div class="node em">Python runs it</div><span class="arrow">→</span>
+        <div class="node">Result goes back</div>
+      </div>
+      <div class="flow" style="margin-top:12px"><span class="arrow">↺</span><div class="node ro">Repeat until the model answers in plain text</div></div>
+      <div class="dg-cap">Everything else in this project supports that circle</div>
+    </div>
+
+    <h3>The whole agent, in our code</h3>
+    <p>We do not write the loop. <code class="inl">create_agent</code> already contains it. We supply three things and step back.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/agent.py</span></div>
+      <pre><code><span class="kw">from</span> langchain.agents <span class="kw">import</span> create_agent
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+
+<span class="kw">from</span> prompts <span class="kw">import</span> build_system_prompt
+<span class="kw">from</span> tools.registry <span class="kw">import</span> ALL_TOOLS
+
+
+<span class="kw">def</span> build_agent():
+    <span class="cmt"># 1. the model. temperature=0 means most predictable answer</span>
+    model = ChatOpenAI(model=MODEL_NAME, temperature=<span class="str">0</span>)
+
+    <span class="cmt"># 2. the system prompt, with long term memory baked in</span>
+    facts = long_term_memory.get_all_facts()
+    system_prompt = build_system_prompt(facts)
+
+    <span class="cmt"># 3. agent = model + tools + system prompt</span>
+    agent = create_agent(model, ALL_TOOLS, system_prompt=system_prompt)
+
+    <span class="kw">return</span> agent, system_prompt</code></pre>
+    </div>
+
+    <h4>Words people mix up</h4>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">tool call</div><div class="vd">The model does <strong>not</strong> run anything. It returns a name and arguments. Your code runs it. That gap is where every safety check lives.</div></div>
+      <div class="vocab"><div class="vt">turn</div><div class="vd">One trip around the loop: one model call, plus any tools it asked for.</div></div>
+      <div class="vocab"><div class="vt">temperature</div><div class="vd">How random the answers are. <code class="inl">0</code> for tool-using bots, so the same question picks the same tool.</div></div>
+      <div class="vocab"><div class="vt">agent executor</div><div class="vd">The thing that runs the loop for you. In LangChain 1.x that is what <code class="inl">create_agent</code> returns.</div></div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">The misunderstanding to kill early</span>
+      <p>Beginners think the model executes the function. It never does. The model has no Python, no internet, no clock. <strong>It can only produce text</strong> — and a tool call is just a very structured piece of text that says "please run this for me".</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You give the agent a <code class="inl">delete_all_users()</code> tool and the model asks for it. What runs it?</div>
+      <button class="opt" onclick="qa(this,0)">The model, inside OpenAI</button>
+      <button class="opt" onclick="qa(this,1)">Your own Python process</button>
+      <button class="opt" onclick="qa(this,0)">Nothing — LangChain blocks dangerous tools</button>
+      <div class="explain"><strong>Your own process.</strong> The model only produced the words "delete_all_users, no arguments". Your machine is what actually deletes. Nothing blocks it for you — if a tool is in the registry, it is a thing the model can make happen. <strong>The registry is a permission list.</strong></div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(1)"><div class="pg-l">← Previous</div><div class="pg-t">The project map</div></button>
+    <button class="rt" onclick="go(3)"><div class="pg-l">Next slide →</div><div class="pg-t">The system prompt</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 3 ================= -->
+<section class="slide" data-title="The system prompt">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">03</div>
+    <div>
+      <h2 class="stage-title">The System Prompt</h2>
+      <p class="stage-kicker">The job description. It goes in before every single question, and it is the cheapest way to change how your agent behaves.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Our actual prompt</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/prompts.py</span></div>
+      <pre><code>SYSTEM_PROMPT = <span class="str">"""You are "Bia", a helpful assistant.
+
+You can use tools. Rules for using tools:
+
+1. For any math, always use the math tools. Never do the math in your head.
+2. For questions about company products, policies, pricing or support,
+   use the tool `search_knowledge_base` to find documents first.
+   Then answer using ONLY what those documents say.
+3. If the user asks you to remember something about them
+   (example: "remember that I like Python"), call the tool `remember_fact`.
+4. If the user asks what you know about them, call the tool `recall_facts`.
+5. If you do not find the answer in the documents, say you do not know.
+
+Keep your answers short and simple.
+"""</span></code></pre>
+    </div>
+
+    <h3>Read rule 1 again</h3>
+    <p>"Never do the math in your head." That sentence exists because without it, the model happily answers <code class="inl">12 × 8</code> from memory and skips the tool. It is usually right — and then one day it is quietly wrong, and you have a calculator sitting unused two files away.</p>
+    <p>Rule 2 does the same job for facts: <strong>answer using ONLY what those documents say</strong>. That single line is the difference between a support bot and a bot that invents refund policies.</p>
+
+    <h3>Memory gets injected here</h3>
+    <p>The prompt is not a fixed string. Everything in the long-term memory file is appended before every question, so the bot starts each turn already knowing the user.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/prompts.py</span></div>
+      <pre><code><span class="kw">def</span> build_system_prompt(long_term_facts):
+    <span class="kw">if</span> <span class="kw">not</span> long_term_facts:
+        <span class="kw">return</span> SYSTEM_PROMPT + <span class="str">"\nLong term memory: (empty)\n"</span>
+
+    lines = <span class="str">""</span>
+    <span class="kw">for</span> fact <span class="kw">in</span> long_term_facts:
+        lines = lines + <span class="str">"- "</span> + fact + <span class="str">"\n"</span>
+
+    <span class="kw">return</span> SYSTEM_PROMPT + <span class="str">"\nLong term memory:\n"</span> + lines</code></pre>
+    </div>
+    <p>So the model literally sees this at the top of every request:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">what actually gets sent</span></div>
+      <pre><code>Long term memory (things you already know about the user):
+- The user's name is Nitish.
+- The user lives in Pune.
+- The user prefers short answers.</code></pre>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">Change behaviour here first</span>
+      <p>Before you reach for fine-tuning, more tools, or a bigger model: <strong>edit the prompt.</strong> It costs nothing, takes ten seconds, and fixes most "the bot did something silly" complaints. Add a numbered rule, restart, try again.</p>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">The cost nobody mentions</span>
+      <p>The system prompt is re-sent on <em>every</em> request, and you pay for those tokens every time. A 2,000-word prompt on a chatty bot is a real bill. Keep rules short. Keep memory pruned. <strong>Long prompts are a recurring charge, not a one-off.</strong></p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(2)"><div class="pg-l">← Previous</div><div class="pg-t">What an agent is</div></button>
+    <button class="rt" onclick="go(4)"><div class="pg-l">Next slide →</div><div class="pg-t">Tools</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 4 ================= -->
+<section class="slide" data-title="Tools">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">04</div>
+    <div>
+      <h2 class="stage-title">Tools</h2>
+      <p class="stage-kicker">A tool is a normal Python function with a decorator on top. The hard part is not the code. It is the sentence underneath the <code class="inl">def</code>.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The smallest possible tool</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/tools/math_tools.py</span></div>
+      <pre><code><span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+
+
+<span class="flg">@tool</span>
+<span class="kw">def</span> add(a: float, b: float) -> float:
+    <span class="str">"""Add two numbers together. Use this for any addition."""</span>
+    <span class="kw">return</span> a + b
+
+
+<span class="flg">@tool</span>
+<span class="kw">def</span> multiply(a: float, b: float) -> float:
+    <span class="str">"""Multiply two numbers. Use this for any multiplication."""</span>
+    <span class="kw">return</span> a * b
+
+
+<span class="flg">@tool</span>
+<span class="kw">def</span> divide(a: float, b: float) -> str:
+    <span class="str">"""Divide number a by number b. Use this for any division."""</span>
+    <span class="kw">if</span> b == <span class="str">0</span>:
+        <span class="kw">return</span> <span class="str">"Error: cannot divide by zero."</span>
+
+    <span class="kw">return</span> str(a / b)</code></pre>
+    </div>
+
+    <h3>Three things the model reads</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">The function name</div><div class="sd"><code class="inl">multiply</code>. This is how the model refers to it. Name it what it does, in plain English.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">The docstring</div><div class="sd">This becomes the tool <em>description</em>. It is not a comment for humans. <strong>The model genuinely reads this sentence to decide whether to use your tool.</strong></div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">The type hints</div><div class="sd"><code class="inl">a: float, b: float</code> tells the model what arguments to send, and LangChain validates them before your function runs.</div></div></div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">This happened to us while building</span>
+      <p>The first version of the percentage tool was <code class="inl">percentage(part, whole)</code> — "what percent is 15 of 200?" = 7.5. But users ask <em>"what is 15% of 200?"</em> = 30.</p>
+      <p>The model called the tool, got <strong>7.5</strong>, decided that looked wrong, ignored it and answered <strong>30</strong> from its own head. A silent, confident contradiction. The fix was not smarter code — it was renaming the tool and rewriting one sentence:</p>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">the fix — same maths, better description</span></div>
+      <pre><code><span class="flg">@tool</span>
+<span class="kw">def</span> percent_of(percent: float, number: float) -> float:
+    <span class="str">"""Calculate a percentage of a number.
+    Use this for questions like 'what is 15 percent of 200' or
+    'give me 20% discount on 500'.
+    Here percent=15 and number=200, and the answer is 30."""</span>
+    <span class="kw">return</span> (percent / <span class="str">100</span>) * number</code></pre>
+    </div>
+    <p>Note the example inside the docstring. When a tool is even slightly ambiguous, <strong>put a worked example in the description.</strong> It is the cheapest accuracy fix available.</p>
+
+    <h3>Tools do not have to be maths</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/tools/text_tools.py</span></div>
+      <pre><code><span class="flg">@tool</span>
+<span class="kw">def</span> get_current_time() -> str:
+    <span class="str">"""Get today's date and the current time.
+    Use this when the user asks about date or time."""</span>
+    <span class="kw">return</span> datetime.now().strftime(<span class="str">"%Y-%m-%d %H:%M:%S"</span>)</code></pre>
+    </div>
+    <p>A model has no clock. Without this tool it will confidently tell you the wrong date. Four lines of Python fix a problem no amount of prompting can.</p>
+
+    <h4>What makes a good tool</h4>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">does one thing</div><div class="vd">Separate <code class="inl">add</code> and <code class="inl">multiply</code> beat one <code class="inl">calculate(expression)</code>. Small tools are easier for the model to choose correctly.</div></div>
+      <div class="vocab"><div class="vt">returns text the model can read</div><div class="vd">Return a sentence or a simple number, not a nested object. The result goes straight into the model's context.</div></div>
+      <div class="vocab"><div class="vt">fails politely</div><div class="vd"><code class="inl">"Error: cannot divide by zero."</code> beats an exception. The model can read that and recover; a traceback kills the run.</div></div>
+      <div class="vocab"><div class="vt">has an unmistakable name</div><div class="vd">If two tools could plausibly answer the same question, the model will sometimes pick the wrong one. That is your fault, not its.</div></div>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your tool works perfectly but the model never calls it. Where do you look first?</div>
+      <button class="opt" onclick="qa(this,0)">The model — try a bigger one</button>
+      <button class="opt" onclick="qa(this,1)">The docstring and the function name</button>
+      <button class="opt" onclick="qa(this,0)">The temperature setting</button>
+      <div class="explain"><strong>The docstring and the name.</strong> Tool selection happens entirely from the name plus that one description sentence. If the model cannot tell from those two things that your tool answers the question, it will not call it. Rewrite the description to mention the words users actually type.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(3)"><div class="pg-l">← Previous</div><div class="pg-t">The system prompt</div></button>
+    <button class="rt" onclick="go(5)"><div class="pg-l">Next slide →</div><div class="pg-t">The tool registry</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 5 ================= -->
+<section class="slide" data-title="The tool registry">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">05</div>
+    <div>
+      <h2 class="stage-title">The Tool Registry</h2>
+      <p class="stage-kicker">One file that collects every tool in the application. It is also, quietly, your permission system.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The whole file</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/tools/registry.py</span></div>
+      <pre><code><span class="kw">from</span> tools <span class="kw">import</span> data_tools, math_tools, memory_tools, text_tools
+
+
+ALL_TOOLS = [
+    <span class="cmt"># --- math tools ---</span>
+    math_tools.add,
+    math_tools.subtract,
+    math_tools.multiply,
+    math_tools.divide,
+    math_tools.percent_of,
+
+    <span class="cmt"># --- data tools (our JSON corpus) ---</span>
+    data_tools.search_knowledge_base,
+    data_tools.get_document,
+    data_tools.list_topics,
+
+    <span class="cmt"># --- long term memory tools ---</span>
+    memory_tools.remember_fact,
+    memory_tools.recall_facts,
+    memory_tools.forget_everything,
+
+    <span class="cmt"># --- small helper tools ---</span>
+    text_tools.get_current_time,
+    text_tools.count_words,
+    text_tools.to_uppercase,
+    text_tools.reverse_text,
+]</code></pre>
+    </div>
+
+    <h3>Why bother, when it is just a list?</h3>
+    <ul>
+      <li><strong>The agent imports one thing.</strong> <code class="inl">from tools.registry import ALL_TOOLS</code>. Not five imports scattered through <code class="inl">agent.py</code>.</li>
+      <li><strong>You can see the agent's entire capability in one screen.</strong> Someone asks "what can this bot do?" — you show them this file.</li>
+      <li><strong>It is the permission boundary.</strong> A tool that is not in this list cannot be called, no matter what the model says. Comment out a line and that ability is gone.</li>
+      <li><strong>Different agents, different lists.</strong> A read-only support bot gets the search tools; an admin bot gets more. Same functions, different registries.</li>
+    </ul>
+
+    <h3>Adding a tool takes two edits</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">step 1 — write the function anywhere in tools/</span></div>
+      <pre><code><span class="flg">@tool</span>
+<span class="kw">def</span> square(number: float) -> float:
+    <span class="str">"""Multiply a number by itself.
+    Use this when the user asks for a square."""</span>
+    <span class="kw">return</span> number * number</code></pre>
+    </div>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">step 2 — add one line to the registry</span></div>
+      <pre><code>ALL_TOOLS = [
+    math_tools.add,
+    math_tools.square,   <span class="cmt"># &lt;-- that is the whole wiring</span>
+    ...
+]</code></pre>
+    </div>
+    <p>Restart the server. The agent can use it. Nothing else in the codebase changes.</p>
+
+    <h3>Print the registry to explain it</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">registry.print_tools() — run this live</span></div>
+      <pre><code>TOOL REGISTRY - 15 tools available
+
+  * add
+      Add two numbers together. Use this for any addition.
+  * search_knowledge_base
+      Search the CloudDesk company documents for a topic...
+  * remember_fact
+      Save one fact about the user into long term memory...</code></pre>
+    </div>
+    <p>This is very close to what the model itself receives. Showing it makes the whole thing click: <strong>the model is choosing from a menu, and this is the menu.</strong></p>
+
+    <div class="callout co-cost"><span class="co-tag">Every tool costs tokens</span>
+      <p>All 15 descriptions are sent with <em>every</em> request, whether or not they get used. Fifteen is comfortable. Fifty starts to hurt your bill and your accuracy — the more similar options there are, the more often the model picks a neighbour. <strong>When a registry gets big, split it per agent rather than growing one giant list.</strong></p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(4)"><div class="pg-l">← Previous</div><div class="pg-t">Tools</div></button>
+    <button class="rt" onclick="go(6)"><div class="pg-l">Next slide →</div><div class="pg-t">How tool calls travel</div></button>
+  </div>
+</div></div>
+</section>
+<!-- ================= SLIDE 6 ================= -->
+<section class="slide" data-title="How tool calls travel">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">06</div>
+    <div>
+      <h2 class="stage-title">How Tool Calls Travel</h2>
+      <p class="stage-kicker">The single most important slide in this deck. An agent is a list of messages that keeps growing — and a tool call is just three of those messages in a row.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>There are only four kinds of message</h3>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">SystemMessage</div><div class="vd">The rules. Our system prompt. Sent first, every time.</div></div>
+      <div class="vocab"><div class="vt">HumanMessage</div><div class="vd">What the user typed.</div></div>
+      <div class="vocab"><div class="vt">AIMessage</div><div class="vd">What the model said. <strong>If it wants a tool, the text is empty and it carries a <code class="inl">tool_calls</code> list instead.</strong></div></div>
+      <div class="vocab"><div class="vt">ToolMessage</div><div class="vd">What your Python function returned. This gets sent <em>back into</em> the model as a new message.</div></div>
+    </div>
+
+    <h3>"What is 12 times 8?" — the real sequence</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">the message list, growing</span></div>
+      <pre><code>SystemMessage  <span class="str">"You are Bia... never do maths in your head..."</span>
+
+HumanMessage   <span class="str">"what is 12 times 8?"</span>
+
+AIMessage      text = <span class="str">""</span>
+               tool_calls = [ {name: <span class="str">"multiply"</span>, args: {a: 12, b: 8}} ]
+               <span class="cmt"># the model ASKS. it has not computed anything.</span>
+
+ToolMessage    <span class="str">"96.0"</span>
+               <span class="cmt"># OUR python function ran and produced this</span>
+
+AIMessage      text = <span class="str">"12 times 8 is 96."</span>
+               tool_calls = []
+               <span class="cmt"># no tool calls means the loop stops here</span></code></pre>
+    </div>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">HumanMessage</div><span class="arrow">→</span>
+        <div class="node am">AIMessage<br>tool_calls</div><span class="arrow">→</span>
+        <div class="node em">ToolMessage<br>"96.0"</div><span class="arrow">→</span>
+        <div class="node">AIMessage<br>final text</div>
+      </div>
+      <div class="dg-cap">Model asks · your code answers · model reads the answer · model replies</div>
+    </div>
+
+    <h3>How the loop knows to stop</h3>
+    <p>One condition, and it is beautifully simple:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">the stopping rule</span></div>
+      <pre><code><span class="kw">if</span> <span class="kw">not</span> reply.tool_calls:
+    <span class="kw">return</span> reply.text     <span class="cmt"># nothing more to do — this is the answer</span></code></pre>
+    </div>
+    <p>An <code class="inl">AIMessage</code> with tool calls means "keep going". An <code class="inl">AIMessage</code> without them means "I'm done". That is the entire control flow.</p>
+
+    <h3>Reading it out of the result</h3>
+    <p><code class="inl">trace.py</code> walks the finished message list and labels each one. This is the whole function that produces our phase panel:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/trace.py</span></div>
+      <pre><code><span class="kw">for</span> message <span class="kw">in</span> messages:
+    kind = message.__class__.__name__
+
+    <span class="kw">if</span> kind == <span class="str">"HumanMessage"</span>:
+        steps.append({<span class="str">"phase"</span>: <span class="str">"USER MESSAGE"</span>, ...})
+
+    <span class="kw">elif</span> kind == <span class="str">"AIMessage"</span>:
+        <span class="cmt"># case 1: the model wants tools</span>
+        <span class="kw">if</span> message.tool_calls:
+            <span class="kw">for</span> call <span class="kw">in</span> message.tool_calls:
+                steps.append({
+                    <span class="str">"phase"</span>: <span class="str">"TOOL CALL"</span>,
+                    <span class="str">"title"</span>: <span class="str">"Model asked for tool: "</span> + call[<span class="str">"name"</span>],
+                    <span class="str">"detail"</span>: <span class="str">"arguments = "</span> + str(call[<span class="str">"args"</span>]),
+                })
+        <span class="cmt"># case 2: final text answer</span>
+        <span class="kw">else</span>:
+            steps.append({<span class="str">"phase"</span>: <span class="str">"FINAL ANSWER"</span>, ...})
+
+    <span class="kw">elif</span> kind == <span class="str">"ToolMessage"</span>:
+        steps.append({<span class="str">"phase"</span>: <span class="str">"TOOL RESULT"</span>, ...})</code></pre>
+    </div>
+
+    <h3>Two tools in one turn</h3>
+    <p>The model can ask for several tools at once. "Remember I live in Pune and I like Python" produces <em>two</em> tool calls in a single <code class="inl">AIMessage</code>, and they run at the same time:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">real output from our terminal</span></div>
+      <pre><code>[3] TOOL CALL    remember_fact   args = {'fact': "The user's name is Nitish."}
+[4] TOOL CALL    remember_fact   args = {'fact': 'The user lives in Pune.'}
+[5] TOOL RESULT  Saved to long term memory: The user's name is Nitish.
+[6] TOOL RESULT  Saved to long term memory: The user lives in Pune.
+[7] FINAL ANSWER I've remembered that your name is Nitish and you live in Pune.</code></pre>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">This bit us for real</span>
+      <p>Because those two tool calls run <strong>at the same time</strong>, both read the JSON file, both appended one fact, and both wrote the file back. One fact vanished. A reader could even catch a half-written file.</p>
+      <p>The fix is on slide 08. But note the lesson now: <strong>the moment tools can run in parallel, every shared file or counter becomes a race.</strong></p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Where does the string "96.0" physically come from?</div>
+      <button class="opt" onclick="qa(this,0)">The model generated it from the numbers</button>
+      <button class="opt" onclick="qa(this,1)">Your Python function returned it, and LangChain put it in a ToolMessage</button>
+      <button class="opt" onclick="qa(this,0)">LangChain's built-in calculator</button>
+      <div class="explain"><strong>Your function returned it.</strong> <code class="inl">multiply(12, 8)</code> ran on your machine and returned the float <code class="inl">96.0</code>. LangChain wrapped it in a <code class="inl">ToolMessage</code> and sent it back to the model, which then wrote a sentence around it. The number is real; only the sentence is generated.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(5)"><div class="pg-l">← Previous</div><div class="pg-t">The tool registry</div></button>
+    <button class="rt" onclick="go(7)"><div class="pg-l">Next slide →</div><div class="pg-t">Short term memory</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 7 ================= -->
+<section class="slide" data-title="Short term memory">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">07</div>
+    <div>
+      <h2 class="stage-title">Short Term Memory</h2>
+      <p class="stage-kicker">The model remembers nothing. Not one word. Every follow-up question works only because we re-send the entire conversation, every time.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The entire implementation</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/short_term_memory.py</span></div>
+      <pre><code><span class="cmt"># session_id  ->  list of langchain messages</span>
+CHAT_HISTORY = {}
+
+<span class="cmt"># keep the last 10 messages (about 5 questions and 5 answers)</span>
+MAX_MESSAGES = <span class="str">10</span>
+
+
+<span class="kw">def</span> get_history(session_id):
+    <span class="kw">if</span> session_id <span class="kw">not</span> <span class="kw">in</span> CHAT_HISTORY:
+        CHAT_HISTORY[session_id] = []
+
+    <span class="kw">return</span> CHAT_HISTORY[session_id]
+
+
+<span class="kw">def</span> save_history(session_id, messages):
+    CHAT_HISTORY[session_id] = messages[-MAX_MESSAGES:]</code></pre>
+    </div>
+    <p>That is it. A dictionary. No database, no framework, no vector store. <strong>Short term memory is a Python dict and people are always surprised by that.</strong></p>
+
+    <h3>How it gets used</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/agent.py</span></div>
+      <pre><code><span class="cmt"># take everything said earlier in this conversation</span>
+history = short_term_memory.get_history(session_id)
+
+<span class="cmt"># put the new question at the end</span>
+messages_to_send = history + [HumanMessage(content=user_message)]
+
+result = agent.invoke({<span class="str">"messages"</span>: messages_to_send})</code></pre>
+    </div>
+
+    <h3>Why "and what about the Business plan?" works</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">what the model receives on the second question</span></div>
+      <pre><code>SystemMessage  <span class="str">"You are Bia..."</span>
+HumanMessage   <span class="str">"how much is the Team plan?"</span>        <span class="cmt"># old</span>
+AIMessage      <span class="str">"The Team plan costs 30 dollars..."</span>   <span class="cmt"># old</span>
+HumanMessage   <span class="str">"and what about the Business plan?"</span>   <span class="cmt"># new</span></code></pre>
+    </div>
+    <p>The word "Business plan" only makes sense next to the previous exchange. Delete the history and the bot has no idea what you are asking about.</p>
+
+    <div class="callout co-note"><span class="co-tag">The mental model that fixes everything</span>
+      <p>An LLM is a pure function. Same input, same output. It has <strong>no memory between calls at all.</strong> Everything that looks like memory is you, resending text.</p>
+      <p>So "the bot forgot" is never a bug in the model. It is a bug in what you chose to resend.</p>
+    </div>
+
+    <h3>Why we cut it at 10 messages</h3>
+    <p>Every message in the history is re-sent and re-charged on every turn. A conversation that runs all day would grow forever, get slower, cost more, and eventually blow past the context window.</p>
+    <p><code class="inl">messages[-MAX_MESSAGES:]</code> keeps the last 10 and drops the rest. Crude, and completely fine for a demo. Real systems summarise the dropped part instead of binning it.</p>
+
+    <h3>What we deliberately do not store</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/agent.py</span></div>
+      <pre><code><span class="cmt"># we save only the question and the answer,</span>
+<span class="cmt"># not every tool message, to keep the history small</span>
+new_history = history + [
+    HumanMessage(content=user_message),
+    all_messages[-<span class="str">1</span>],
+]
+short_term_memory.save_history(session_id, new_history)</code></pre>
+    </div>
+    <p>The tool calls and tool results from old turns are thrown away. The model does not need to re-read "96.0" from ten minutes ago — it only needs the conclusion.</p>
+
+    <div class="callout co-trap"><span class="co-tag">It dies with the process</span>
+      <p><code class="inl">CHAT_HISTORY</code> lives in RAM. Restart <code class="inl">uvicorn</code> and every conversation is gone. That is the entire difference between short term and long term memory — and it is why the next slide writes to a file.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your bot "forgets" what was said two questions ago. Which file is the bug in?</div>
+      <button class="opt" onclick="qa(this,1)">short_term_memory.py — probably MAX_MESSAGES</button>
+      <button class="opt" onclick="qa(this,0)">prompts.py — the rules are unclear</button>
+      <button class="opt" onclick="qa(this,0)">The model provider — try a bigger context window</button>
+      <div class="explain"><strong>short_term_memory.py.</strong> With <code class="inl">MAX_MESSAGES = 10</code> you keep about five exchanges; anything older is dropped before it is ever sent. The model never saw it, so it cannot have forgotten it. Raise the limit, or summarise what you drop.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(6)"><div class="pg-l">← Previous</div><div class="pg-t">How tool calls travel</div></button>
+    <button class="rt" onclick="go(8)"><div class="pg-l">Next slide →</div><div class="pg-t">Long term memory</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 8 ================= -->
+<section class="slide" data-title="Long term memory">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">08</div>
+    <div>
+      <h2 class="stage-title">Long Term Memory</h2>
+      <p class="stage-kicker">A JSON file that survives a restart — and the interesting part is that the <em>agent decides</em> when to write to it.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The two memories, side by side</h3>
+    <table class="cmp">
+      <tr><th>&nbsp;</th><th>Short term</th><th>Long term</th></tr>
+      <tr><td>Lives in</td><td>A Python dict, in RAM</td><td><code class="inl">data/long_term_memory.json</code></td></tr>
+      <tr><td>Survives restart</td><td class="no">No</td><td class="yes">Yes</td></tr>
+      <tr><td>Holds</td><td>The last 10 messages</td><td>Facts about the user</td></tr>
+      <tr><td>Written by</td><td>Our code, every turn</td><td><strong>The model</strong>, by calling a tool</td></tr>
+      <tr><td>Reaches the model via</td><td>The message list</td><td>The system prompt</td></tr>
+    </table>
+
+    <h3>The file</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">data/long_term_memory.json</span></div>
+      <pre><code>{
+  <span class="str">"facts"</span>: [
+    {
+      <span class="str">"fact"</span>: <span class="str">"The user's name is Nitish."</span>,
+      <span class="str">"saved_at"</span>: <span class="str">"2026-08-08 23:15:55"</span>
+    },
+    {
+      <span class="str">"fact"</span>: <span class="str">"The user lives in Pune."</span>,
+      <span class="str">"saved_at"</span>: <span class="str">"2026-08-08 23:15:55"</span>
+    }
+  ]
+}</code></pre>
+    </div>
+
+    <h3>The tool that writes it</h3>
+    <p>This is where it gets interesting. We never parse the user's sentence looking for the word "remember". <strong>The model decides</strong>, and it decides by reading this docstring:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/tools/memory_tools.py</span></div>
+      <pre><code><span class="flg">@tool</span>
+<span class="kw">def</span> remember_fact(fact: str) -> str:
+    <span class="str">"""Save one fact about the user into long term memory,
+    so it is remembered forever.
+    Use this whenever the user says 'remember ...' or tells you
+    something personal that will be useful later, like their name,
+    their city, or what they like.
+    Write the fact as a short full sentence,
+    for example 'The user lives in Pune'."""</span>
+
+    long_term_memory.add_fact(fact)
+    <span class="kw">return</span> <span class="str">"Saved to long term memory: "</span> + fact</code></pre>
+    </div>
+    <p>Notice it also rewrites the phrasing. You type <em>"remember I live in Pune"</em>; the model stores <em>"The user lives in Pune."</em> — because the docstring asked for a full sentence. That is prompt engineering happening inside a tool description.</p>
+
+    <h3>The round trip</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">"remember I<br>live in Pune"</div><span class="arrow">→</span>
+        <div class="node am">model calls<br>remember_fact</div><span class="arrow">→</span>
+        <div class="node em">JSON file<br>updated</div>
+      </div>
+      <div class="flow" style="margin-top:12px">
+        <div class="node">next question</div><span class="arrow">→</span>
+        <div class="node ro">facts injected into<br>the system prompt</div><span class="arrow">→</span>
+        <div class="node">model already<br>knows you</div>
+      </div>
+      <div class="dg-cap">Written by a tool · read by the prompt · survives every restart</div>
+    </div>
+
+    <h3>Writing it safely</h3>
+    <p>Remember the race from slide 06 — two <code class="inl">remember_fact</code> calls at once, one fact lost. Two small changes fix it, and both are worth explaining:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/long_term_memory.py</span></div>
+      <pre><code><span class="cmt"># the model can ask for two tools AT THE SAME TIME.</span>
+<span class="cmt"># this lock makes sure only one of them writes at a time.</span>
+LOCK = threading.Lock()
+
+
+<span class="kw">def</span> save_memory(memory):
+    <span class="cmt"># write to a temp file, then rename. renaming is one single</span>
+    <span class="cmt"># step, so nobody can ever read a half written file.</span>
+    temp_file = MEMORY_FILE + <span class="str">".tmp"</span>
+
+    <span class="kw">with</span> open(temp_file, <span class="str">"w"</span>) <span class="kw">as</span> f:
+        json.dump(memory, f, indent=<span class="str">2</span>)
+
+    os.replace(temp_file, MEMORY_FILE)
+
+
+<span class="kw">def</span> add_fact(fact):
+    <span class="kw">with</span> LOCK:
+        memory = load_memory()
+        memory[<span class="str">"facts"</span>].append({
+            <span class="str">"fact"</span>: fact,
+            <span class="str">"saved_at"</span>: datetime.now().strftime(<span class="str">"%Y-%m-%d %H:%M:%S"</span>),
+        })
+        save_memory(memory)</code></pre>
+    </div>
+    <p>Before: 20 parallel writes saved 1 fact. After: 20 out of 20. Six lines of difference.</p>
+
+    <div class="callout co-win"><span class="co-tag">The demo that lands</span>
+      <p>Open <code class="inl">data/long_term_memory.json</code> in the editor, side by side with the chat. Type <em>"remember that I love cricket"</em>. <strong>Watch the file change while they look at it.</strong> Then restart the server, ask "what do you know about me?", and it still knows. That is the moment long-term memory stops being an abstract term.</p>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">Where this design runs out</span>
+      <p>Every fact is dumped into every prompt. At ten facts that is fine. At a thousand it is unaffordable and the important ones get lost in the noise.</p>
+      <p>Real systems store facts in a database, <strong>retrieve only the relevant ones</strong> per question, and expire or merge contradictions ("lives in Pune" vs "moved to Bangalore"). Our version has no idea one fact can replace another.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(7)"><div class="pg-l">← Previous</div><div class="pg-t">Short term memory</div></button>
+    <button class="rt" onclick="go(9)"><div class="pg-l">Next slide →</div><div class="pg-t">Answering from our data</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 9 ================= -->
+<section class="slide" data-title="Answering from our data">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">09</div>
+    <div>
+      <h2 class="stage-title">Answering From Our Own Data</h2>
+      <p class="stage-kicker">The model has never heard of your company. Give it a search tool over your documents and it stops guessing.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The corpus is just a JSON list</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">data/corpus.json</span></div>
+      <pre><code>[
+  {
+    <span class="str">"id"</span>: <span class="str">"doc-3"</span>,
+    <span class="str">"title"</span>: <span class="str">"Refund Policy"</span>,
+    <span class="str">"topic"</span>: <span class="str">"policy"</span>,
+    <span class="str">"text"</span>: <span class="str">"Customers can ask for a full refund within 30 days
+             of payment. Refunds are sent back to the original
+             payment method and take 5 to 7 working days..."</span>
+  },
+  ...
+]</code></pre>
+    </div>
+    <p>Ten documents about a fictional product. Swap in your own and the bot changes domain in one file.</p>
+
+    <h3>The search tool</h3>
+    <p>No embeddings. No vector database. We count how many words of the question appear in each document — and for a teaching demo it works remarkably well.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/tools/data_tools.py</span></div>
+      <pre><code><span class="flg">@tool</span>
+<span class="kw">def</span> search_knowledge_base(query: str) -> str:
+    <span class="str">"""Search the CloudDesk company documents for a topic.
+    Use this for any question about pricing, plans, refunds,
+    policies, support, security, integrations or features."""</span>
+
+    documents = load_corpus()
+    words = query.lower().split()
+    results = []
+
+    <span class="kw">for</span> doc <span class="kw">in</span> documents:
+        haystack = (doc[<span class="str">"title"</span>] + <span class="str">" "</span> + doc[<span class="str">"topic"</span>]
+                    + <span class="str">" "</span> + doc[<span class="str">"text"</span>]).lower()
+
+        <span class="cmt"># how many words of the question appear in this doc?</span>
+        score = <span class="str">0</span>
+        <span class="kw">for</span> word <span class="kw">in</span> words:
+            <span class="kw">if</span> word <span class="kw">in</span> haystack:
+                score = score + <span class="str">1</span>
+
+        <span class="kw">if</span> score > <span class="str">0</span>:
+            results.append({<span class="str">"score"</span>: score, <span class="str">"doc"</span>: doc})
+
+    <span class="cmt"># best match first, keep the top 3</span>
+    results.sort(key=<span class="kw">lambda</span> item: item[<span class="str">"score"</span>], reverse=<span class="kw">True</span>)
+    results = results[:<span class="str">3</span>]</code></pre>
+    </div>
+
+    <h3>What comes back</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">the ToolMessage the model receives</span></div>
+      <pre><code>Found 3 document(s):
+
+[doc-3] Refund Policy
+Customers can ask for a full refund within 30 days of payment...
+
+[doc-9] How to Cancel an Account
+To cancel, go to Settings, then Billing...</code></pre>
+    </div>
+    <p>Plain text with the source id in front. The model reads it and writes an answer grounded in those words — and if you ask, it can cite <code class="inl">doc-3</code>.</p>
+
+    <h3>This is RAG, with the scary parts removed</h3>
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">Retrieve</div><div class="mb-d">Find documents that match the question. Ours: word counting. Real: embeddings.</div></div>
+      <div class="mbox"><div class="mb-t">Augment</div><div class="mb-d">Put those documents into the model's context, as a ToolMessage.</div></div>
+      <div class="mbox"><div class="mb-t">Generate</div><div class="mb-d">Model writes the answer using only what it was given.</div></div>
+    </div>
+    <p>Everything a vector database adds is a better <em>Retrieve</em> step. The shape of the solution is identical — which is exactly why starting here makes the upgrade obvious later.</p>
+
+    <div class="callout co-note"><span class="co-tag">When word matching is not enough</span>
+      <p>Ask <em>"how do I get my money back?"</em> — no document contains those words, so our search finds nothing. Embeddings would match it to the refund policy by meaning.</p>
+      <p>That failure is worth demonstrating live. <strong>It shows exactly what problem a vector database solves</strong>, instead of the usual hand-waving.</p>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">The prompt rule that prevents invention</span>
+      <p><em>"Then answer using ONLY what those documents say."</em> Plus: <em>"If you do not find the answer in the documents, say you do not know."</em></p>
+      <p>Test it by asking something not in the corpus — <em>"do you support Salesforce?"</em>. A good agent says it does not know. Without those two lines, it cheerfully makes something up.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(8)"><div class="pg-l">← Previous</div><div class="pg-t">Long term memory</div></button>
+    <button class="rt" onclick="go(10)"><div class="pg-l">Next slide →</div><div class="pg-t">FastAPI</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 10 ================= -->
+<section class="slide" data-title="FastAPI">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">10</div>
+    <div>
+      <h2 class="stage-title">FastAPI — The Door</h2>
+      <p class="stage-kicker">The API layer knows nothing about AI. It takes JSON in, hands it to the agent, and sends JSON back. That is the whole job.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The journey of one message</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">React</div><span class="arrow">→</span>
+        <div class="node">POST /chat</div><span class="arrow">→</span>
+        <div class="node">main.py</div><span class="arrow">→</span>
+        <div class="node am">agent.py</div><span class="arrow">→</span>
+        <div class="node ro">OpenAI</div>
+      </div>
+      <div class="flow" style="margin-top:12px">
+        <div class="node ro">"call multiply"</div><span class="arrow">→</span>
+        <div class="node em">math_tools.py</div><span class="arrow">→</span>
+        <div class="node am">model writes answer</div><span class="arrow">→</span>
+        <div class="node sky">React gets answer + steps</div>
+      </div>
+      <div class="dg-cap">Every arrow is printed in the terminal while it happens</div>
+    </div>
+
+    <h3>The endpoint</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/main.py</span></div>
+      <pre><code><span class="kw">class</span> ChatRequest(BaseModel):
+    <span class="cmt"># this describes the JSON React must send us</span>
+    message: str
+    session_id: str = <span class="str">"default"</span>
+
+
+<span class="flg">@app.post</span>(<span class="str">"/chat"</span>)
+<span class="kw">def</span> chat(request: ChatRequest):
+    print(<span class="str">"\n&gt;&gt;&gt; API HIT: POST /chat"</span>)
+    print(<span class="str">"&gt;&gt;&gt; message:"</span>, request.message)
+
+    <span class="cmt"># give the work to the agent</span>
+    answer, steps = agent.run_agent(request.message, request.session_id)
+
+    print(<span class="str">"&gt;&gt;&gt; API RETURNING the answer to React\n"</span>)
+
+    <span class="kw">return</span> {
+        <span class="str">"answer"</span>: answer,
+        <span class="str">"steps"</span>: steps,
+        <span class="str">"short_term_memory_size"</span>: len(...),
+        <span class="str">"long_term_memory"</span>: long_term_memory.get_all_facts(),
+    }</code></pre>
+    </div>
+    <p>Eleven lines of real work. <code class="inl">BaseModel</code> means FastAPI validates the incoming JSON for you and returns a clear 422 if React sends rubbish — no manual checking.</p>
+
+    <h3>The other endpoints exist to be shown</h3>
+    <table class="cmp">
+      <tr><th>Endpoint</th><th>What it is for</th></tr>
+      <tr><td><code class="inl">GET /</code></td><td>Health check. Returns the tool count.</td></tr>
+      <tr><td><code class="inl">GET /tools</code></td><td>The whole registry with descriptions — the menu the model sees.</td></tr>
+      <tr><td><code class="inl">GET /memory/long-term</code></td><td>Reads the JSON file. Refresh it after saying "remember...".</td></tr>
+      <tr><td><code class="inl">GET /memory/short-term</code></td><td>The conversation currently in RAM.</td></tr>
+      <tr><td><code class="inl">POST /memory/short-term/clear</code></td><td>Forget the conversation, keep the saved facts. Great for showing the difference.</td></tr>
+    </table>
+
+    <h3>One line that saves an hour of confusion</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">CORS</span></div>
+      <pre><code>app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[<span class="str">"*"</span>],
+    allow_methods=[<span class="str">"*"</span>],
+    allow_headers=[<span class="str">"*"</span>],
+)</code></pre>
+    </div>
+    <p>React runs on port 5173, the API on 8001. Different ports mean different origins, and the browser blocks the request unless the server says it is allowed. <strong><code class="inl">allow_origins=["*"]</code> is fine for a classroom and wrong for production</strong> — name your real domain there.</p>
+
+    <div class="callout co-win"><span class="co-tag">Free UI for testing</span>
+      <p>Open <strong>http://localhost:8001/docs</strong>. FastAPI generates a full interactive page from your type hints. You can send chat messages and read the phases without React running at all — perfect for the part of the session before you show the frontend.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(9)"><div class="pg-l">← Previous</div><div class="pg-t">Answering from our data</div></button>
+    <button class="rt" onclick="go(11)"><div class="pg-l">Next slide →</div><div class="pg-t">The React screen</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 11 ================= -->
+<section class="slide" data-title="The React screen">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">11</div>
+    <div>
+      <h2 class="stage-title">The React Screen</h2>
+      <p class="stage-kicker">Chat on the left, the agent's reasoning on the right. The right panel is the reason this project teaches anything.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Sending a message</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">frontend/src/App.jsx</span></div>
+      <pre><code><span class="kw">async function</span> sendMessage() {
+  <span class="kw">const</span> response = <span class="kw">await</span> fetch(API + <span class="str">"/chat"</span>, {
+    method: <span class="str">"POST"</span>,
+    headers: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span> },
+    body: JSON.stringify({ message: question, session_id: <span class="str">"default"</span> }),
+  });
+
+  <span class="kw">const</span> data = <span class="kw">await</span> response.json();
+
+  setMessages((old) => [...old, { role: <span class="str">"bot"</span>, text: data.answer }]);
+  setSteps(data.steps);              <span class="cmt">// the phase panel</span>
+  setMemory(data.long_term_memory);  <span class="cmt">// the fact list</span>
+}</code></pre>
+    </div>
+    <p>One <code class="inl">fetch</code>. No streaming, no websockets, no state library. A beginner can read this and know exactly what crosses the network.</p>
+
+    <h3>Drawing the phases</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">frontend/src/App.jsx</span></div>
+      <pre><code>{steps.map((step, i) => (
+  &lt;div key={i} className={<span class="str">"step "</span> + step.phase.replace(<span class="str">" "</span>, <span class="str">"-"</span>)}&gt;
+    &lt;div className=<span class="str">"phase"</span>&gt;{i + 1}. {step.phase}&lt;/div&gt;
+    &lt;div className=<span class="str">"title"</span>&gt;{step.title}&lt;/div&gt;
+    &lt;pre&gt;{step.detail}&lt;/pre&gt;
+  &lt;/div&gt;
+))}</code></pre>
+    </div>
+    <p>The phase name becomes the CSS class, so each type gets its own colour: purple for the system prompt, blue for the user, orange for a tool call, green for a tool result, black for the final answer. Colour is what makes the pattern visible at a glance.</p>
+
+    <h3>What the panel shows</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">one turn, on screen</span></div>
+      <pre><code>1. SYSTEM PROMPT   Rules given to the model
+2. USER MESSAGE    what is the refund policy?
+3. TOOL CALL       search_knowledge_base
+                   arguments = {'query': 'refund policy'}
+4. TOOL RESULT     Found 3 document(s): [doc-3] Refund Policy...
+5. FINAL ANSWER    The refund policy allows customers to...</code></pre>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">A decision worth explaining</span>
+      <p>The panel shows <strong>only the current turn</strong>. The older messages are still sent to the model — that is short term memory — but repeating the whole conversation in the panel every time made it unreadable.</p>
+      <p>Instead there is one grey line: <em>"Short term memory: 4 older messages were also sent with this question."</em> The cut is one line in <code class="inl">agent.py</code>:</p>
+    </div>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">backend/agent.py</span></div>
+      <pre><code><span class="cmt"># everything before this point is replayed history,</span>
+<span class="cmt"># everything after it happened just now</span>
+new_messages = all_messages[len(history):]</code></pre>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">Show the terminal too</span>
+      <p>Keep the <code class="inl">uvicorn</code> window visible next to the browser. The same phases print there via <code class="inl">trace.print_steps()</code>. Seeing the browser and the server print the same story at the same instant is what connects the two halves of the stack for people.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(10)"><div class="pg-l">← Previous</div><div class="pg-t">FastAPI</div></button>
+    <button class="rt" onclick="go(12)"><div class="pg-l">Next slide →</div><div class="pg-t">Run it live</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 12 ================= -->
+<section class="slide" data-title="Run it live">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">12</div>
+    <div>
+      <h2 class="stage-title">Run It Live</h2>
+      <p class="stage-kicker">The order to demo things in, and the exact sentences to type so every concept shows itself.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Starting up</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">terminal 1 — the API</span></div>
+      <pre><code>cd simple_agent_chatbot/backend
+../.venv/bin/uvicorn main:app --reload --port 8001</code></pre>
+    </div>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">terminal 2 — the UI</span></div>
+      <pre><code>cd simple_agent_chatbot/frontend
+npm install
+npm run dev</code></pre>
+    </div>
+    <p>Then <strong>http://localhost:5173</strong>. Needs Python 3.10 or newer, and an <code class="inl">OPENAI_API_KEY</code> in <code class="inl">.env</code>.</p>
+
+    <h3>Teach it in this order</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">Terminal only — no API, no browser</div><div class="sd"><code class="inl">python test_agent.py</code>. It prints the tool registry, then every phase as you chat. Nothing is hidden behind a network call. Spend real time here.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">Then the API alone</div><div class="sd">Open <code class="inl">/docs</code> and send the same question. Same agent, now with HTTP in front. Shows that the agent does not care who calls it.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">Then React</div><div class="sd">Only now open the UI. By this point nothing in the phase panel is a mystery.</div></div></div>
+    </div>
+
+    <h3>The demo script</h3>
+    <table class="cmp">
+      <tr><th>Type this</th><th>What it proves</th></tr>
+      <tr><td>what is 25 times 4 plus 10?</td><td>Two tool calls in a row. The second uses the first one's result.</td></tr>
+      <tr><td>what is 15 percent of 200?</td><td><code class="inl">percent_of</code>. Contrast with a plain chatbot doing it in its head.</td></tr>
+      <tr><td>what is the refund policy?</td><td>Search over <code class="inl">corpus.json</code>. Point at the TOOL RESULT — the words come from the file.</td></tr>
+      <tr><td>and what about cancelling?</td><td>Short term memory. "Cancelling" only makes sense next to the previous turn.</td></tr>
+      <tr><td>do you support Salesforce?</td><td>Not in the corpus. A good agent says it does not know.</td></tr>
+      <tr><td>remember that I love cricket</td><td>The JSON file changes on screen. Have it open in the editor.</td></tr>
+      <tr><td>what do you remember about me?</td><td><code class="inl">recall_facts</code>.</td></tr>
+      <tr><td>what time is it?</td><td>A model has no clock. Four lines of Python gives it one.</td></tr>
+      <tr><td>how do I get my money back?</td><td><strong>Deliberate failure.</strong> Word search misses it. This is what embeddings fix.</td></tr>
+    </table>
+
+    <div class="callout co-win"><span class="co-tag">The restart trick</span>
+      <p>After saving a few facts, stop <code class="inl">uvicorn</code> and start it again. Ask <em>"what did we just talk about?"</em> — gone. Ask <em>"what do you remember about me?"</em> — still there.</p>
+      <p><strong>Short term memory died with the process. Long term memory was on disk.</strong> Thirty seconds, and nobody confuses the two again.</p>
+    </div>
+
+    <h3>Things that will go wrong</h3>
+    <table class="cmp">
+      <tr><th>Symptom</th><th>Cause</th></tr>
+      <tr><td>Blank screen, console shows CORS</td><td>The API is not running, or it is on a different port than <code class="inl">App.jsx</code> expects.</td></tr>
+      <tr><td><code class="inl">pip install</code> fails on langchain</td><td>Python 3.9 or older. LangChain needs 3.10+.</td></tr>
+      <tr><td>Port already in use</td><td>Something else owns 8000/8001. Change the port in the uvicorn command and in <code class="inl">App.jsx</code>.</td></tr>
+      <tr><td>Bot does maths in its head</td><td>The prompt rule got weakened, or a tool description is vague.</td></tr>
+      <tr><td>401 from OpenAI</td><td><code class="inl">.env</code> missing, or the key has no credit.</td></tr>
+    </table>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(11)"><div class="pg-l">← Previous</div><div class="pg-t">The React screen</div></button>
+    <button class="rt" onclick="go(13)"><div class="pg-l">Next slide →</div><div class="pg-t">The framework landscape</div></button>
+  </div>
+</div></div>
+</section>
+<!-- ================= SLIDE 13 ================= -->
+<section class="slide" data-title="The framework landscape">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">13</div>
+    <div>
+      <h2 class="stage-title">The Framework Landscape</h2>
+      <p class="stage-kicker">LangChain, LangGraph, CrewAI, AutoGen. They are not competitors so much as different answers to "how much control do I need, and how many agents am I running?"</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The one question that sorts them</h3>
+    <div class="diagram">
+      <div class="box-row">
+        <div class="mbox"><div class="mb-t">One agent</div><div class="mb-d">A loop with tools.<br><strong>LangChain</strong></div></div>
+        <div class="mbox"><div class="mb-t">One agent, strict path</div><div class="mb-d">Branches, retries, approvals, resume.<br><strong>LangGraph</strong></div></div>
+        <div class="mbox"><div class="mb-t">A team with roles</div><div class="mb-d">Researcher → analyst → writer.<br><strong>CrewAI</strong></div></div>
+        <div class="mbox"><div class="mb-t">Agents that talk</div><div class="mb-d">Write, critique, run code, repeat.<br><strong>AutoGen</strong></div></div>
+      </div>
+      <div class="dg-cap">Pick by the shape of the work, not by which name you have heard most</div>
+    </div>
+
+    <h3>Side by side</h3>
+    <table class="cmp">
+      <tr><th>&nbsp;</th><th>LangChain</th><th>LangGraph</th><th>CrewAI</th><th>AutoGen</th></tr>
+      <tr><td>Core idea</td><td>Model + tools + loop</td><td>State machine / graph</td><td>Roles and tasks</td><td>Agents in conversation</td></tr>
+      <tr><td>Agents</td><td>One</td><td>One or many</td><td>Many</td><td>Many</td></tr>
+      <tr><td>Who picks the order</td><td>The model</td><td><strong>You</strong>, in the graph</td><td>Task order / manager</td><td>The conversation</td></tr>
+      <tr><td>Learning curve</td><td class="yes">Low</td><td>Medium</td><td class="yes">Low</td><td>Medium</td></tr>
+      <tr><td>Pause &amp; resume</td><td class="no">No</td><td class="yes">Built in</td><td class="no">Limited</td><td class="no">Limited</td></tr>
+      <tr><td>Human approval step</td><td class="no">Roll your own</td><td class="yes">First class</td><td>Some support</td><td>Via a human agent</td></tr>
+      <tr><td>Predictable path</td><td class="no">No</td><td class="yes">Yes</td><td>Mostly</td><td class="no">Least</td></tr>
+      <tr><td>Best at</td><td>Getting started</td><td>Production control</td><td>Content pipelines</td><td>Code &amp; critique loops</td></tr>
+    </table>
+
+    <h4>01 · LangChain</h4>
+    <p><strong>What it is.</strong> The high-level toolkit — models, prompts, tools, output parsers, and a ready-made agent loop. It is what we used all afternoon. <code class="inl">create_agent(model, tools, system_prompt)</code> and you have a working agent.</p>
+    <p><strong>Use it when</strong> one agent with a bag of tools genuinely solves the problem — which is more often than people expect. Do not skip past it because it looks too simple.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">langchain — the whole agent</span></div>
+      <pre><code><span class="kw">from</span> langchain.agents <span class="kw">import</span> create_agent
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI
+
+agent = create_agent(
+    ChatOpenAI(model=<span class="str">"gpt-4o-mini"</span>, temperature=<span class="str">0</span>),
+    ALL_TOOLS,
+    system_prompt=SYSTEM_PROMPT,
+)
+
+result = agent.invoke({<span class="str">"messages"</span>: [HumanMessage(content=<span class="str">"..."</span>)]})</code></pre>
+    </div>
+    <p><strong>Example projects</strong></p>
+    <ul>
+      <li><strong>Internal helpdesk bot</strong> — searches your policy documents, answers HR and IT questions, escalates by creating a ticket.</li>
+      <li><strong>Customer support bot over product docs</strong> — exactly this project, with your corpus swapped in.</li>
+      <li><strong>Database question answering</strong> — a <code class="inl">run_sql</code> tool over a read-only connection, plus a schema description tool.</li>
+      <li><strong>Personal assistant</strong> — calendar, email search, weather. Many small tools, one loop.</li>
+    </ul>
+    <div class="callout co-trap"><span class="co-tag">Where it stops</span>
+      <p>The model chooses the path every run, so you cannot promise "step 3 always happens after step 2". There is no built-in way to pause for a human and resume tomorrow. <strong>The moment you need a guarantee about the order, you have outgrown it.</strong></p>
+    </div>
+
+    <h4>02 · LangGraph</h4>
+    <p><strong>What it is.</strong> From the same team, one level lower. You describe your process as a <em>graph</em>: nodes are steps, edges are what happens next, and there is a shared state object flowing through it. Conditional edges give you branching; a checkpointer gives you persistence.</p>
+    <p><strong>Use it when</strong> the process must be reliable and inspectable — approvals, retries, escalation, or anything that runs longer than one HTTP request.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">langgraph — you draw the path</span></div>
+      <pre><code><span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph, END
+<span class="kw">from</span> langgraph.checkpoint.memory <span class="kw">import</span> MemorySaver
+
+<span class="kw">def</span> check_policy(state):    <span class="cmt"># plain python functions</span>
+    ...
+<span class="kw">def</span> auto_approve(state):
+    ...
+<span class="kw">def</span> ask_human(state):
+    ...
+
+graph = StateGraph(RefundState)
+graph.add_node(<span class="str">"check"</span>, check_policy)
+graph.add_node(<span class="str">"auto"</span>, auto_approve)
+graph.add_node(<span class="str">"human"</span>, ask_human)
+
+graph.set_entry_point(<span class="str">"check"</span>)
+
+<span class="cmt"># small refunds go through, big ones wait for a person</span>
+graph.add_conditional_edges(<span class="str">"check"</span>, route_by_amount, {
+    <span class="str">"small"</span>: <span class="str">"auto"</span>,
+    <span class="str">"large"</span>: <span class="str">"human"</span>,
+})
+graph.add_edge(<span class="str">"auto"</span>, END)
+
+<span class="cmt"># the checkpointer is why this can pause and resume later</span>
+app = graph.compile(checkpointer=MemorySaver(),
+                    interrupt_before=[<span class="str">"human"</span>])</code></pre>
+    </div>
+    <p><strong>Example projects</strong></p>
+    <ul>
+      <li><strong>Refund approval</strong> — under ₹5,000 auto-approve, above that stop and wait for a manager, then resume days later at the same point.</li>
+      <li><strong>Loan or KYC processing</strong> — extract, validate, check rules, escalate on failure, with a full audit trail of every state change.</li>
+      <li><strong>Deep research assistant</strong> — search, read, judge "is this enough?", loop back for more, then write. The loop is a real cycle in the graph.</li>
+      <li><strong>Order-to-shipment flow</strong> — retries on a flaky inventory API, a compensating step when payment fails.</li>
+    </ul>
+    <div class="callout co-note"><span class="co-tag">The honest trade</span>
+      <p>You write more code and you draw your own diagram. In exchange, you can answer "what will this do on Tuesday?" — which is exactly the question compliance, finance and your on-call rota all ask. <strong>Control costs design effort. That is the deal.</strong></p>
+    </div>
+
+    <h4>03 · CrewAI</h4>
+    <p><strong>What it is.</strong> A team metaphor. You define agents with a <em>role</em>, a <em>goal</em> and a <em>backstory</em>, give each one a task, and the crew runs them in sequence (or with a manager agent delegating). The output of one task feeds the next.</p>
+    <p><strong>Use it when</strong> the work genuinely splits into different jobs a human team would divide — and when a readable, role-shaped script is worth more than fine control.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">crewai — a team with roles</span></div>
+      <pre><code><span class="kw">from</span> crewai <span class="kw">import</span> Agent, Task, Crew
+
+researcher = Agent(
+    role=<span class="str">"Market Researcher"</span>,
+    goal=<span class="str">"Find recent facts about {topic}"</span>,
+    backstory=<span class="str">"You dig through sources and never invent numbers."</span>,
+    tools=[search_tool],
+)
+
+writer = Agent(
+    role=<span class="str">"Report Writer"</span>,
+    goal=<span class="str">"Turn research notes into a clear one page report"</span>,
+    backstory=<span class="str">"You write plainly for busy executives."</span>,
+)
+
+research_task = Task(
+    description=<span class="str">"Research {topic}. List the key facts with sources."</span>,
+    expected_output=<span class="str">"A bullet list of facts"</span>,
+    agent=researcher,
+)
+
+write_task = Task(
+    description=<span class="str">"Write a 300 word report from the research."</span>,
+    expected_output=<span class="str">"A short report"</span>,
+    agent=writer,
+    context=[research_task],      <span class="cmt"># feeds task 1's output in</span>
+)
+
+crew = Crew(agents=[researcher, writer], tasks=[research_task, write_task])
+print(crew.kickoff(inputs={<span class="str">"topic"</span>: <span class="str">"electric cars in India"</span>}))</code></pre>
+    </div>
+    <p><strong>Example projects</strong></p>
+    <ul>
+      <li><strong>Market research report</strong> — researcher gathers, analyst finds the pattern, writer produces the document. The classic CrewAI demo, and it genuinely works.</li>
+      <li><strong>Content pipeline</strong> — SEO planner → draft writer → editor → fact checker, producing a finished blog post.</li>
+      <li><strong>Resume screening</strong> — one agent extracts skills, one scores against the job description, one drafts the interview questions.</li>
+      <li><strong>Competitor teardown</strong> — an agent per competitor running in parallel, then a synthesiser that merges the findings.</li>
+    </ul>
+    <div class="callout co-trap"><span class="co-tag">The multi-agent tax</span>
+      <p>Four agents means at least four times the tokens and four times the latency. Every handoff is a chance to lose detail.</p>
+      <p>Before splitting into a crew, ask honestly: <strong>would one agent with good tools have done this?</strong> Very often the answer is yes, and the crew exists because it looks impressive in a demo rather than because the work needed it.</p>
+    </div>
+
+    <h4>04 · AutoGen</h4>
+    <p><strong>What it is.</strong> Microsoft's multi-agent framework, built around agents that hold a <em>conversation</em> with each other. Its signature move is the write–run–critique loop: one agent proposes code, another executes it, a third reviews, and they iterate until a stop condition fires.</p>
+    <p><strong>Use it when</strong> the answer improves by being argued over — code that must actually run, analysis that needs a sceptic, a draft that needs a critic.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">autogen — agents that talk to each other</span></div>
+      <pre><code><span class="kw">from</span> autogen_agentchat.agents <span class="kw">import</span> AssistantAgent
+<span class="kw">from</span> autogen_agentchat.teams <span class="kw">import</span> RoundRobinGroupChat
+<span class="kw">from</span> autogen_agentchat.conditions <span class="kw">import</span> TextMentionTermination
+<span class="kw">from</span> autogen_ext.models.openai <span class="kw">import</span> OpenAIChatCompletionClient
+
+model = OpenAIChatCompletionClient(model=<span class="str">"gpt-4o-mini"</span>)
+
+coder = AssistantAgent(
+    <span class="str">"coder"</span>,
+    model_client=model,
+    system_message=<span class="str">"Write python. Fix it when the reviewer objects."</span>,
+)
+
+reviewer = AssistantAgent(
+    <span class="str">"reviewer"</span>,
+    model_client=model,
+    system_message=<span class="str">"Review the code. Say APPROVE when it is correct."</span>,
+)
+
+<span class="cmt"># they take turns until 'APPROVE' appears, or 8 turns pass</span>
+team = RoundRobinGroupChat(
+    [coder, reviewer],
+    termination_condition=TextMentionTermination(<span class="str">"APPROVE"</span>),
+    max_turns=<span class="str">8</span>,
+)
+
+<span class="kw">await</span> team.run(task=<span class="str">"Write a function that finds duplicate rows in a CSV"</span>)</code></pre>
+    </div>
+    <p><strong>Example projects</strong></p>
+    <ul>
+      <li><strong>Data analysis assistant</strong> — one agent writes pandas code, an executor actually runs it, and errors go back for a fix. The loop keeps going until the chart appears.</li>
+      <li><strong>Automated code review pair</strong> — an implementer and a sceptic argue until the tests pass.</li>
+      <li><strong>Hard problem solving</strong> — a solver plus a dedicated critic whose only job is to find the flaw. Measurably better than one agent alone on maths and logic.</li>
+      <li><strong>Research prototyping</strong> — trying out agent conversation patterns before committing to a design.</li>
+    </ul>
+    <div class="callout co-cost"><span class="co-tag">Watch the meter</span>
+      <p>Conversational agents are the easiest way to accidentally spend money. Two agents that both think they should have the last word will happily run to your turn limit, every time.</p>
+      <p><strong>Always set a termination condition and a max turn count</strong>, and never let an execution loop run untrusted generated code outside a container.</p>
+    </div>
+    <div class="callout co-note"><span class="co-tag">Version note</span>
+      <p>AutoGen was substantially rewritten at v0.4 — the modern API lives in <code class="inl">autogen-agentchat</code> and is async, which is why you see <code class="inl">await</code> above. Older tutorials show a very different <code class="inl">UserProxyAgent</code> style from v0.2. Microsoft has also been converging AutoGen with Semantic Kernel into a single Agent Framework, so <strong>check the current docs before starting a new project</strong> rather than trusting a blog post.</p>
+    </div>
+
+    <h4>And the option nobody sells you</h4>
+    <p><strong>No framework at all.</strong> The OpenAI or Anthropic SDK gives you tool calling directly. The agent loop is about twenty lines — you saw it on slide 02. No abstraction to learn, no version churn, complete visibility.</p>
+    <p>This is a genuinely good choice for a small production bot with five tools. You give up prebuilt memory, retries and streaming helpers, and you write those yourself. Sometimes that is cheaper than learning where a framework hid them.</p>
+
+    <div class="quiz">
+      <div class="q">A bank wants an agent that processes refunds, but anything above ₹50,000 must be approved by a manager who may not respond until tomorrow. What do you reach for?</div>
+      <button class="opt" onclick="qa(this,0)">CrewAI — one agent per department</button>
+      <button class="opt" onclick="qa(this,1)">LangGraph — conditional edges plus a checkpointer</button>
+      <button class="opt" onclick="qa(this,0)">AutoGen — let the agents discuss it</button>
+      <div class="explain"><strong>LangGraph.</strong> Two requirements decide it: a hard rule about which path is taken at a threshold, and the ability to stop mid-process and resume days later. Conditional edges give you the first, the checkpointer gives you the second. A crew or a conversation gives you neither guarantee — and this is money, so "usually right" is not a specification.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(12)"><div class="pg-l">← Previous</div><div class="pg-t">Run it live</div></button>
+    <button class="rt" onclick="go(14)"><div class="pg-l">Next slide →</div><div class="pg-t">Which one, when</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 14 ================= -->
+<section class="slide" data-title="Which one, when">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">14</div>
+    <div>
+      <h2 class="stage-title">Which One, When</h2>
+      <p class="stage-kicker">A decision path you can actually follow on Monday, and the order to build things in.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Work down this list and stop at the first yes</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">Would a single prompt do it?</div><div class="sd">Summarising, classifying, rewriting. Then you do not need an agent at all. One API call is cheaper, faster and cannot loop.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">Do you know the exact steps in advance?</div><div class="sd">Then write a normal Python function that calls the model a few times. A <code class="inl">for</code> loop you wrote beats an agent that might improvise.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">Does it need to look things up or take actions, in an order you cannot predict?</div><div class="sd"><strong>Now</strong> you need an agent. Start with <strong>LangChain</strong> — one agent, a handful of tools. This project.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">Does it need approvals, retries, branching, or to resume tomorrow?</div><div class="sd">Move to <strong>LangGraph</strong>. Same ecosystem, so tools and prompts come across.</div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="st">Does the work split into clearly different jobs?</div><div class="sd"><strong>CrewAI</strong> for a role pipeline, <strong>AutoGen</strong> when the agents need to critique each other. Only after a single agent has visibly failed.</div></div></div>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">The rule that saves the most money</span>
+      <p><strong>One good agent with well described tools beats a team of mediocre ones almost every time.</strong></p>
+      <p>Multi-agent is a solution to a specific problem — one context window cannot hold the whole job, or you genuinely need an independent critic. It is not a way to make a system smarter. Reach for it when you can name the failure it fixes.</p>
+    </div>
+
+    <h3>What to build first, in order</h3>
+    <table class="cmp">
+      <tr><th>#</th><th>Build</th><th>Why it comes first</th></tr>
+      <tr><td>1</td><td>Tools with excellent descriptions</td><td>Most agent failures are tool selection failures. This is where accuracy lives.</td></tr>
+      <tr><td>2</td><td>A tool registry</td><td>Your capability list and your permission boundary, in one file.</td></tr>
+      <tr><td>3</td><td>Tracing — print every phase</td><td>Without it you are debugging blind. It is what <code class="inl">trace.py</code> exists for.</td></tr>
+      <tr><td>4</td><td>Step and cost limits</td><td>One runaway loop can cost more than a week of your salary.</td></tr>
+      <tr><td>5</td><td>Short term memory</td><td>Follow-up questions are most of real usage.</td></tr>
+      <tr><td>6</td><td>A test set of 20 real questions</td><td>So you can tell whether today's prompt change helped or hurt.</td></tr>
+      <tr><td>7</td><td>Long term memory</td><td>Genuinely useful, and genuinely optional. Later than people think.</td></tr>
+      <tr><td>8</td><td>Multi-agent</td><td>Last. Only when you can point at what a single agent failed to do.</td></tr>
+    </table>
+
+    <h3>What this project deliberately left out</h3>
+    <ul>
+      <li><strong>Streaming</strong> — answers arrive all at once. Real chat UIs stream tokens as they generate.</li>
+      <li><strong>A step limit</strong> — nothing stops a loop that never settles. Add a max-iterations cap before production.</li>
+      <li><strong>Authentication</strong> — <code class="inl">session_id</code> is whatever the browser sends. Anyone could read anyone's memory.</li>
+      <li><strong>Real retrieval</strong> — word counting, not embeddings.</li>
+      <li><strong>Error handling around the model call</strong> — a timeout or rate limit will surface as a 500.</li>
+      <li><strong>Evaluation</strong> — no test set, so "did that prompt change help?" is currently a matter of opinion.</li>
+    </ul>
+    <p>Each of those is a good exercise. They are missing on purpose: <strong>every one of them, added now, would hide the idea we are trying to teach.</strong></p>
+
+    <div class="callout co-note"><span class="co-tag">The sentence to leave with</span>
+      <p>An agent is a model, a list of tools, and a loop that keeps going until the model stops asking for things.</p>
+      <p>Frameworks differ in how much of that loop they hand back to you. <strong>Start with the one that hands you the least, and only take control back when something breaks.</strong></p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your one-agent support bot is right 85% of the time. What is most likely to move the number?</div>
+      <button class="opt" onclick="qa(this,0)">Split it into four specialist agents</button>
+      <button class="opt" onclick="qa(this,1)">Look at the 15% that failed and fix the tool descriptions and the corpus</button>
+      <button class="opt" onclick="qa(this,0)">Switch to a bigger, more expensive model</button>
+      <div class="explain"><strong>Read the failures.</strong> They almost always cluster: a tool nobody could pick from its description, a question whose answer is not in the corpus at all, a prompt rule the model reads differently than you meant. Every one is a cheap targeted fix. Adding agents multiplies your cost and adds handoff failures on top of the ones you already have — without ever telling you what went wrong.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(13)"><div class="pg-l">← Previous</div><div class="pg-t">The framework landscape</div></button>
+    <button class="rt" onclick="go(0)"><div class="pg-l">Back to start →</div><div class="pg-t">What we are building</div></button>
+  </div>
+</div></div>
+</section>
+
+<div class="foot">Building a tool-calling agent · LangChain · FastAPI · React</div>
+
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+
+/* build dropdown */
+const menu=document.getElementById('dropMenu');
+menu.innerHTML='<div class="part">Session</div>'+slides.map((s,i)=>
+  `<a data-i="${i}" onclick="go(${i});return false;"><span class="dn">${i===0?'··':String(i).padStart(2,'0')}</span><span class="dt">${s.dataset.title}</span></a>`
+).join('');
+
+function go(i){
+  if(i<0||i>=slides.length)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  [...menu.querySelectorAll('a')].forEach(a=>a.classList.toggle('cur',+a.dataset.i===i));
+  document.getElementById('btnPrev').classList.toggle('disabled',i===0);
+  document.getElementById('btnNext').classList.toggle('disabled',i===slides.length-1);
+  document.getElementById('railFill').style.width=((i)/(slides.length-1)*100)+'%';
+  drop.classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* dropdown toggle */
+const drop=document.getElementById('chDrop');
+document.getElementById('chDropBtn').onclick=e=>{e.stopPropagation();drop.classList.toggle('open');};
+document.addEventListener('click',()=>drop.classList.remove('open'));
+
+/* keyboard */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+
+/* quiz */
+function qa(btn,correct){
+  const box=btn.closest('.quiz');
+  box.querySelectorAll('.opt').forEach(o=>o.disabled=true);
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    box.querySelectorAll('.opt').forEach(o=>{
+      if(o.getAttribute('onclick').includes(',1)'))o.classList.add('correct');
+    });
+  }
+  box.querySelector('.explain').classList.add('show');
+}
+
+go(0);
+</script>
+
+</body></html>

@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gen AI Foundations — Models, Licences & Running Them Locally</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#8b5cf6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 15% 50%, rgba(139,92,246,.08), transparent 25%),radial-gradient(circle at 85% 30%, rgba(99,102,241,.08), transparent 25%);background-attachment:fixed;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* ===== top site nav ===== */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--violet)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#e7e1ff;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:360px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--violet);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--sky));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:86vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(42px,7.6vw,88px);margin-bottom:28px;background:linear-gradient(135deg,var(--violet),var(--indigo),var(--sky));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:48px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* tabs */
+.tabs{position:sticky;top:57px;z-index:50;background:rgba(8,8,12,.91);backdrop-filter:blur(14px);border-bottom:1px solid var(--card-border);padding:14px 0}
+.tabs-inner{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tab-btn{font:600 11.5px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:4px;color:var(--ink-dim);cursor:pointer;transition:all .2s}
+.tab-btn:hover{color:var(--ink);background:rgba(255,255,255,.055)}
+.tab-btn.active{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* slide */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+.stage{padding:64px 0 84px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:36px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:60px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:870px}
+
+/* body */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:880px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.22);border-radius:4px;padding:2px 6px;color:#d6ccff}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+
+/* vocab */
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#d6ccff;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* concept cards -> modal */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--sky);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--violet)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--sky);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--violet)}
+
+/* code block */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:18px 0;overflow:hidden}
+.codeblock .cb-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.codeblock .cb-title{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.codeblock pre{margin:0;padding:16px 18px;overflow-x:auto}
+.codeblock code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#cfd3e0;white-space:pre}
+.cmt{color:#6a6a85}.kw{color:#c4b5fd}.str{color:#7fd4a0}.flg{color:#7cc5f0}
+
+/* table */
+.cmp{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px}
+.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--card-border)}
+.cmp th{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.cmp td{color:var(--ink-dim);font-weight:300}
+.cmp td:first-child{color:var(--ink);font-weight:500}
+.cmp tr:hover td{background:rgba(255,255,255,.02)}
+.yes{color:var(--emerald);font-weight:600}.no{color:var(--rose);font-weight:600}
+
+/* diagram */
+.diagram{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:26px 22px;margin:22px 0}
+.diagram .dg-cap{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);text-align:center;margin-top:16px}
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.node{background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;padding:11px 15px;font:600 13px 'Inter Tight',sans-serif;color:var(--ink);text-align:center;min-width:96px}
+.node.sky{background:rgba(14,165,233,.13);border-color:rgba(14,165,233,.34)}
+.node.em{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
+.node.am{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.node.ro{background:rgba(244,63,94,.13);border-color:rgba(244,63,94,.36)}
+.arrow{color:var(--ink-faint);font-size:18px}
+.box-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.mbox{flex:1;min-width:150px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.mbox .mb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.mbox .mb-d{font-size:13px;color:var(--ink-dim);font-weight:300}
+
+/* nested rings diagram */
+.rings{display:flex;align-items:center;justify-content:center;padding:10px 0}
+.ring{border:1px solid;border-radius:14px;padding:18px;text-align:center;width:100%}
+.ring .rl{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px;display:block}
+.r1{border-color:rgba(14,165,233,.35);background:rgba(14,165,233,.04)}.r1>.rl{color:var(--sky)}
+.r2{border-color:rgba(99,102,241,.35);background:rgba(99,102,241,.05)}.r2>.rl{color:var(--indigo)}
+.r3{border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06)}.r3>.rl{color:var(--violet)}
+.r4{border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.07);padding:16px}.r4>.rl{color:var(--rose);margin-bottom:6px}
+.r4 .rd{font-size:13.5px;color:var(--ink-dim);font-weight:300}
+
+/* timeline */
+.tl{margin:22px 0;border-left:1px solid var(--card-border);padding-left:0}
+.tl-item{display:grid;grid-template-columns:78px 1fr;gap:18px;padding:0 0 22px 20px;position:relative;border-left:2px solid rgba(139,92,246,.25);margin-left:6px}
+.tl-item:last-child{border-left-color:transparent;padding-bottom:4px}
+.tl-item::before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--violet);box-shadow:0 0 0 4px rgba(139,92,246,.14)}
+.tl-item.big::before{background:var(--rose);box-shadow:0 0 0 5px rgba(244,63,94,.18)}
+.tl-yr{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--violet);padding-top:2px}
+.tl-item.big .tl-yr{color:var(--rose)}
+.tl-t{font-size:16.5px;color:var(--ink);font-weight:600;line-height:1.3;margin-bottom:5px}
+.tl-d{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+
+/* two-column compare */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.duo-col{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-radius:9px;padding:20px}
+.duo-col.a{border-top:3px solid var(--sky)}
+.duo-col.b{border-top:3px solid var(--amber)}
+.duo-col h5{font-family:'Fraunces',serif;font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:4px;color:var(--ink)}
+.duo-col .dsub{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px}
+.duo-col ul{margin:0}
+.duo-col li{font-size:14.5px;margin-bottom:8px}
+
+/* step list */
+.steps{counter-reset:st;margin:20px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--card-border)}
+.step:last-child{border-bottom:none}
+.step .sn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#fff;background:color-mix(in srgb,var(--accent) 40%,transparent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.step .st{font-size:16.5px;color:var(--ink);font-weight:600;margin-bottom:6px}
+.step .sd{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.step .codeblock{margin:12px 0 0}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:18px 0}
+.quiz .q{font-size:16.5px;color:var(--ink);font-weight:500;margin-bottom:14px}
+.quiz .opt{display:block;width:100%;text-align:left;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:7px;padding:12px 16px;margin-bottom:9px;color:var(--ink-dim);font-size:15px;cursor:pointer;transition:all .15s;font-family:'Inter Tight',sans-serif}
+.quiz .opt:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.quiz .opt.correct{border-color:var(--emerald);background:rgba(16,185,129,.12);color:var(--ink)}
+.quiz .opt.wrong{border-color:var(--rose);background:rgba(244,63,94,.1)}
+.quiz .explain{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6;margin-top:10px;padding-top:12px;border-top:1px solid var(--card-border);display:none}
+.quiz .explain.show{display:block}.quiz .explain strong{color:var(--ink)}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(4,4,8,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex;animation:fadeIn .25s ease}
+.modal{max-width:820px;width:100%;max-height:88vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 34%,var(--card-border));border-radius:10px;padding:34px 36px 30px;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.65);}
+.modal .m-cat{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.modal .m-q{font-family:'Fraunces',serif;font-weight:800;font-size:26px;line-height:1.15;letter-spacing:-.02em;margin-bottom:6px}
+.modal .m-hint{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:20px}
+.modal .m-body{font-size:15.5px;color:var(--ink-dim);font-weight:300;line-height:1.68}
+.modal .m-body p{margin-bottom:13px}.modal .m-body strong{color:var(--ink);font-weight:600}
+.modal .m-body ul{list-style:none;margin:6px 0 14px}
+.modal .m-body li{padding-left:22px;position:relative;margin-bottom:8px}
+.modal .m-body li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1px solid var(--card-border);background:rgba(255,255,255,.04);color:var(--ink-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:2}
+.modal-close:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,transparent)}
+
+.foot{padding:50px 0 80px;text-align:center;border-top:1px solid var(--card-border);color:var(--ink-faint);font-size:14px}
+
+/* bottom slide pager */
+.pager{display:flex;justify-content:space-between;gap:12px;padding:26px 0 70px}
+.pager button{flex:1;max-width:340px;text-align:left;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;padding:16px 20px;cursor:pointer;transition:all .18s;font-family:'Inter Tight',sans-serif}
+.pager button:hover{background:rgba(255,255,255,.05);border-color:var(--accent);transform:translateY(-2px)}
+.pager button.rt{text-align:right}
+.pager .pg-l{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.pager .pg-t{font-family:'Fraunces',serif;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.pager button:disabled{opacity:.25;pointer-events:none}
+
+/* widget */
+.widget{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:24px 0}
+.widget .w-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:6px}
+.widget .w-title{font-family:'Fraunces',serif;font-weight:800;font-size:20px;letter-spacing:-.02em;margin-bottom:16px;color:var(--ink)}
+.widget label{display:block;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+.widget input[type=range]{width:100%;accent-color:var(--violet);margin-bottom:6px}
+.widget .w-val{font-family:'JetBrains Mono',monospace;color:#d6ccff;font-weight:700}
+.widget select{background:#11111a;color:var(--ink);border:1px solid var(--card-border);border-radius:6px;padding:9px 12px;font-family:'Inter Tight',sans-serif;font-size:14px;margin-bottom:10px;width:100%}
+.w-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.w-out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.w-out .wo{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.w-out .wo .wo-n{font-family:'Fraunces',serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--ink)}
+.w-out .wo .wo-l{font:600 9.5px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:4px}
+.verdict{margin-top:16px;padding:14px 16px;border-radius:8px;font-size:15px;font-weight:300;border:1px solid}
+.v-ok{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);color:var(--ink-dim)}
+.v-tight{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3);color:var(--ink-dim)}
+.v-no{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.32);color:var(--ink-dim)}
+.verdict strong{color:var(--ink);font-weight:600}
+
+@media(max-width:900px){
+  .stats,.vocab-grid,.code-cards,.duo,.w-grid{grid-template-columns:1fr}
+  .stage-header,.body-wrap{grid-template-columns:1fr}
+  .dropmenu{min-width:280px}
+  .nav-prevnext{display:none}
+  .modal{padding:28px 22px 24px}
+  .cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}
+  .tabs{top:55px}
+  .tl-item{grid-template-columns:1fr;gap:4px}
+  .pager{flex-direction:column}.pager button{max-width:none}
+  .w-out{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body style="--accent:var(--violet)">
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="home-link" href="../index.html" title="Back to all decks">← Home</a>
+    <a class="brand" href="#" onclick="go(0);return false;">Gen AI <em>foundations</em></a>
+    <div class="dropdown" id="chDrop">
+      <button class="dropbtn" id="chDropBtn">Slides <span class="chev">▾</span></button>
+      <div class="dropmenu" id="dropMenu"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-prevnext">
+      <button id="btnPrev" onclick="go(cur-1)">← Prev</button>
+      <button id="btnNext" onclick="go(cur+1)">Next →</button>
+    </div>
+  </div>
+  <div class="rail"><div class="rail-fill" id="railFill"></div></div>
+</nav>
+
+<!-- ================= SLIDE 0 · TITLE ================= -->
+<section class="slide active" data-title="Session overview">
+<div class="hero"><div class="container">
+  <div class="stage-num">Boston Institute of Analytics · Generative &amp; Agentic AI Development</div>
+  <h1 class="display">How Models<br><em>Are Built,</em><br>Licensed &amp; Run</h1>
+  <p class="sub">The ideas behind every AI system you will ever build. Where these models came from, how they actually make things, who owns them, where you download them, and how to run one on your own laptop with the internet switched off.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">9</div><div class="label">Topics</div></div>
+    <div class="stat"><div class="num">2017</div><div class="label">Year it all turned</div></div>
+    <div class="stat"><div class="num">4.4 GB</div><div class="label">Size of a real AI model</div></div>
+    <div class="stat"><div class="num">₹0</div><div class="label">Cost to run it yourself</div></div>
+  </div>
+</div></div>
+<div class="container">
+  <div class="prose" style="max-width:880px;padding-bottom:20px">
+    <h3>What we cover today</h3>
+    <div class="code-cards">
+      <div class="code-card" onclick="go(1)"><span class="cc-ico">01</span><div><div class="cc-t">Classical ML vs DL vs Gen AI</div><div class="cc-s">Three ways, one problem</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(2)"><span class="cc-ico">02</span><div><div class="cc-t">Classical ML, up close</div><div class="cc-s">Loans, spam, scikit-learn, the maths</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(3)"><span class="cc-ico">03</span><div><div class="cc-t">Deep Learning, up close</div><div class="cc-s">Neurons, images, PyTorch</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(4)"><span class="cc-ico">04</span><div><div class="cc-t">Gen AI, up close</div><div class="cc-s">RAG, agents, the full tech stack</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(5)"><span class="cc-ico">05</span><div><div class="cc-t">The Timeline: 1936 to Now</div><div class="cc-s">Turing to AI agents</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(6)"><span class="cc-ico">06</span><div><div class="cc-t">Diffusion vs Autoregressive</div><div class="cc-s">Two ways to make things</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(7)"><span class="cc-ico">07</span><div><div class="cc-t">Open vs Closed Licences</div><div class="cc-s">Who actually owns the model</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(8)"><span class="cc-ico">08</span><div><div class="cc-t">HuggingFace Model Hub</div><div class="cc-s">Where all the models live</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(9)"><span class="cc-ico">09</span><div><div class="cc-t">Running Models Locally</div><div class="cc-s">Ollama, step by step</div></div><span class="cc-go">Open</span></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">How to use this deck</span>
+      <p>Use the <strong>Slides</strong> menu at the top, or just press the arrow keys. Each slide keeps going down, so scroll to the bottom before you move on.</p>
+    </div>
+  </div>
+  <div class="pager"><button disabled></button><button class="rt" onclick="go(1)"><div class="pg-l">Next slide →</div><div class="pg-t">Classical ML vs DL vs Gen AI</div></button></div>
+</div>
+</section>
+
+<!-- ================= SLIDE 1 ================= -->
+<section class="slide" data-title="Classical ML vs DL vs Gen AI">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">01</div>
+    <div>
+      <h2 class="stage-title">Classical ML vs Deep Learning vs Gen AI</h2>
+      <p class="stage-kicker">These three are not fighting each other. They sit on top of each other. Each new one does more of the work, so the human does less.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The one-line version</h3>
+    <ul>
+      <li><strong>Classical ML</strong> — <em>you</em> tell the computer what to look at. It learns the rule.</li>
+      <li><strong>Deep learning</strong> — the computer works out what to look at, by itself. You just hand it the raw photo, sound or text.</li>
+      <li><strong>Gen AI</strong> — the computer learns what the data looks like, so it can <em>make new things</em>. Not just sort old things.</li>
+    </ul>
+
+    <div class="diagram">
+      <div class="rings"><div class="ring r1"><span class="rl">Artificial Intelligence</span>
+        <div class="ring r2"><span class="rl">Machine Learning</span>
+          <div class="ring r3"><span class="rl">Deep Learning</span>
+            <div class="ring r4"><span class="rl">Generative AI</span><div class="rd">LLMs · diffusion models · speech and music models</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="dg-cap">Each one sits inside the bigger one. Nothing got thrown away</div>
+    </div>
+
+    <h3>One problem, three ways</h3>
+    <p>Same job — <strong>catching spam email</strong>. Watch the work slowly move from the human to the machine.</p>
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">Classical ML</div><div class="mb-d">A person writes code to count the "!" marks, count the links, check who sent it. Those numbers go into a simple model. <em>The person decides what matters.</em></div></div>
+      <div class="mbox"><div class="mb-t">Deep learning</div><div class="mb-d">Just give it the plain email text. It figures out by itself that "free" sitting next to "click" is a bad sign. <em>The machine decides what matters.</em></div></div>
+      <div class="mbox"><div class="mb-t">Gen AI</div><div class="mb-d">Just ask it: "Is this spam, and why?" It replies in normal English. It never even saw your spam data. <em>The machine writes the answer.</em></div></div>
+    </div>
+
+    <h3>The one big difference: sorting vs making</h3>
+    <p>Classical ML and most deep learning are <strong>sorters</strong>. They draw a line between groups. You give them something, they give back a label. Cat or dog. Fraud or clean. Spam or not.</p>
+    <p><strong>Makers</strong> learn what the data itself looks like. So you can ask them to make a new one. That is the whole difference.</p><p>Put it simply: a spam sorter can never write you an email. A maker can.</p>
+
+    <h4>Side by side</h4>
+    <table class="cmp">
+      <tr><th>Dimension</th><th>Classical ML</th><th>Deep Learning</th><th>Gen AI</th></tr>
+      <tr><td>Who picks what matters</td><td>You do, by hand</td><td>The machine does</td><td>The machine does</td></tr>
+      <tr><td>How much data</td><td>Thousands of rows</td><td>Millions of examples</td><td>Most of the internet</td></tr>
+      <tr><td>Machine to train it</td><td>Your laptop</td><td>A few GPUs</td><td>Thousands of GPUs</td></tr>
+      <tr><td>What comes out</td><td>A label or number</td><td>A label or number</td><td>Brand new content</td></tr>
+      <tr><td>Can you explain why</td><td class="yes">Mostly yes</td><td class="no">Hard</td><td class="no">Very hard</td></tr>
+      <tr><td>How many jobs</td><td>One model, one job</td><td>One model, one job</td><td>One model, many jobs</td></tr>
+      <tr><td>Common tools</td><td>scikit-learn, XGBoost</td><td>PyTorch, TensorFlow</td><td>transformers, LangChain</td></tr>
+      <tr><td>Cost per answer</td><td>Almost nothing</td><td>Low</td><td>Real money</td></tr>
+      <tr><td>Best for</td><td>Tables of numbers</td><td>Pictures and sound</td><td>Language and open questions</td></tr>
+    </table>
+
+    <div class="callout co-trap"><span class="co-tag">The trap everyone falls into</span>
+      <p>Gen AI did <strong>not</strong> kill classical ML. If your data is a table with 40 columns and you want to predict one thing, a simple old model beats an LLM. It is more accurate, cheaper and faster. Every time.</p>
+      <p>Most AI running inside banks today is still this old kind. Use Gen AI when the input is <strong>messy text or images</strong> and the question has <strong>no fixed answer list</strong>. Not before.</p>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">How to choose</span>
+      <p>A table, with one column you want to predict → <strong>classical ML</strong>.</p>
+      <p>Photos or sound, and you want one fixed answer → <strong>deep learning</strong>.</p>
+      <p>Text goes in, text comes out, and the answer could be anything → <strong>Gen AI</strong>.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">A bank has 5 years of loan data — 60 numeric columns, one default/no-default label. What should you build first?</div>
+      <button class="opt" onclick="qa(this,0)">Fine-tune Llama 3 on the CSV</button>
+      <button class="opt" onclick="qa(this,1)">Gradient boosting on the tabular data</button>
+      <button class="opt" onclick="qa(this,0)">A RAG pipeline over the loan documents</button>
+      <div class="explain"><strong>Gradient boosting.</strong> A neat table with a clear yes/no column is exactly what classical ML is for. It trains in minutes, costs almost nothing to run, and you can show the bank inspector why it said no.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(0)"><div class="pg-l">← Previous</div><div class="pg-t">Session overview</div></button>
+    <button class="rt" onclick="go(2)"><div class="pg-l">Next slide →</div><div class="pg-t">Classical ML, up close</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE · CLASSICAL ML ================= -->
+<section class="slide" data-title="Classical ML, up close">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">02</div>
+    <div>
+      <h2 class="stage-title">Classical Machine Learning</h2>
+      <p class="stage-kicker">You hand the computer a table of numbers and say "find the pattern". It has been quietly running banks, shops and hospitals for thirty years, and it still does.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The idea in one picture</h3>
+    <p>You have a spreadsheet. Some columns describe a thing. One column is the answer you want to predict. The model learns how the first columns lead to the last one.</p>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Table of data</div><span class="arrow">→</span>
+        <div class="node">You pick the<br>useful columns</div><span class="arrow">→</span>
+        <div class="node">Train the model</div><span class="arrow">→</span>
+        <div class="node am">Test it on<br>unseen rows</div><span class="arrow">→</span>
+        <div class="node em">Predict</div>
+      </div>
+      <div class="dg-cap">The same five steps, every single project</div>
+    </div>
+
+    <h3>Real examples you already know</h3>
+    <table class="cmp">
+      <tr><th>The job</th><th>What goes in</th><th>What comes out</th><th>Type</th></tr>
+      <tr><td>Spam filter</td><td>Number of links, "!" count, sender history</td><td>Spam or not spam</td><td>Sorting into 2 groups</td></tr>
+      <tr><td>Loan approval</td><td>Income, age, job years, past loans, credit score</td><td>Approve or reject, plus a risk score</td><td>Sorting into 2 groups</td></tr>
+      <tr><td>House price</td><td>Square feet, bedrooms, area, age of building</td><td>₹ 82,40,000</td><td>Predicting a number</td></tr>
+      <tr><td>Will the customer leave</td><td>Months with us, complaints, last recharge</td><td>Yes or no, plus a probability</td><td>Sorting into 2 groups</td></tr>
+      <tr><td>Credit card fraud</td><td>Amount, time, location, usual spending</td><td>Fraud or fine</td><td>Spotting the odd one out</td></tr>
+      <tr><td>Tomorrow's sales</td><td>Last 2 years of daily sales, festivals, weather</td><td>1,240 units</td><td>Predicting a number</td></tr>
+      <tr><td>Customer groups</td><td>Age, spend, visit frequency</td><td>4 natural groups of shoppers</td><td>Grouping with no answers given</td></tr>
+      <tr><td>Crop yield</td><td>Rainfall, soil test, fertiliser used</td><td>3.1 tonnes per hectare</td><td>Predicting a number</td></tr>
+    </table>
+
+    <h3>Two big families</h3>
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>Supervised</h5>
+        <div class="dsub">You show it the answers</div>
+        <ul>
+          <li>You have past data <em>with</em> the correct answer in it</li>
+          <li>10,000 old loans, and you know which ones went bad</li>
+          <li>The model learns from those answers</li>
+          <li>Two kinds: predict a <strong>number</strong>, or predict a <strong>group</strong></li>
+        </ul>
+      </div>
+      <div class="duo-col b">
+        <h5>Unsupervised</h5>
+        <div class="dsub">Nobody knows the answers</div>
+        <ul>
+          <li>You just have data, with no correct answer column</li>
+          <li>"Here are 50,000 customers, find natural groups"</li>
+          <li>The model finds structure by itself</li>
+          <li>Used for grouping and for spotting odd data</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>The models you will actually use</h3>
+    <table class="cmp">
+      <tr><th>Model</th><th>What it does, in one line</th><th>Use it when</th></tr>
+      <tr><td>Linear regression</td><td>Draws the best straight line through your points</td><td>Predicting a number, simple relationship</td></tr>
+      <tr><td>Logistic regression</td><td>Same idea, but squashed into a yes/no probability</td><td>Yes or no, and you must explain why</td></tr>
+      <tr><td>Decision tree</td><td>A flowchart of yes/no questions</td><td>You want to literally show someone the rules</td></tr>
+      <tr><td>Random forest</td><td>Hundreds of trees vote, majority wins</td><td>Solid all-rounder, hard to get wrong</td></tr>
+      <tr><td>XGBoost / LightGBM</td><td>Trees built one after another, each fixing the last one's mistakes</td><td class="yes">Tables of data. This usually wins</td></tr>
+      <tr><td>SVM</td><td>Draws the widest possible gap between two groups</td><td>Small, clean datasets</td></tr>
+      <tr><td>KNN</td><td>Look at the 5 most similar past cases and copy them</td><td>Simple, easy to explain to anyone</td></tr>
+      <tr><td>K-means</td><td>Splits data into K natural groups</td><td>Grouping customers, no answers available</td></tr>
+      <tr><td>PCA</td><td>Squeezes 100 columns into 5 without losing much</td><td>Too many columns to handle</td></tr>
+    </table>
+
+    <h3>Let us actually do the maths</h3>
+    <p>Take the simplest one: <strong>linear regression</strong>, predicting a house price.</p>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky" style="min-width:auto;font-family:'JetBrains Mono',monospace;font-size:15px">price = w₁ × size + w₂ × bedrooms + b</div>
+      </div>
+      <div class="dg-cap">That is the entire model. Three numbers to learn</div>
+    </div>
+
+    <ul>
+      <li><strong>w₁ and w₂</strong> are <em>weights</em>. How much each thing matters. If size matters a lot, w₁ is big.</li>
+      <li><strong>b</strong> is the <em>bias</em>. The starting price before anything else is counted.</li>
+      <li><strong>Training</strong> just means: find the values of w₁, w₂ and b that make the predictions closest to the real prices.</li>
+    </ul>
+
+    <p>How does it know if it is close? It measures the mistake:</p>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node ro" style="min-width:auto;font-family:'JetBrains Mono',monospace;font-size:15px">error = average of (real price − predicted price)²</div>
+      </div>
+      <div class="dg-cap">Square it so that being too high and being too low both count as bad</div>
+    </div>
+    <p>Then it nudges w₁, w₂ and b again and again, each time making that error a bit smaller. That nudging is called <strong>gradient descent</strong>. Picture rolling a ball downhill until it settles at the bottom. That is all it is.</p>
+
+    <h4>The same thing in code</h4>
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">python · from scratch, no library</span></div><pre><code><span class="cmt"># two houses: [size in 100 sqft, bedrooms] and the real price in lakhs</span>
+X = [[<span class="flg">12</span>, <span class="flg">2</span>], [<span class="flg">18</span>, <span class="flg">3</span>], [<span class="flg">25</span>, <span class="flg">4</span>], [<span class="flg">30</span>, <span class="flg">4</span>]]
+y = [<span class="flg">40</span>, <span class="flg">62</span>, <span class="flg">88</span>, <span class="flg">101</span>]
+
+w1, w2, b = <span class="flg">0.0</span>, <span class="flg">0.0</span>, <span class="flg">0.0</span>      <span class="cmt"># start knowing nothing</span>
+lr = <span class="flg">0.001</span>                       <span class="cmt"># how big each nudge is</span>
+
+<span class="kw">for</span> step <span class="kw">in</span> range(<span class="flg">10000</span>):
+    <span class="cmt"># 1. guess the price for every house</span>
+    preds = [w1*x[<span class="flg">0</span>] + w2*x[<span class="flg">1</span>] + b <span class="kw">for</span> x <span class="kw">in</span> X]
+
+    <span class="cmt"># 2. how wrong were we, for each house</span>
+    errs  = [p - t <span class="kw">for</span> p, t <span class="kw">in</span> zip(preds, y)]
+
+    <span class="cmt"># 3. nudge each number in the direction that reduces the error</span>
+    w1 -= lr * sum(e*x[<span class="flg">0</span>] <span class="kw">for</span> e, x <span class="kw">in</span> zip(errs, X)) / len(X)
+    w2 -= lr * sum(e*x[<span class="flg">1</span>] <span class="kw">for</span> e, x <span class="kw">in</span> zip(errs, X)) / len(X)
+    b  -= lr * sum(errs) / len(X)
+
+print(w1, w2, b)
+print(<span class="str">"a 22-hundred-sqft 3BHK →"</span>, w1*<span class="flg">22</span> + w2*<span class="flg">3</span> + b)</code></pre></div>
+
+    <div class="callout co-win"><span class="co-tag">The point of showing this</span>
+      <p>That is a real machine learning model, written in 12 lines, with no library at all. Guess, measure the mistake, nudge, repeat. <strong>Every model in this entire session works that way</strong> — including the one behind ChatGPT. Everything else is just more numbers and a cleverer shape.</p>
+    </div>
+
+    <h4>The same thing with scikit-learn — 4 lines</h4>
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">python · scikit-learn</span></div><pre><code><span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LinearRegression
+
+model = LinearRegression()
+model.fit(X, y)                      <span class="cmt"># the whole loop above, done for you</span>
+
+print(model.coef_, model.intercept_) <span class="cmt"># your w1, w2 and b</span>
+print(model.predict([[<span class="flg">22</span>, <span class="flg">3</span>]]))    <span class="cmt"># predict a new house</span></code></pre></div>
+
+    <h4>A full, real project — loan approval</h4>
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">python · the shape of every classical ML project</span></div><pre><code><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> classification_report
+
+<span class="cmt"># 1. load the table</span>
+df = pd.read_csv(<span class="str">"loans.csv"</span>)
+
+<span class="cmt"># 2. split into "the clues" and "the answer"</span>
+X = df[[<span class="str">"income"</span>, <span class="str">"age"</span>, <span class="str">"job_years"</span>, <span class="str">"credit_score"</span>, <span class="str">"past_defaults"</span>]]
+y = df[<span class="str">"approved"</span>]
+
+<span class="cmt"># 3. hide 20% of the rows so we can test honestly later</span>
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=<span class="flg">0.2</span>)
+
+<span class="cmt"># 4. train</span>
+model = RandomForestClassifier(n_estimators=<span class="flg">200</span>)
+model.fit(X_tr, y_tr)
+
+<span class="cmt"># 5. check it on rows it has never seen</span>
+print(classification_report(y_te, model.predict(X_te)))
+
+<span class="cmt"># 6. which clue mattered most? banks always ask this</span>
+<span class="kw">for</span> name, score <span class="kw">in</span> zip(X.columns, model.feature_importances_):
+    print(name, round(score, <span class="flg">3</span>))</code></pre></div>
+
+    <div class="callout co-trap"><span class="co-tag">The mistake everyone makes once</span>
+      <p>Never test your model on the same rows you trained it on. It will look brilliant and then fail completely in the real world. That is called <strong>overfitting</strong> — the model memorised the answers instead of learning the pattern, like a student who memorised last year's paper.</p>
+      <p>That is why line 3 above hides 20% of the data. Always.</p>
+    </div>
+
+    <h3>The tech stack</h3>
+    <table class="cmp">
+      <tr><th>Tool</th><th>What it is for</th></tr>
+      <tr><td>Python</td><td>The language everything is written in</td></tr>
+      <tr><td>pandas</td><td>Loading and cleaning tables. You will spend most of your time here</td></tr>
+      <tr><td>NumPy</td><td>Fast maths on lists of numbers. Sits under everything else</td></tr>
+      <tr><td class="yes">scikit-learn</td><td>The main one. Nearly every classical model, all with the same <code class="inl">.fit()</code> and <code class="inl">.predict()</code></td></tr>
+      <tr><td>XGBoost / LightGBM</td><td>The strongest models for tables. Separate libraries, worth learning</td></tr>
+      <tr><td>Matplotlib / Seaborn</td><td>Charts, so you can actually see your data</td></tr>
+      <tr><td>Jupyter Notebook</td><td>Where you write and run all of this, step by step</td></tr>
+      <tr><td>joblib</td><td>Saving your trained model to a file so you can use it later</td></tr>
+      <tr><td>MLflow</td><td>Keeping track of which experiment gave which score</td></tr>
+    </table>
+
+    <div class="callout co-note"><span class="co-tag">Why scikit-learn is so pleasant</span>
+      <p>Every single model has the same three commands: <code class="inl">.fit()</code> to train, <code class="inl">.predict()</code> to use, <code class="inl">.score()</code> to check. Swapping a decision tree for a random forest is a one-word change. Learn the pattern once and you can use fifty models.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">In <code class="inl">price = w₁ × size + w₂ × bedrooms + b</code>, what does training actually change?</div>
+      <button class="opt" onclick="qa(this,0)">The size and bedroom values</button>
+      <button class="opt" onclick="qa(this,1)">The numbers w₁, w₂ and b</button>
+      <button class="opt" onclick="qa(this,0)">The shape of the formula</button>
+      <div class="explain"><strong>w₁, w₂ and b.</strong> The data never changes, and the formula never changes. Training only hunts for the three numbers that make the predictions closest to reality. A 7 billion parameter model is exactly this, with 7 billion numbers instead of three.</div>
+    </div>
+
+  </div></div>
+  <div class="pager"><button onclick="go(1)"><div class="pg-l">← Previous</div><div class="pg-t">Classical ML vs DL vs Gen AI</div></button><button class="rt" onclick="go(3)"><div class="pg-l">Next slide →</div><div class="pg-t">Deep Learning, up close</div></button></div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE · DEEP LEARNING ================= -->
+<section class="slide" data-title="Deep Learning, up close">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">03</div>
+    <div>
+      <h2 class="stage-title">Deep Learning</h2>
+      <p class="stage-kicker">Stack simple maths in layers, feed it raw photos or raw text, and it works out for itself what to look at. Nobody tells it what a whisker is.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Why we needed it</h3>
+    <p>Classical ML needs you to hand it good columns. That works fine for a loan table. Now try it on a photo.</p>
+    <p>What column would you write for "is there a cat in this picture"? Number of whiskers? Ear angle? You cannot. Nobody can. A photo is a million tiny colour dots and the meaning is buried in how they sit together.</p>
+    <p><strong>So deep learning learns the columns itself.</strong> That is the entire reason it exists.</p>
+
+    <h3>One neuron — the whole building block</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky" style="min-width:auto;font-family:'JetBrains Mono',monospace;font-size:15px">output = activation( w₁x₁ + w₂x₂ + w₃x₃ + b )</div>
+      </div>
+      <div class="dg-cap">Look familiar? It is linear regression, with one extra bend at the end</div>
+    </div>
+    <p>Multiply each input by a weight, add them up, add a bias. So far, identical to the house price formula. Then one new thing: pass it through an <strong>activation</strong>, which is just a little bend.</p>
+    <p>That bend matters enormously. Without it, stacking a hundred layers of straight lines gives you... one straight line. The bend is what lets the network learn curves, corners and complicated shapes.</p>
+
+    <table class="cmp">
+      <tr><th>Activation</th><th>What it does</th><th>Used where</th></tr>
+      <tr><td>ReLU</td><td>Negative becomes 0, positive stays as it is. Absurdly simple, works brilliantly</td><td>Almost everywhere, hidden layers</td></tr>
+      <tr><td>Sigmoid</td><td>Squashes anything into 0 to 1</td><td>Final layer, yes/no answers</td></tr>
+      <tr><td>Softmax</td><td>Turns scores into percentages that add to 100</td><td>Final layer, picking one of many</td></tr>
+      <tr><td>Tanh</td><td>Squashes into −1 to 1</td><td>Older networks</td></tr>
+      <tr><td>GELU</td><td>A smoother ReLU</td><td>Inside transformers</td></tr>
+    </table>
+
+    <h3>Now stack them into layers</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Raw pixels<br>784 dots</div><span class="arrow">→</span>
+        <div class="node">Layer 1<br>128 neurons</div><span class="arrow">→</span>
+        <div class="node">Layer 2<br>64 neurons</div><span class="arrow">→</span>
+        <div class="node am">Layer 3<br>10 neurons</div><span class="arrow">→</span>
+        <div class="node em">"it's a 7"</div>
+      </div>
+      <div class="dg-cap">A real network that reads handwritten digits</div>
+    </div>
+    <p>Here is the beautiful part. Nobody programmed these layers, but if you look inside a trained image network you find:</p>
+    <ul>
+      <li><strong>Early layers</strong> found edges and simple colour patches</li>
+      <li><strong>Middle layers</strong> combined those into corners, circles, textures</li>
+      <li><strong>Later layers</strong> combined those into eyes, wheels, letters</li>
+      <li><strong>The last layer</strong> combined those into "cat", "car", "the number 7"</li>
+    </ul>
+    <p>It built its own ladder from dots to meaning. That is what "deep" means — many layers, each one seeing something slightly bigger than the last.</p>
+
+    <h3>How it learns: forward, then backward</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Show it a photo</div><span class="arrow">→</span>
+        <div class="node">It guesses "dog"</div><span class="arrow">→</span>
+        <div class="node ro">Wrong. It was a cat</div><span class="arrow">→</span>
+        <div class="node am">Work backwards:<br>whose fault was it?</div><span class="arrow">→</span>
+        <div class="node em">Nudge every weight<br>a tiny bit</div>
+      </div>
+      <div class="dg-cap">Repeat a few million times. That backward blame-sharing is called backpropagation</div>
+    </div>
+    <p>Same three steps as the house price model: guess, measure the mistake, nudge. The only new idea is that the mistake has to be shared backwards across every layer, so each of the millions of weights knows how much it was to blame.</p>
+
+    <h3>The main types, and where each is used</h3>
+    <table class="cmp">
+      <tr><th>Type</th><th>Built for</th><th>The clever idea</th><th>Famous models</th></tr>
+      <tr><td>CNN</td><td>Images and video</td><td>Slides a small window over the picture, so it spots a cat anywhere in the frame</td><td>ResNet, VGG, EfficientNet</td></tr>
+      <tr><td>Object detection</td><td>Finding things in a photo</td><td>Also draws the box and says where it is</td><td>YOLO, Faster R-CNN</td></tr>
+      <tr><td>RNN / LSTM</td><td>Sequences, older text models</td><td>Reads in order, carries a memory along</td><td>Mostly replaced now</td></tr>
+      <tr><td>Transformer</td><td>Text, and now everything</td><td>Every word sees every word at once</td><td>BERT, GPT, Llama</td></tr>
+      <tr><td>Autoencoder</td><td>Squeezing and cleaning data</td><td>Learns to compress then rebuild</td><td>Used inside image generators</td></tr>
+      <tr><td>GAN</td><td>Making fake images</td><td>Two networks fight: one fakes, one detects</td><td>StyleGAN</td></tr>
+      <tr><td>Diffusion</td><td>Making images today</td><td>Cleans up static into a picture</td><td>Stable Diffusion</td></tr>
+    </table>
+
+    <h4>What each one is doing, in one line</h4>
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">Images · CNN</div><div class="mb-d">Take a chest X-ray, output "normal" or "pneumonia". Take a factory photo, output "cracked part". Take a number plate, output the digits.</div></div>
+      <div class="mbox"><div class="mb-t">Text · Transformer</div><div class="mb-d">Take a customer review, output "angry". Take an English sentence, output Hindi. Take a contract, output the key dates.</div></div>
+      <div class="mbox"><div class="mb-t">Sound</div><div class="mb-d">Take a voice recording, output the words. Take a machine's hum, output "bearing about to fail".</div></div>
+    </div>
+
+    <h3>PyTorch — the tool you will actually learn</h3>
+    <p>PyTorch is the library almost all research and most industry uses now. It gives you three things: fast maths on a GPU, ready-made layers, and automatic mistake-sharing so you never do the backward maths by hand.</p>
+
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">python · a complete network in PyTorch</span></div><pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cmt"># 1. describe the shape: 784 pixels in, 10 answers out</span>
+model = nn.Sequential(
+    nn.Linear(<span class="flg">784</span>, <span class="flg">128</span>),   <span class="cmt"># the w·x + b part</span>
+    nn.ReLU(),              <span class="cmt"># the bend</span>
+    nn.Linear(<span class="flg">128</span>, <span class="flg">64</span>),
+    nn.ReLU(),
+    nn.Linear(<span class="flg">64</span>, <span class="flg">10</span>)      <span class="cmt"># 10 digits, 0 to 9</span>
+)
+
+<span class="cmt"># 2. how we measure being wrong, and how we nudge</span>
+loss_fn   = nn.CrossEntropyLoss()
+optimiser = torch.optim.Adam(model.parameters(), lr=<span class="flg">0.001</span>)
+
+<span class="cmt"># 3. the training loop — this is the whole of deep learning</span>
+<span class="kw">for</span> epoch <span class="kw">in</span> range(<span class="flg">5</span>):
+    <span class="kw">for</span> images, labels <span class="kw">in</span> train_loader:
+
+        guesses = model(images)              <span class="cmt"># forward: make a guess</span>
+        loss    = loss_fn(guesses, labels)   <span class="cmt"># how wrong were we</span>
+
+        optimiser.zero_grad()                <span class="cmt"># clear the old blame</span>
+        loss.backward()                      <span class="cmt"># backward: share the blame</span>
+        optimiser.step()                     <span class="cmt"># nudge every weight</span>
+
+    print(<span class="str">"epoch"</span>, epoch, <span class="str">"loss"</span>, loss.item())</code></pre></div>
+
+    <div class="callout co-win"><span class="co-tag">Read those three lines again</span>
+      <p><code class="inl">loss.backward()</code> then <code class="inl">optimiser.step()</code>. That is the same "measure the mistake, then nudge" from the house price example. Only now it nudges a million weights at once, and PyTorch works out all the calculus for you.</p>
+      <p>Every deep learning script you ever read has this loop in it. Find the loop and you understand the file.</p>
+    </div>
+
+    <h4>Use a model someone else already trained</h4>
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">python · transfer learning, the practical way</span></div><pre><code><span class="kw">from</span> torchvision <span class="kw">import</span> models
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="cmt"># ResNet already learned edges, shapes and textures from millions of photos</span>
+model = models.resnet18(weights=<span class="str">"IMAGENET1K_V1"</span>)
+
+<span class="cmt"># freeze everything it already knows</span>
+<span class="kw">for</span> p <span class="kw">in</span> model.parameters():
+    p.requires_grad = <span class="kw">False</span>
+
+<span class="cmt"># replace only the last layer with your own 3 categories</span>
+model.fc = nn.Linear(<span class="flg">512</span>, <span class="flg">3</span>)   <span class="cmt"># healthy / diseased / unclear</span>
+
+<span class="cmt"># now train on just 200 of your own photos. This actually works.</span></code></pre></div>
+    <div class="callout co-note"><span class="co-tag">This is how real projects get done</span>
+      <p>Almost nobody trains an image model from nothing. You take one that already learned to see, freeze it, and teach it your last step. You need a few hundred photos instead of a few million, and an afternoon instead of a month.</p>
+    </div>
+
+    <h3>The tech stack</h3>
+    <table class="cmp">
+      <tr><th>Tool</th><th>What it is for</th></tr>
+      <tr><td class="yes">PyTorch</td><td>The main one. Building, training and running networks</td></tr>
+      <tr><td>TensorFlow / Keras</td><td>Google's alternative. Keras is friendlier, still common in industry</td></tr>
+      <tr><td>torchvision</td><td>Ready-made image models and image loading tools</td></tr>
+      <tr><td>NumPy</td><td>Still here. PyTorch tensors are basically NumPy arrays that run on a GPU</td></tr>
+      <tr><td>CUDA</td><td>The layer that lets your code use an NVIDIA GPU</td></tr>
+      <tr><td>Google Colab</td><td>A free GPU in your browser. How most people start</td></tr>
+      <tr><td>Weights &amp; Biases</td><td>Watching your training curves live</td></tr>
+      <tr><td>ONNX</td><td>Exporting a trained model so it runs on a phone or a server</td></tr>
+      <tr><td>Hugging Face transformers</td><td>Thousands of pre-trained models, ready to load</td></tr>
+    </table>
+
+    <div class="callout co-cost"><span class="co-tag">Why a GPU</span>
+      <p>Training is millions of the same small multiplication. A normal processor has a few strong cores and does them mostly one after another. A GPU has thousands of weak cores and does them all together.</p>
+      <p>A job that takes 3 weeks on a laptop takes about 6 hours on a decent GPU. That is the whole reason NVIDIA is worth what it is worth.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Why do we need the activation function, the little bend?</div>
+      <button class="opt" onclick="qa(this,0)">To make training faster</button>
+      <button class="opt" onclick="qa(this,1)">Without it, stacking layers of straight lines still just gives one straight line</button>
+      <button class="opt" onclick="qa(this,0)">To stop the network overfitting</button>
+      <div class="explain"><strong>Straight lines stay straight.</strong> Adding straight lines together only ever gives you another straight line, so a hundred layers would be no better than one. The bend is what lets the network learn curves and complicated shapes. It is the single most important small detail in deep learning.</div>
+    </div>
+
+  </div></div>
+  <div class="pager"><button onclick="go(2)"><div class="pg-l">← Previous</div><div class="pg-t">Classical ML, up close</div></button><button class="rt" onclick="go(4)"><div class="pg-l">Next slide →</div><div class="pg-t">Gen AI, up close</div></button></div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE · GEN AI ================= -->
+<section class="slide" data-title="Gen AI, up close">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">04</div>
+    <div>
+      <h2 class="stage-title">Generative AI</h2>
+      <p class="stage-kicker">The job changed completely. You no longer collect data and train a model. Somebody else already trained it. Your job is now to aim it, feed it the right facts, and wire it into something useful.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What is actually different</h3>
+    <table class="cmp">
+      <tr><th></th><th>Classical ML &amp; deep learning</th><th>Gen AI</th></tr>
+      <tr><td>Where you start</td><td>Collect and label data</td><td>Pick a model that already exists</td></tr>
+      <tr><td>Main effort</td><td>Cleaning data, training, tuning</td><td>Writing prompts, feeding in the right facts, testing</td></tr>
+      <tr><td>Time to first result</td><td>Weeks</td><td>Ten minutes</td></tr>
+      <tr><td>Who trains it</td><td>You</td><td>A big lab, once, at huge cost</td></tr>
+      <tr><td>New task</td><td>New model, new training</td><td>New instructions. Same model</td></tr>
+      <tr><td>The hard part</td><td>Getting good accuracy</td><td>Stopping it confidently making things up</td></tr>
+    </table>
+
+    <div class="callout co-note"><span class="co-tag">Say this out loud once</span>
+      <p>In classical ML, <strong>the model is the product</strong> and you build it. In Gen AI, <strong>the model is a raw ingredient</strong> and you build the system around it. That is the whole shift, and it is why the job title changed.</p>
+    </div>
+
+    <h3>The five things people actually build</h3>
+    <table class="cmp">
+      <tr><th>Pattern</th><th>What it means</th><th>Real example</th></tr>
+      <tr><td>Prompting</td><td>Just ask, with clear instructions and examples</td><td>Turn 200 messy reviews into a summary and a mood score</td></tr>
+      <tr><td class="yes">RAG</td><td>Look up your own documents first, then answer using them</td><td>An HR bot that answers from your actual policy PDFs</td></tr>
+      <tr><td>Tools / function calling</td><td>The model is allowed to call your code</td><td>"What's my order status?" → it calls your database</td></tr>
+      <tr><td>Agents</td><td>It plans several steps and uses tools in a loop</td><td>Read the ticket, search the docs, draft a fix, open a pull request</td></tr>
+      <tr><td>Fine-tuning</td><td>Actually train it a bit more on your examples</td><td>Make it always reply in your company's exact tone and format</td></tr>
+    </table>
+    <p>Notice that only the last one involves training. In real projects, prompting and RAG cover the large majority of the work.</p>
+
+    <h3>RAG, because this is what you will build most</h3>
+    <p>The problem: the model knows the internet, but it does not know <em>your</em> leave policy, <em>your</em> product catalogue, <em>your</em> contracts. And if you just ask, it will happily invent an answer.</p>
+    <p>The fix: find the right paragraph from your own documents first, and paste it into the question.</p>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Your PDFs</div><span class="arrow">→</span>
+        <div class="node">Cut into<br>small chunks</div><span class="arrow">→</span>
+        <div class="node">Turn each chunk<br>into numbers</div><span class="arrow">→</span>
+        <div class="node em">Store in a<br>vector database</div>
+      </div>
+      <div class="dg-cap">Done once, when you set it up</div>
+    </div>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node am">User asks<br>a question</div><span class="arrow">→</span>
+        <div class="node">Turn the question<br>into numbers too</div><span class="arrow">→</span>
+        <div class="node">Find the 4 closest<br>chunks</div><span class="arrow">→</span>
+        <div class="node">Paste them into<br>the prompt</div><span class="arrow">→</span>
+        <div class="node em">Model answers<br>from those facts</div>
+      </div>
+      <div class="dg-cap">Done every time somebody asks something</div>
+    </div>
+
+    <p><strong>Why turn text into numbers?</strong> Because then "how many holidays do I get" and "what is the annual leave allowance" end up close together as numbers, even though they share almost no words. That list of numbers is called an <strong>embedding</strong>, and finding the closest ones is what a vector database does.</p>
+
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">python · a small but complete RAG</span></div><pre><code><span class="kw">from</span> langchain_community.document_loaders <span class="kw">import</span> PyPDFLoader
+<span class="kw">from</span> langchain.text_splitter <span class="kw">import</span> RecursiveCharacterTextSplitter
+<span class="kw">from</span> langchain_chroma <span class="kw">import</span> Chroma
+<span class="kw">from</span> langchain_ollama <span class="kw">import</span> OllamaEmbeddings, ChatOllama
+
+<span class="cmt"># 1. read the PDF and cut it into overlapping chunks</span>
+pages  = PyPDFLoader(<span class="str">"hr_policy.pdf"</span>).load()
+chunks = RecursiveCharacterTextSplitter(
+             chunk_size=<span class="flg">800</span>, chunk_overlap=<span class="flg">100</span>).split_documents(pages)
+
+<span class="cmt"># 2. turn every chunk into numbers and store them</span>
+db = Chroma.from_documents(chunks, OllamaEmbeddings(model=<span class="str">"nomic-embed-text"</span>))
+
+<span class="cmt"># 3. a question comes in — fetch the closest chunks</span>
+question = <span class="str">"How many casual leaves do I get in a year?"</span>
+found    = db.similarity_search(question, k=<span class="flg">4</span>)
+context  = <span class="str">"\n\n"</span>.join(d.page_content <span class="kw">for</span> d <span class="kw">in</span> found)
+
+<span class="cmt"># 4. give the model the facts, and tell it not to guess</span>
+prompt = f<span class="str">"""Answer using ONLY the policy text below.
+If the answer is not in it, say "not in the policy".
+
+POLICY:
+{context}
+
+QUESTION: {question}"""</span>
+
+print(ChatOllama(model=<span class="str">"mistral"</span>).invoke(prompt).content)</code></pre></div>
+
+    <div class="callout co-win"><span class="co-tag">That single instruction is the whole trick</span>
+      <p>"Answer using ONLY the text below. If it is not there, say so." Without that line the model fills gaps with confident nonsense. With it, you get an honest "not in the policy". This one sentence is the difference between a demo and something a company can actually use.</p>
+    </div>
+
+    <h3>The tech stack</h3>
+    <table class="cmp">
+      <tr><th>Layer</th><th>What it does</th><th>Common choices</th></tr>
+      <tr><td>The model</td><td>Does the actual thinking</td><td>GPT, Claude, Gemini · or Llama, Mistral run locally</td></tr>
+      <tr><td>Running it</td><td>How you reach the model</td><td>Their API · Ollama or vLLM if self-hosted · AWS Bedrock</td></tr>
+      <tr><td>Framework</td><td>Glues the steps together</td><td>LangChain, LlamaIndex, LangGraph for agents</td></tr>
+      <tr><td>Embeddings</td><td>Turns text into numbers</td><td>OpenAI embeddings, nomic-embed-text, BGE</td></tr>
+      <tr><td>Vector database</td><td>Stores those numbers and finds the closest</td><td>Chroma to learn · FAISS, Pinecone, OpenSearch for real</td></tr>
+      <tr><td>Reading documents</td><td>Getting text out of PDFs and Word files</td><td>PyPDF, Unstructured, LlamaParse</td></tr>
+      <tr><td>Prompt management</td><td>Keeping prompts tidy and versioned</td><td>Prompt templates, plain files in git</td></tr>
+      <tr><td>Watching it</td><td>Seeing what it actually did and what it cost</td><td>LangSmith, Langfuse</td></tr>
+      <tr><td>Testing</td><td>Checking answers are still good after a change</td><td>Ragas, DeepEval, your own test questions</td></tr>
+      <tr><td>Guardrails</td><td>Blocking bad input and bad output</td><td>Guardrails, NeMo, your own checks</td></tr>
+      <tr><td>The app</td><td>What the user sees</td><td>Streamlit or Gradio to demo · FastAPI + React for real</td></tr>
+      <tr><td>Fine-tuning</td><td>When prompting genuinely is not enough</td><td>LoRA, PEFT, Unsloth, Axolotl</td></tr>
+    </table>
+
+    <h4>A realistic project, end to end</h4>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Streamlit<br>screen</div><span class="arrow">→</span>
+        <div class="node">FastAPI</div><span class="arrow">→</span>
+        <div class="node">LangChain</div><span class="arrow">→</span>
+        <div class="node am">Chroma<br>find facts</div><span class="arrow">→</span>
+        <div class="node">Claude or<br>local Mistral</div><span class="arrow">→</span>
+        <div class="node em">Answer +<br>sources</div>
+      </div>
+      <div class="dg-cap">Nothing here was trained by you. It is all wiring, and that is the job now</div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">Where Gen AI projects actually fail</span>
+      <p><strong>It makes things up.</strong> Ground it in real documents and tell it to refuse when unsure.</p>
+      <p><strong>Nobody measured anything.</strong> "It looked good in the demo" is not testing. Write 30 real questions with known answers and check them after every change.</p>
+      <p><strong>The bill.</strong> A long prompt sent a million times a day costs real money. Watch the token counts from day one.</p>
+      <p><strong>Slow.</strong> Five model calls chained together means five waits. Users leave.</p>
+      <p><strong>The wrong tool entirely.</strong> If the answer lives in a database, write a SQL query. Not every problem needs an LLM.</p>
+    </div>
+
+    <h3>Where the three fit together</h3>
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">Classical ML</div><div class="mb-d">Tables of numbers. Predict a number or a group. Cheap, fast, explainable. Still runs most of the industry.</div></div>
+      <div class="mbox"><div class="mb-t">Deep learning</div><div class="mb-d">Pictures, sound, signals. Learns what to look at by itself. Needs lots of data and a GPU.</div></div>
+      <div class="mbox"><div class="mb-t">Gen AI</div><div class="mb-d">Language and open questions. Somebody else trained it. You aim it, feed it facts, and wire it up.</div></div>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your company wants a bot that answers staff questions from 400 internal PDFs. What do you build?</div>
+      <button class="opt" onclick="qa(this,0)">Fine-tune a model on all 400 PDFs</button>
+      <button class="opt" onclick="qa(this,1)">A RAG system — search the PDFs, then answer from what you found</button>
+      <button class="opt" onclick="qa(this,0)">Train a classifier on the PDFs</button>
+      <div class="explain"><strong>RAG.</strong> Fine-tuning teaches a model a <em>style</em>, not facts, and every time a policy changes you would have to train again. RAG looks up the current document at the moment of the question, so updating a PDF updates the answer instantly. It also lets you show the user exactly which page the answer came from, which is usually what the business really wants.</div>
+    </div>
+
+  </div></div>
+  <div class="pager"><button onclick="go(3)"><div class="pg-l">← Previous</div><div class="pg-t">Deep Learning, up close</div></button><button class="rt" onclick="go(5)"><div class="pg-l">Next slide →</div><div class="pg-t">The Timeline: 1936 to Now</div></button></div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 2 ================= -->
+<section class="slide" data-title="The Timeline: 1936 to Now">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">05</div>
+    <div>
+      <h2 class="stage-title">The Timeline</h2>
+      <p class="stage-kicker">From Turing in 1936 to AI agents today. Ninety years, and only about a dozen moments that really mattered.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The whole story, in order</h3>
+    <p>This did not start in 2017. It started with one man asking whether a machine could think at all, nearly ninety years ago.</p>
+
+    <h4>Part 1 · The foundations</h4>
+    <div class="tl">
+      <div class="tl-item"><div class="tl-yr">1936</div><div><div class="tl-t">Turing invents the idea of a computer</div><div class="tl-d">Alan Turing describes an imaginary machine that reads instructions off a tape and follows them. No such machine existed yet. He was writing down, on paper, what a computer <em>is</em>. Everything we build today sits on this one idea.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">1943</div><div><div class="tl-t">The first artificial neuron, on paper</div><div class="tl-d">McCulloch and Pitts write down a simple maths version of a brain cell: take some inputs, add them up, fire if the total is big enough. Still exactly what a neuron in PyTorch does today.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">1945</div><div><div class="tl-t">Real computers get built</div><div class="tl-d">ENIAC, a room-sized machine of 18,000 valves. It took days to rewire it for a new job. But now the idea from 1936 actually existed in metal.</div></div></div>
+      <div class="tl-item big"><div class="tl-yr">1950</div><div><div class="tl-t">Turing asks: can a machine learn?</div><div class="tl-d">In one famous paper Turing suggests something radical. Do not try to program an adult mind. <strong>Build something like a child's mind and teach it.</strong> That single sentence is the beginning of machine learning.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">1956</div><div><div class="tl-t">The field gets its name</div><div class="tl-d">A summer meeting at Dartmouth College. A handful of researchers coin the phrase <strong>"artificial intelligence"</strong> and predict they will crack it in a few years. They were off by about seventy.</div></div></div>
+      <div class="tl-item big"><div class="tl-yr">1957</div><div><div class="tl-t">The Perceptron — the first machine that learned</div><div class="tl-d">Frank Rosenblatt builds a real machine that adjusts its own weights from examples. Show it shapes, it gets better. Guess, measure the mistake, nudge. <strong>The same loop you saw in the house price example.</strong></div></div></div>
+      <div class="tl-item"><div class="tl-yr">1969</div><div><div class="tl-t">The first AI winter</div><div class="tl-d">Minsky and Papert prove a single perceptron cannot even learn a basic either-or rule. Funding collapses. AI research goes quiet for years. The fix was already known — stack more layers — but nobody could train them yet.</div></div></div>
+    </div>
+
+    <h4>Part 2 · Learning gets deep</h4>
+    <div class="tl">
+      <div class="tl-item big"><div class="tl-yr">1986</div><div><div class="tl-t">Backpropagation — the missing piece</div><div class="tl-d">Rumelhart, Hinton and Williams show how to share the blame backwards through many layers, so every weight learns from its own mistake. <strong>Now you can finally train a deep network.</strong> This is the <code class="inl">loss.backward()</code> line from the PyTorch slide.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">1989</div><div><div class="tl-t">CNNs read handwriting</div><div class="tl-d">Yann LeCun builds a network that reads the digits on bank cheques, and it goes into real use. First proof that a neural network can do a real job at scale.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">1997</div><div><div class="tl-t">LSTM, and Deep Blue beats Kasparov</div><div class="tl-d">LSTM gives networks a proper memory for sequences, and runs language tasks for the next twenty years. The same year, a chess computer beats the world champion — though by brute force, not by learning.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">2006</div><div><div class="tl-t">"Deep learning" is reborn</div><div class="tl-d">Hinton shows a practical way to train networks with many layers, and gives the field a new name to shake off the old bad reputation. Quiet at the time. Enormous in hindsight.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">2009</div><div><div class="tl-t">ImageNet — someone finally builds the data</div><div class="tl-d">Fei-Fei Li's team labels 14 million photos. The theory had been ready for twenty years. What was missing was enough examples to learn from.</div></div></div>
+    </div>
+
+    <h4>Part 3 · The big bang</h4>
+    <div class="tl">
+      <div class="tl-item big"><div class="tl-yr">2012</div><div><div class="tl-t">AlexNet — the moment everything took off</div><div class="tl-d">A deep network wins the ImageNet contest by a huge margin, crushing every hand-built method. The trick was running it on <strong>gaming graphics cards</strong>. Old idea plus big data plus GPUs. Within two years, everyone had switched. This is the true start of the modern AI era.</div></div></div>
+      <div class="tl-item big"><div class="tl-yr">2017</div><div><div class="tl-t">Attention Is All You Need — the transformer</div><div class="tl-d">Google throws away one-word-at-a-time reading. Now every word looks at every other word at the same time, so a whole sentence trains together instead of in a queue. Faster, better memory, and it scales. <strong>Every model in the rest of this session is a version of this paper.</strong></div></div></div>
+    </div>
+
+    <h4>Part 4 · The AI everyone now uses</h4>
+    <div class="tl">
+      <div class="tl-item"><div class="tl-yr">2018</div><div><div class="tl-t">The design splits in two: BERT and GPT</div><div class="tl-d">Google takes one half (BERT) — reads both ways, great at understanding, ran Google Search for years. OpenAI takes the other half (GPT) — reads left to right and plays one simple game: <strong>guess the next word</strong>. The second one turned out to be the important one.</div></div></div>
+      <div class="tl-item big"><div class="tl-yr">2020</div><div><div class="tl-t">GPT-3 — size turns into a surprise</div><div class="tl-d">175 billion numbers inside it. The shock was not that it wrote well. It was that you could <strong>show it three examples inside your message</strong> and it would copy the pattern, with no retraining at all. Prompt writing was born here.</div></div></div>
+      <div class="tl-item big"><div class="tl-yr">2022</div><div><div class="tl-t">ChatGPT — manners, not a new design</div><div class="tl-d">No new architecture. They showed it good answers, let humans rank which reply was better, and trained it to give the better one. Suddenly it <em>follows instructions</em> instead of just continuing your sentence. In November it reaches the public, and the world notices.</div></div></div>
+      <div class="tl-item"><div class="tl-yr">2023</div><div><div class="tl-t">Open weights arrive</div><div class="tl-d">Meta gives Llama 2 away as a download, and Mistral 7B lands with a fully free licence, small enough for a laptop. Until now you could only rent AI. <strong>Now you can own a copy.</strong> The last slide of this session exists because of this year.</div></div></div>
+      <div class="tl-item big"><div class="tl-yr">2025 →</div><div><div class="tl-t">Agents — the biggest shift since ChatGPT</div><div class="tl-d">Until now the model answered and stopped. Now it <strong>plans, uses tools, and works in a loop</strong> — read the ticket, search the docs, run the code, check the result, try again. Two things made it work: models that think for longer before answering, and giving them real tools to call.</div><div class="tl-d" style="margin-top:8px">The change in your job: you stop writing one clever prompt, and start designing what the model is allowed to <em>do</em>.</div></div></div>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">The pattern across ninety years</span>
+      <p>Look at what actually caused each jump. Almost never a brand new idea.</p>
+      <p><strong>1957:</strong> the learning loop. <strong>1986:</strong> a way to train many layers. <strong>2012:</strong> enough data and fast enough chips. <strong>2017:</strong> a shape that scales. <strong>2022:</strong> manners. <strong>2025:</strong> tools and time to think.</p>
+      <p>The neuron from 1943 and the learning loop from 1957 are still sitting inside everything. We mostly got better at feeding them.</p>
+    </div>
+
+    <h3>Why the old way got stuck</h3>
+    <p>Worth understanding what 2017 actually fixed. Before it, models read a sentence one word at a time, like reading with your finger, carrying a little memory along. Three problems:</p>
+    <ul>
+      <li><strong>Too slow.</strong> Word 50 had to wait for word 49. The computer just sat there waiting.</li>
+      <li><strong>Bad memory.</strong> By word 200 it had almost forgotten word 1.</li>
+      <li><strong>Squeezed too tight.</strong> The whole sentence got crushed into one small summary before the answer even began.</li>
+    </ul>
+    <p>Attention fixed all three at once. That is why one paper mattered so much.</p>
+
+    <h3>Encoder, decoder, or both</h3>
+    <p>The 2017 design had two halves. Different models kept different halves. This is the most useful thing to remember.</p>
+    <table class="cmp">
+      <tr><th>Type</th><th>Sees</th><th>Trained by</th><th>Good at</th><th>Examples</th></tr>
+      <tr><td>Encoder only</td><td>The whole sentence, both ways</td><td>Hide a word, guess it</td><td>Understanding and sorting</td><td>BERT</td></tr>
+      <tr><td>Decoder only</td><td>Only what came before</td><td>Guess the next word</td><td>Writing anything</td><td>GPT, Llama, Mistral, Claude</td></tr>
+      <tr><td>Both halves</td><td>Full input, then writes output</td><td>Text in, text out</td><td>Translating, summarising</td><td>T5, the original 2017 model</td></tr>
+    </table>
+
+    <div class="callout co-win"><span class="co-tag">Why decoder-only won</span>
+      <p>"Guess the next word" needs <strong>nobody to label anything</strong>. Every sentence ever written on the internet is already a free practice question. And once a model is really good at it, almost any job can be written as text: translate this, summarise this, answer this, code this.</p>
+      <p>One simple game. Endless free practice. Every job. That is why almost everyone picked this half.</p>
+    </div>
+
+    <h3>What "attention" actually means</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Tokens in</div><span class="arrow">→</span>
+        <div class="node">Embeddings<br>+ position</div><span class="arrow">→</span>
+        <div class="node">Attention<br>every word sees every word</div><span class="arrow">→</span>
+        <div class="node">Feed-forward</div><span class="arrow">→</span>
+        <div class="node em">repeat 32 times</div><span class="arrow">→</span>
+        <div class="node am">Next token</div>
+      </div>
+      <div class="dg-cap">One block. A 7B model stacks about 32 of these</div>
+    </div>
+    <p>Take the sentence: "the trophy did not fit in the suitcase because <strong>it</strong> was too big." You instantly know "it" means the trophy. Attention is how the model knows that too. Every word quietly scores how much it should care about every other word, then mixes in their meaning.</p>
+
+    <div class="callout co-note"><span class="co-tag">Four words to remember it by</span>
+      <p>2017 gave the <strong>design</strong>. 2020 gave the <strong>size</strong>. 2022 gave the <strong>manners</strong>. 2025 gave the <strong>tools</strong>. That is the modern era in four words.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Why is a transformer so much faster to train than the old word-by-word models?</div>
+      <button class="opt" onclick="qa(this,0)">Transformers have more parameters</button>
+      <button class="opt" onclick="qa(this,1)">It looks at every word at the same time, so nothing waits its turn</button>
+      <button class="opt" onclick="qa(this,0)">Transformers use bigger GPUs</button>
+      <div class="explain"><strong>Everything at once.</strong> The old model had to finish word 49 before starting word 50. Attention handles all the words together in one go, so the whole sentence goes through the machine at the same time.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(4)"><div class="pg-l">← Previous</div><div class="pg-t">Gen AI, up close</div></button>
+    <button class="rt" onclick="go(6)"><div class="pg-l">Next slide →</div><div class="pg-t">Diffusion vs Autoregressive</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 3 ================= -->
+<section class="slide" data-title="Diffusion vs Autoregressive">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">06</div>
+    <div>
+      <h2 class="stage-title">Diffusion vs Autoregressive</h2>
+      <p class="stage-kicker">Two very different ways to make something new. One is like writing a sentence, left to right. The other is like carving a statue out of a rough block of stone.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>Autoregressive</h5>
+        <div class="dsub">One piece at a time, in order</div>
+        <ul>
+          <li>Guesses the <strong>next word</strong>, using everything written so far</li>
+          <li>Adds that word, then guesses again</li>
+          <li>The answer appears left to right, word by word</li>
+          <li>Cannot go back and fix word 3 after writing word 40</li>
+          <li>Takes one step for every single word</li>
+        </ul>
+        <p style="font-size:14px;margin:8px 0 0"><strong>Used by:</strong> GPT, Claude, Llama, Mistral, Gemini — all text models.</p>
+      </div>
+      <div class="duo-col b">
+        <h5>Diffusion</h5>
+        <div class="dsub">Start with noise, clean it up</div>
+        <ul>
+          <li>Starts with a screen of <strong>pure static</strong>, like an old TV</li>
+          <li>Works out which bits are junk and rubs a little away</li>
+          <li>Does that 20 to 50 times. The picture gets clearer each round</li>
+          <li>The <em>whole</em> picture improves every round</li>
+          <li>Later rounds can fix mistakes from earlier rounds</li>
+        </ul>
+        <p style="font-size:14px;margin:8px 0 0"><strong>Used by:</strong> Stable Diffusion, Midjourney, DALL·E, video models.</p>
+      </div>
+    </div>
+
+    <h3>Writing a sentence, step by step</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">"The cat"</div><span class="arrow">→</span>
+        <div class="node">Model</div><span class="arrow">→</span>
+        <div class="node am">scores every<br>possible word</div><span class="arrow">→</span>
+        <div class="node em">pick "sat"</div><span class="arrow">→</span>
+        <div class="node ro">feed back in</div>
+      </div>
+      <div class="dg-cap">Repeat for every word. A 500-word answer means about 650 loops</div>
+    </div>
+    <p>At every step the model gives a score to <strong>every word it knows</strong> — often more than 30,000 words. Then it picks one.</p><p>There is a dial called <strong>temperature</strong> for that pick. Turn it low and it always plays safe and boring. Turn it high and it takes risks and gets creative, sometimes silly.</p>
+
+    <h3>Carving a picture out of static, step by step</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node ro">pure static</div><span class="arrow">→</span>
+        <div class="node am">round 10<br>blurry shapes</div><span class="arrow">→</span>
+        <div class="node">round 25<br>you can tell what it is</div><span class="arrow">→</span>
+        <div class="node sky">round 40<br>sharp details</div><span class="arrow">→</span>
+        <div class="node em">finished picture</div>
+      </div>
+      <div class="dg-cap">This is training run backwards. In training, clean photos were slowly turned into static</div>
+    </div>
+    <p><strong>How it learns:</strong> take a real photo, mess it up with a known amount of static, and ask the model to spot exactly what junk was added. Do that a billion times and it gets very good at removing junk.</p><p><strong>How it draws:</strong> start with nothing but junk, and remove it over and over. A picture is left behind.</p>
+    <p>Your words steer it. The prompt is fed in at every round, so "a red car" quietly pushes every single round a bit more towards a red car.</p>
+
+    <h3>Why the split happened</h3>
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">Text is discrete</div><div class="mb-d">A word is either "cat" or "dog". There is nothing in between. You cannot half-blur a word and still have a word. So you must pick one, then the next.</div></div>
+      <div class="mbox"><div class="mb-t">Images are continuous</div><div class="mb-d">A dot on screen can slide smoothly from grey to slightly lighter grey. Blurring and un-blurring makes perfect sense here.</div></div>
+    </div>
+
+    <h4>Differences you will actually notice</h4>
+    <table class="cmp">
+      <tr><th>Property</th><th>Autoregressive</th><th>Diffusion</th></tr>
+      <tr><td>Do you see it appear live</td><td class="yes">Yes, word by word</td><td class="no">No, you wait, then it pops up</td></tr>
+      <tr><td>Can it fix its own mistakes</td><td class="no">No, a bad start ruins the rest</td><td class="yes">Yes, later rounds clean up</td></tr>
+      <tr><td>How many steps</td><td>One per word, so hundreds</td><td>20 to 50, always</td></tr>
+      <tr><td>Size of the result</td><td>It decides when to stop</td><td>You set the picture size first</td></tr>
+      <tr><td>Main dials you turn</td><td>Temperature</td><td>Number of rounds, how hard it follows your words</td></tr>
+      <tr><td>Same answer twice</td><td>Only with temperature at 0</td><td>Yes, if you reuse the same starting static</td></tr>
+      
+      <tr><td>Where it is used</td><td>Text and code</td><td>Pictures, sound, video</td></tr>
+    </table>
+
+    <div class="callout co-note"><span class="co-tag">The trick that made it fit on a laptop</span>
+      <p>Cleaning up a full-size picture dot by dot is far too slow. So the model does all the work on a <strong>shrunk-down version</strong>, about 8 times smaller on each side, and only blows it up to a real picture at the very last step.</p><p>That one shortcut is why you can make images on a normal computer instead of a data centre.</p>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">One honest note</span>
+      <p>The neat split is starting to blur. There are now text models that work the "clean up static" way, and picture models that work the "one bit at a time" way.</p><p>Learn the clean split first. It explains the last ten years. Just know the line is moving.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Why do you see ChatGPT type out its answer, but an AI image just appears all at once?</div>
+      <button class="opt" onclick="qa(this,1)">Each word is finished the moment it is made. The picture is unfinished everywhere until the very last round</button>
+      <button class="opt" onclick="qa(this,0)">Pictures are bigger files</button>
+      <button class="opt" onclick="qa(this,0)">Midjourney's servers are slower</button>
+      <div class="explain"><strong>It is the order things get made.</strong> Every word the text model produces is done and can be shown straight away. The picture model keeps improving the whole canvas every round, so until the last round there is no finished piece to show you.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(5)"><div class="pg-l">← Previous</div><div class="pg-t">The Timeline: 1936 to Now</div></button>
+    <button class="rt" onclick="go(7)"><div class="pg-l">Next slide →</div><div class="pg-t">Open vs Closed Licences</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 4 ================= -->
+<section class="slide" data-title="Open vs Closed Licences">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">07</div>
+    <div>
+      <h2 class="stage-title">Open vs Closed Licences</h2>
+      <p class="stage-kicker">The real question is not "is it free". It is: can you download it, change it, and sell something built with it?</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>It is three buckets, not two</h3>
+    <p>Everyone says "open or closed". But there is a big middle group, and that is where most popular models actually sit.</p>
+
+    <div class="box-row">
+      <div class="mbox" style="border-color:rgba(16,185,129,.3)"><div class="mb-t" style="color:var(--emerald)">Truly permissive</div><div class="mb-d">Download it, change it, sell it, share it. No limits, no conditions. Licence names: Apache 2.0 or MIT.<br><br><strong>Mistral 7B, Qwen</strong></div></div>
+      <div class="mbox" style="border-color:rgba(245,158,11,.3)"><div class="mb-t" style="color:var(--amber)">Open weights, with strings</div><div class="mb-d">You get the model file, but with rules attached. Things like a limit on how many users you can have, and a list of things you must not build.<br><br><strong>Llama, Gemma</strong></div></div>
+      <div class="mbox" style="border-color:rgba(244,63,94,.3)"><div class="mb-t" style="color:var(--rose)">Closed / API only</div><div class="mb-d">You never get the file. You rent it over the internet and agree to their rules.<br><br><strong>GPT, Claude, Gemini</strong></div></div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">The thing almost everyone gets wrong</span>
+      <p><strong>"You can download it" is not the same as "open source".</strong> Proper open source means you get everything you need to build the thing again yourself.</p>
+      <p>With almost every "open" AI model you only get the <em>finished file</em>. You do not get the data it learned from, or the code that trained it.</p><p>Think of a cake. They gave you the cake. Not the recipe, not the ingredients. You can eat it. You cannot bake another one.</p>
+    </div>
+
+    <h3>What you actually receive</h3>
+    <table class="cmp">
+      <tr><th>You get</th><th>Apache 2.0</th><th>Llama-style</th><th>Closed API</th></tr>
+      <tr><td>The model file itself</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="no">No</td></tr>
+      <tr><td>Run it on your own computer</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="no">No</td></tr>
+      <tr><td>Train it further yourself</td><td class="yes">Yes</td><td class="yes">Yes</td><td>Sometimes, on their servers</td></tr>
+      <tr><td>Use it to make money</td><td class="yes">Yes</td><td>Yes, with rules</td><td>Yes, if you pay</td></tr>
+      <tr><td>Share the file with others</td><td class="yes">Yes</td><td>Yes, but you must credit them</td><td class="no">No</td></tr>
+      <tr><td>The data it learned from</td><td class="no">Almost never</td><td class="no">No</td><td class="no">No</td></tr>
+      <tr><td>The code that trained it</td><td class="no">Almost never</td><td class="no">No</td><td class="no">No</td></tr>
+      <tr><td>Must you keep their name on it</td><td>No</td><td>Often yes</td><td>Follow their brand rules</td></tr>
+      <tr><td>A list of banned uses</td><td>None</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+    </table>
+
+    <h3>The rules that catch people out</h3>
+    <ul>
+      <li><strong>User limits.</strong> Some licences say: once your app has a huge number of users, come back and sign a separate deal. No problem for a small startup. A very big deal for a large company.</li>
+      <li><strong>Keeping their name.</strong> Some say if you train on top of their model, your model must keep their name in it, and you must show a "built with" credit.</li>
+      <li><strong>Banned uses.</strong> A list of things you promise not to build — spying, weapons, illegal content. This still applies even when the file sits on your own machine.</li>
+      <li><strong>Who owns the output.</strong> Check who owns what the model writes for you. Usually you, but always check.</li>
+      <li><strong>"Non-commercial" tags.</strong> Many models say research only. Fine for a class demo. Not allowed in anything you sell.</li>
+      <li><strong>Rules travel.</strong> If someone trains on top of Llama, the Llama rules still apply to their version too, whatever they wrote on the page.</li>
+    </ul>
+
+    <div class="callout co-cost"><span class="co-tag">The one habit to build</span>
+      <p>Check the licence <strong>before</strong> you start building, not after.</p><p>It happens all the time: a team works for three months, then someone finally reads the tag a week before launch and the whole project has to be thrown away. The tag is right there on the page. It takes ten seconds.</p>
+    </div>
+
+    <h3>How to choose for a real project</h3>
+    <table class="cmp">
+      <tr><th>What you care about most</th><th>Pick</th><th>Why</th></tr>
+      <tr><td>Data must stay in-house</td><td>Downloadable model, run it yourself</td><td>Nothing ever leaves your building</td></tr>
+      <tr><td>Best possible quality</td><td>Paid API</td><td>The very best models are still rental only</td></tr>
+      <tr><td>Huge steady usage</td><td>Downloadable model</td><td>One fixed machine cost beats paying per word</td></tr>
+      <tr><td>Small or on-and-off usage</td><td>Paid API</td><td>No machine sitting idle burning money all night</td></tr>
+      <tr><td>Small team, nobody to run servers</td><td>Paid API</td><td>Running it yourself is a real full-time job</td></tr>
+      <tr><td>It must never change on you</td><td>Downloadable model</td><td>Your copy stays the same forever. Rented ones get retired</td></tr>
+      <tr><td>Heavy custom training</td><td>Downloadable model</td><td>Full control</td></tr>
+      <tr><td>No internet where it runs</td><td>Downloadable model</td><td>Rented models always need internet</td></tr>
+    </table>
+
+    <div class="callout co-note"><span class="co-tag">The honest middle path</span>
+      <p>Most real teams use <strong>both</strong>. A small free model does the easy, high-volume jobs — sorting, tagging, pulling out details, first drafts. The expensive paid model handles the genuinely hard thinking. Cheap where you can, strong where you must.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You train on top of a free downloadable model and put it inside an app you sell. Whose rules apply?</div>
+      <button class="opt" onclick="qa(this,0)">Yours, because you trained it, so it is a new model</button>
+      <button class="opt" onclick="qa(this,1)">The original model's rules still apply to your version</button>
+      <button class="opt" onclick="qa(this,0)">None, rules only cover the first download</button>
+      <div class="explain"><strong>The original rules follow you.</strong> Anything you build on top carries the same terms — user limits, naming rules, banned uses. This is exactly why you read the licence before you start, not after.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(6)"><div class="pg-l">← Previous</div><div class="pg-t">Diffusion vs Autoregressive</div></button>
+    <button class="rt" onclick="go(8)"><div class="pg-l">Next slide →</div><div class="pg-t">HuggingFace Model Hub</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 5 ================= -->
+<section class="slide" data-title="HuggingFace Model Hub">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">08</div>
+    <div>
+      <h2 class="stage-title">The HuggingFace Model Hub</h2>
+      <p class="stage-kicker">One giant website where the whole world uploads AI models. Think YouTube, but for models instead of videos.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What is on it</h3>
+    <ul>
+      <li><strong>Models</strong> — millions of them. Some are 50 MB. Some are 400 GB.</li>
+      <li><strong>Datasets</strong> — piles of data people have shared for training and testing.</li>
+      <li><strong>Spaces</strong> — little live demos you can click and try in your browser. Nothing to install.</li>
+      <li><strong>Code tools</strong> — free Python libraries that download and run all of the above.</li>
+    </ul>
+
+    <div class="callout co-note"><span class="co-tag">Why this slide matters</span>
+      <p>When you type <code class="inl">ollama pull mistral</code> later in this session, the file comes from here. Same for every other local AI tool. Ollama is just a friendly front door. <strong>HuggingFace is the actual warehouse.</strong></p>
+    </div>
+
+    <h3>What is on a model page</h3>
+    <table class="cmp">
+      <tr><th>Part</th><th>What it tells you</th><th>What to check</th></tr>
+      <tr><td>Model card</td><td>The description page. What it does, what it learned from, what it is bad at</td><td>Is it actually written, or blank?</td></tr>
+      <tr><td>Licence tag</td><td>What you are allowed to do with it</td><td>Check this <em>first</em>, every time</td></tr>
+      <tr><td>Files tab</td><td>The actual files you download</td><td>How big is it, and is it the safe file type</td></tr>
+      <tr><td>Download count</td><td>How popular it is</td><td>Millions means lots of people trust it</td></tr>
+      <tr><td>Likes</td><td>What people think of it</td><td>Helpful when downloads are low</td></tr>
+      <tr><td>Model tree</td><td>Which model it was built on top of</td><td>Tells you whose rules you inherit</td></tr>
+      <tr><td>Config file</td><td>The technical settings</td><td>The real numbers live here, not in the marketing text</td></tr>
+      <tr><td>Community tab</td><td>People asking questions and reporting problems</td><td>Where you find "it does not work on a Mac"</td></tr>
+    </table>
+
+    <h4>The files you will see</h4>
+    <table class="cmp">
+      <tr><th>File</th><th>What it is</th></tr>
+      <tr><td>model.safetensors</td><td>The model, in the safe modern format. It holds numbers only, so it cannot run anything on your computer. <span class="yes">Always prefer this one.</span></td></tr>
+      <tr><td>pytorch_model.bin</td><td>The old format. It can hide code that runs the moment you open it. <span class="no">Be careful.</span></td></tr>
+      <tr><td>something.gguf</td><td>A shrunk-down, single-file version. This is the one that runs on a laptop.</td></tr>
+      <tr><td>config.json</td><td>The settings sheet. How big the model is, how much text it can hold.</td></tr>
+      <tr><td>tokenizer.json</td><td>The rules for chopping your text into pieces the model understands.</td></tr>
+      <tr><td>index.json</td><td>A map, for big models that are split across many files.</td></tr>
+      <tr><td>README.md</td><td>The description page itself.</td></tr>
+    </table>
+
+    <h3>Those confusing file names, explained</h3>
+    <p>You will see a long list of files with names like <code class="inl">mistral-7b-instruct.Q4_K_M.gguf</code>. The <strong>Q number</strong> is how much the model has been squashed down to save space. Lower number, smaller file, slightly worse answers.</p>
+    <ul>
+      <li><strong>Q8</strong> — barely squashed. Almost as good as the original. Biggest file.</li>
+      <li><strong>Q5_K_M</strong> — squashed a bit more. Still very good.</li>
+      <li><strong>Q4_K_M</strong> — <strong>the one almost everyone picks.</strong> Half the memory, only a small quality drop.</li>
+      <li><strong>Q3 or Q2</strong> — squashed hard. You can tell the answers got worse. Only if you are really short on space.</li>
+    </ul>
+    <div class="callout co-win"><span class="co-tag">Rule of thumb</span>
+      <p>Not sure? Take <strong>Q4_K_M</strong>. It is what nearly everyone ends up using, and it is what Ollama picks for you by default.</p>
+    </div>
+
+    <h3>Loading a model in three lines of code</h3>
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">python · transformers</span></div><pre><code><span class="kw">from</span> transformers <span class="kw">import</span> pipeline
+
+pipe = pipeline(<span class="str">"text-generation"</span>, model=<span class="str">"mistralai/Mistral-7B-Instruct-v0.2"</span>)
+print(pipe(<span class="str">"Explain overfitting in one line:"</span>, max_new_tokens=<span class="flg">60</span>))
+
+<span class="cmt"># the first run downloads about 14 GB</span>
+<span class="cmt"># this is the full-size version. On a laptop, use Ollama instead</span></code></pre></div>
+
+    <div class="codeblock"><div class="cb-head"><span class="cb-title">bash · download without python</span></div><pre><code><span class="cmt"># install the CLI</span>
+pip install -U <span class="str">"huggingface_hub[cli]"</span>
+
+<span class="cmt"># grab just one small file, not the whole thing</span>
+hf download TheBloke/Mistral-7B-Instruct-v0.2-GGUF \
+  mistral-7b-instruct-v0.2.Q4_K_M.gguf \
+  <span class="flg">--local-dir</span> ./models
+
+<span class="cmt"># log in first if the model asks you to accept terms</span>
+hf auth login</code></pre></div>
+
+    <h3>How to find the right model</h3>
+    <p>With millions of models, how do you pick? Use the filters on the left of the models page, then read the page. That is it.</p>
+    <ul>
+      <li><strong>What job</strong> — writing text, understanding pictures, speech.</li>
+      <li><strong>Licence</strong> — pick Apache 2.0 or MIT if you ever want to sell what you build.</li>
+      <li><strong>Language</strong> — really matters for Hindi, Tamil, Kannada and so on. Check the page for which languages it actually learned.</li>
+      <li><strong>Sort by trending or downloads</strong> — trending is what is new and exciting. Downloads is what is proven.</li>
+      <li><strong>File type</strong> — pick GGUF if you want to run it on your own laptop.</li>
+    </ul>
+
+    <h4>Quick checks before you download 14 GB</h4>
+    <table class="cmp">
+      <tr><th>Signal</th><th>Good</th><th>Warning</th></tr>
+      <tr><td>Who uploaded it</td><td>A known company — Mistral, Google, Meta</td><td>A random account with nothing else on it</td></tr>
+      <tr><td>The description</td><td>Proper detail — what it learned, test scores, what it is bad at</td><td>Blank, or copy-pasted</td></tr>
+      <tr><td>Licence tag</td><td>There and clear</td><td>Not there at all</td></tr>
+      <tr><td>File type</td><td>safetensors</td><td>Only the old .bin type</td></tr>
+      <tr><td>Downloads</td><td>Tens of thousands or more</td><td>Under 100, but making huge claims</td></tr>
+      <tr><td>Test scores</td><td>Real named tests with real numbers</td><td>"Beats GPT-4" with no proof</td></tr>
+      <tr><td>Last updated</td><td>Recent, or a well-known stable version</td><td>Half uploaded and abandoned</td></tr>
+    </table>
+
+    <div class="callout co-trap"><span class="co-tag">Safety, in plain words</span>
+      <p>Anyone can upload here. Just like anyone can upload a video to YouTube.</p><p>An old <code class="inl">.bin</code> file can hide code that runs on your computer the second you open it. So: stick to <strong>safetensors</strong> files, stick to well-known companies, and never switch on the setting called <code class="inl">trust_remote_code</code> for a model you do not know. That setting lets a stranger's code run on your machine.</p>
+    </div>
+
+    <div class="callout co-cost"><span class="co-tag">Try this yourself</span>
+      <p>Open two model pages side by side. One with a full description, a licence, test scores and safe files. One with a blank page, no licence and old files.</p>
+      <p>Now ask yourself: <strong>which one would you put inside a bank's app, and how would you explain that choice to your boss?</strong></p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You find a model with 40 downloads, no licence, a blank description and one old .bin file. It claims to beat GPT-4. What do you do?</div>
+      <button class="opt" onclick="qa(this,0)">Download it, the claim is worth testing</button>
+      <button class="opt" onclick="qa(this,1)">Skip it. No licence, no description, unsafe file, no proof</button>
+      <button class="opt" onclick="qa(this,0)">Download it, but switch on trust_remote_code to be safe</button>
+      <div class="explain"><strong>Skip it.</strong> Four warning signs at once: you cannot legally use it without a licence, nobody explained what it is, the file type can run code on your computer, and a huge claim with zero proof. And that last option makes things <em>worse</em> — that setting is exactly what lets a stranger's code run on your machine.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(7)"><div class="pg-l">← Previous</div><div class="pg-t">Open vs Closed Licences</div></button>
+    <button class="rt" onclick="go(9)"><div class="pg-l">Next slide →</div><div class="pg-t">Running Models Locally</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 6 ================= -->
+<section class="slide" data-title="Running Models Locally · Ollama">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">09</div>
+    <div>
+      <h2 class="stage-title">Running a Model Locally</h2>
+      <p class="stage-kicker">The model file sits on your own laptop. Your laptop does the thinking. Nothing goes to the internet. Here is how to set it up, step by step.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What "local" actually means</h3>
+    <p>You download the model file, like downloading a game. Your laptop opens it and does all the work itself. <strong>No account. No internet. No bill. Nothing you type ever leaves your computer.</strong></p>
+
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>Why local</h5>
+        <div class="dsub">The good bits</div>
+        <ul>
+          <li><strong>Private</strong> — medical records, contracts, your code, none of it goes anywhere</li>
+          <li><strong>Free to use</strong> — asking a million questions costs the same as asking one</li>
+          <li><strong>Works with no internet</strong> — a factory, a ship, a village clinic, a plane</li>
+          <li><strong>No limits</strong> — use it all night if you want</li>
+          <li><strong>It never changes</strong> — your copy stays exactly the same forever</li>
+          <li><strong>You learn more</strong> — you can finally see and change every setting</li>
+        </ul>
+      </div>
+      <div class="duo-col b">
+        <h5>Why not local</h5>
+        <div class="dsub">The honest downsides</div>
+        <ul>
+          <li><strong>Not as smart</strong> — a small local model is nowhere near ChatGPT or Claude</li>
+          <li><strong>Big models will not fit</strong> — your laptop has limits</li>
+          <li><strong>Slower</strong> — you will watch the words crawl out</li>
+          <li><strong>You maintain it</strong> — updates and problems are your job now</li>
+          <li><strong>Bad with long documents</strong> — small models get confused fast</li>
+          <li><strong>Wasteful at work</strong> — a server sitting idle still costs money</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Will it fit? The simple sum</h3>
+    <p>A model has billions of little numbers inside it. How much memory it needs is just: <strong>how many numbers × how much space each one takes</strong>. Then add 1 to 2 GB for working room.</p>
+    <table class="cmp">
+      <tr><th>How squashed</th><th>Space per number</th><th>A 7B model needs</th><th>Quality</th></tr>
+      <tr><td>Not squashed</td><td>2 bytes</td><td>about 14 GB</td><td>The original</td></tr>
+      <tr><td>Q8</td><td>1 byte</td><td>about 7 GB</td><td>You cannot tell the difference</td></tr>
+      <tr><td>Q5_K_M</td><td>0.7 bytes</td><td>about 5 GB</td><td>Very close</td></tr>
+      <tr><td>Q4_K_M</td><td>0.6 bytes</td><td>about 4.4 GB</td><td class="yes">Slightly worse. The best pick</td></tr>
+      <tr><td>Q3</td><td>0.45 bytes</td><td>about 3.3 GB</td><td>You will notice it is worse</td></tr>
+    </table>
+
+    <div class="widget">
+      <div class="w-tag">Try it</div>
+      <div class="w-title">Will it fit on my machine?</div>
+      <div class="w-grid">
+        <div>
+          <label>How big is the model</label>
+          <select id="wSize" onchange="calcFit()">
+            <option value="3">3B — Llama 3.2 3B</option>
+            <option value="7" selected>7B — Mistral 7B</option>
+            <option value="8">8B — Llama 3.1 8B</option>
+            <option value="12">12B — Gemma 3 12B</option>
+            <option value="14">14B — Phi-4</option>
+            <option value="32">32B — Qwen 32B</option>
+            <option value="70">70B — Llama 3 70B</option>
+          </select>
+        </div>
+        <div>
+          <label>How squashed</label>
+          <select id="wQuant" onchange="calcFit()">
+            <option value="2">Not squashed</option>
+            <option value="1">Q8</option>
+            <option value="0.7">Q5_K_M</option>
+            <option value="0.6" selected>Q4_K_M</option>
+          </select>
+        </div>
+      </div>
+      <label style="margin-top:12px">Memory in your laptop · <span class="w-val" id="wRamV">24 GB</span></label>
+      <input type="range" id="wRam" min="8" max="128" step="4" value="24" oninput="calcFit()">
+      <div class="w-out">
+        <div class="wo"><div class="wo-n" id="oWeights">4.2</div><div class="wo-l">GB for the model</div></div>
+        <div class="wo"><div class="wo-n" id="oTotal">5.7</div><div class="wo-l">GB needed in total</div></div>
+        <div class="wo"><div class="wo-n" id="oHead">18</div><div class="wo-l">GB left over</div></div>
+      </div>
+      <div class="verdict v-ok" id="oVerdict">Comfortable.</div>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">If you have a modern Mac</span>
+      <p>On an M1, M2, M3 or M4 Mac, the memory is shared between the main chip and the graphics chip. That is why a Mac with 24 GB can run models that would need an expensive graphics card on a Windows laptop.</p><p>Leave about half your memory free for everything else you have open.</p>
+    </div>
+
+    <h4>Rough guide for your machine</h4>
+    <table class="cmp">
+      <tr><th>Your laptop</th><th>Runs nicely</th><th>Works, but slowly</th></tr>
+      <tr><td>8 GB</td><td>1B to 3B models</td><td>7B, but it will struggle</td></tr>
+      <tr><td>16 GB</td><td>7B to 8B models</td><td>13B models</td></tr>
+      <tr><td>24 GB Mac</td><td>7B to 14B models</td><td>32B models</td></tr>
+      <tr><td>32 GB or a gaming GPU</td><td>14B to 32B models</td><td>70B, heavily squashed</td></tr>
+      <tr><td>64 GB or more</td><td>70B models</td><td>Even bigger, slowly</td></tr>
+    </table>
+
+    <h3 id="ollama">Ollama — install and run, step by step</h3>
+    <p>Ollama is the easiest way to do this. It picks the right file, downloads it, manages memory, and runs it. You type one command.</p>
+
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div>
+        <div class="st">Install Ollama</div>
+        <div class="sd">Pick your system. On Mac and Windows it quietly runs in the background from then on.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">install</span></div><pre><code><span class="cmt"># macOS — download the app from ollama.com, or:</span>
+brew install ollama
+
+<span class="cmt"># Linux</span>
+curl <span class="flg">-fsSL</span> https://ollama.com/install.sh | sh
+
+<span class="cmt"># Windows — download the installer from ollama.com</span></code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">2</div><div>
+        <div class="st">Check it is working</div>
+        <div class="sd">This just proves it installed properly.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">verify</span></div><pre><code>ollama <span class="flg">--version</span>
+
+<span class="cmt"># if nothing happens, start it by hand:</span>
+ollama serve</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">3</div><div>
+        <div class="st">Pull the model — do this the night before</div>
+        <div class="sd">This downloads about 4.4 GB. On slow wifi it can take 20 minutes, so do it at home the night before, not in class.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">download</span></div><pre><code>ollama pull mistral
+
+<span class="cmt"># other good ones to try</span>
+ollama pull llama3.1:8b
+ollama pull gemma3:12b
+ollama pull qwen2.5-coder:7b
+ollama pull phi4
+
+<span class="cmt"># a tiny one, to show how much worse a small model is</span>
+ollama pull llama3.2:1b</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">4</div><div>
+        <div class="st">Run it</div>
+        <div class="sd">This opens a chat right in your terminal. Type a question, get an answer. That is genuinely all there is to it.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">run</span></div><pre><code>ollama run mistral
+
+<span class="cmt">&gt;&gt;&gt; Explain a transformer to a 10 year old</span>
+<span class="cmt">&gt;&gt;&gt; /bye          leave the chat</span>
+<span class="cmt">&gt;&gt;&gt; /?            see all commands</span>
+
+<span class="cmt"># ask one question without opening a chat</span>
+ollama run mistral <span class="str">"Summarise RAG in 30 words"</span></code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">5</div><div>
+        <div class="st">See and clean up what you downloaded</div>
+        <div class="sd">These files are big. Here is how to check what you have and delete what you do not need.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">manage</span></div><pre><code>ollama list        <span class="cmt"># everything you downloaded, with sizes</span>
+ollama ps          <span class="cmt"># what is running right now</span>
+ollama show mistral <span class="cmt"># details: size, licence, settings</span>
+ollama rm mistral  <span class="cmt"># delete it from your disk</span>
+ollama stop mistral <span class="cmt"># stop it running, but keep the file</span></code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">6</div><div>
+        <div class="st">Talk to it from your own program</div>
+        <div class="sd">Ollama quietly runs a little server on your own machine. Your code can send it questions, just like a real web service.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">bash · native api</span></div><pre><code>curl http://localhost:11434/api/generate <span class="flg">-d</span> <span class="str">'{
+  "model": "mistral",
+  "prompt": "Why is the sky blue?",
+  "stream": false
+}'</span></code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">7</div><div>
+        <div class="st">Use it from Python</div>
+        <div class="sd">Best part: Ollama understands the exact same commands as OpenAI. So take any existing project, change <em>one line</em>, and it now runs on your own laptop.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">python · openai-compatible</span></div><pre><code><span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+
+client = OpenAI(
+    base_url=<span class="str">"http://localhost:11434/v1"</span>,   <span class="cmt"># the one line you change</span>
+    api_key=<span class="str">"ollama"</span>                          <span class="cmt"># not checked, but must be there</span>
+)
+
+resp = client.chat.completions.create(
+    model=<span class="str">"mistral"</span>,
+    messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Explain LoRA in 3 lines"</span>}]
+)
+print(resp.choices[<span class="flg">0</span>].message.content)</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">8</div><div>
+        <div class="st">Use it with LangChain</div>
+        <div class="sd">All the usual tools work. Just swap in the local model.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">python · langchain</span></div><pre><code>pip install langchain-ollama
+
+<span class="kw">from</span> langchain_ollama <span class="kw">import</span> ChatOllama
+
+llm = ChatOllama(model=<span class="str">"mistral"</span>, temperature=<span class="flg">0.2</span>)
+print(llm.invoke(<span class="str">"Give me 3 eval metrics for a RAG system"</span>).content)
+
+<span class="cmt"># you can do search locally too, for a fully offline setup</span>
+<span class="cmt"># ollama pull nomic-embed-text</span></code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">9</div><div>
+        <div class="st">Make your own version</div>
+        <div class="sd">Write a small recipe file. It says: start from this model, use these settings, and always behave this way. Then give your version a name.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">Modelfile</span></div><pre><code>FROM mistral
+
+PARAMETER temperature 0.3
+PARAMETER num_ctx 4096
+
+SYSTEM <span class="str">"""You are a strict data structures tutor at BIA.
+Answer in under 100 words. Always give one worked example.
+If the student is wrong, say so plainly."""</span></code></pre></div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">build and run it</span></div><pre><code>ollama create bia-tutor <span class="flg">-f</span> Modelfile
+ollama run bia-tutor</code></pre></div>
+      </div></div>
+    </div>
+
+    <div class="callout co-cost"><span class="co-tag">If something goes wrong</span>
+      <p><strong>Very slow or stuttering:</strong> the model is too big for your memory. Pick a smaller one.</p>
+      <p><strong>"model not found":</strong> you typed a name that does not exist. Run <code class="inl">ollama list</code> to see the real names.</p>
+      <p><strong>"connection refused":</strong> Ollama is not running. Type <code class="inl">ollama serve</code>.</p>
+      <p><strong>First answer slow, rest fast:</strong> that is normal. The first question has to load the model into memory. Ask one throwaway question before you show anyone.</p>
+      <p><strong>Fan loud, laptop hot:</strong> also normal, and actually the proof. All that thinking is happening right there in your hands.</p>
+    </div>
+
+    <h4>Other tools you might hear about</h4>
+    <table class="cmp">
+      <tr><th>Tool</th><th>Best for</th><th>How you use it</th></tr>
+      <tr><td>Ollama</td><td>Getting started fastest</td><td>Typed commands</td></tr>
+      <tr><td>LM Studio</td><td>If you do not like typing commands</td><td>A normal app with buttons</td></tr>
+      <tr><td>llama.cpp</td><td>Full control. It is the engine inside Ollama</td><td>Typed commands</td></tr>
+      <tr><td>vLLM</td><td>Serving lots of users at work</td><td>A proper server</td></tr>
+      <tr><td>Open WebUI</td><td>A ChatGPT-style screen for your local model</td><td>Your browser</td></tr>
+    </table>
+
+    <h3>The demo, in order</h3>
+    <div class="callout co-win"><span class="co-tag">Do these seven things</span>
+      <p><strong>1.</strong> Run <code class="inl">ollama list</code>. Point at the 4.4 GB. The whole thing is sitting right there on the disk.</p>
+      <p><strong>2.</strong> Run <code class="inl">ollama run mistral</code> and ask it something normal.</p>
+      <p><strong>3.</strong> <strong>Turn the wifi off.</strong> Ask another question. It still answers. This is the best moment of the whole session.</p>
+      <p><strong>4.</strong> Open Task Manager or Activity Monitor. Watch the memory and the chip usage jump. It really is running on this machine.</p>
+      <p><strong>5.</strong> Ask the same question to the tiny 1B model. The answer gets noticeably worse. Now you have <em>seen</em> the size trade-off, not just heard about it.</p>
+      <p><strong>6.</strong> Turn wifi back on and ask ChatGPT or Claude the same thing. Be honest about the gap. It is real.</p>
+      <p><strong>7.</strong> Finish with the Python code above. Same code as always, one line changed.</p>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">Before the demo</span>
+      <p>Download the model the night before. Ask it one throwaway question so it is already warmed up. Keep screenshots as a backup. And keep the tiny 1B model ready — if the laptop struggles, switch to it and make that the lesson.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You have a 16 GB laptop and you want to run the 70B model. What happens?</div>
+      <button class="opt" onclick="qa(this,0)">Squash it right down to Q2 and it will fit</button>
+      <button class="opt" onclick="qa(this,1)">It will not fit. Run an 8B model locally, and use a paid service for the hard stuff</button>
+      <button class="opt" onclick="qa(this,0)">Give the laptop more disk space</button>
+      <div class="explain"><strong>It will not fit.</strong> Do the sum: 70 billion numbers × 0.6 bytes each is about 40 GB. You have 16 GB. Even squashing it right down lands near 25 GB, and by then the answers are ruined anyway.</div>
+    </div>
+
+    <h3>The whole session in six lines</h3>
+    <ul>
+      <li><strong>ML, deep learning and Gen AI</strong> sit on top of each other. Each one moved more work from the human to the machine. None of them died.</li>
+      <li><strong>One idea from 2017</strong> is still behind everything. Then came size, then manners, then free downloads.</li>
+      <li><strong>Text</strong> is written one word at a time. <strong>Pictures</strong> are carved out of static. That is the whole difference.</li>
+      <li><strong>"Downloadable" is not "open source".</strong> Read the licence before you start building, not after.</li>
+      <li><strong>HuggingFace</strong> is where all the models live. Check the licence first, the description second, the file type third.</li>
+      <li><strong>You can run AI on your own laptop</strong> — 4.4 GB, no internet, no bill. It is also honestly weaker than the big paid ones. Both things are true.</li>
+    </ul>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(8)"><div class="pg-l">← Previous</div><div class="pg-t">HuggingFace Model Hub</div></button>
+    <button class="rt" onclick="go(0)"><div class="pg-l">Back to start →</div><div class="pg-t">Session overview</div></button>
+  </div>
+</div></div>
+</section>
+
+<div class="foot container">Generative &amp; Agentic AI Development · Boston Institute of Analytics · Nine slides, one session.</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+
+/* build dropdown */
+const menu=document.getElementById('dropMenu');
+menu.innerHTML='<div class="part">Session</div>'+slides.map((s,i)=>
+  `<a data-i="${i}" onclick="go(${i});return false;"><span class="dn">${i===0?'··':String(i).padStart(2,'0')}</span><span class="dt">${s.dataset.title}</span></a>`
+).join('');
+
+function go(i){
+  if(i<0||i>=slides.length)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  [...menu.querySelectorAll('a')].forEach(a=>a.classList.toggle('cur',+a.dataset.i===i));
+  document.getElementById('btnPrev').classList.toggle('disabled',i===0);
+  document.getElementById('btnNext').classList.toggle('disabled',i===slides.length-1);
+  document.getElementById('railFill').style.width=((i)/(slides.length-1)*100)+'%';
+  drop.classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* dropdown toggle */
+const drop=document.getElementById('chDrop');
+document.getElementById('chDropBtn').onclick=e=>{e.stopPropagation();drop.classList.toggle('open');};
+document.addEventListener('click',()=>drop.classList.remove('open'));
+
+/* keyboard */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+
+/* quiz */
+function qa(btn,correct){
+  const box=btn.closest('.quiz');
+  box.querySelectorAll('.opt').forEach(o=>o.disabled=true);
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    box.querySelectorAll('.opt').forEach(o=>{
+      if(o.getAttribute('onclick').includes(',1)'))o.classList.add('correct');
+    });
+  }
+  box.querySelector('.explain').classList.add('show');
+}
+
+/* fit calculator */
+function calcFit(){
+  const b=+document.getElementById('wSize').value;
+  const q=+document.getElementById('wQuant').value;
+  const ram=+document.getElementById('wRam').value;
+  document.getElementById('wRamV').textContent=ram+' GB';
+  const w=b*q;
+  const total=w+1.5;
+  const head=ram-total;
+  document.getElementById('oWeights').textContent=w.toFixed(1);
+  document.getElementById('oTotal').textContent=total.toFixed(1);
+  document.getElementById('oHead').textContent=head.toFixed(1);
+  const v=document.getElementById('oVerdict');
+  v.className='verdict';
+  if(head>ram*0.35){v.classList.add('v-ok');v.innerHTML='<strong>Comfortable.</strong> Plenty of room for the OS and your other apps. This will feel fast.';}
+  else if(head>1.5){v.classList.add('v-tight');v.innerHTML='<strong>Tight.</strong> It will load, but close your browser tabs. Expect slowdowns and a hot laptop.';}
+  else{v.classList.add('v-no');v.innerHTML='<strong>Will not fit.</strong> Pick a smaller model, a lower quantisation, or use a hosted API for this one.';}
+}
+calcFit();
+go(0);
+</script>
+</body></html>

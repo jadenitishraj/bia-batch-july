@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!-- The landing page for the GitHub Pages site. Links to the teaching decks. -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generative &amp; Agentic AI — Teaching Decks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;700&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--violet:#8b5cf6;--emerald:#10b981;--amber:#f59e0b;--rose:#f43f5e;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter Tight',ui-sans-serif,system-ui,sans-serif;
+  background:#08080c;color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(circle at 15% 0%, rgba(139,92,246,.10), transparent 30%),
+                   radial-gradient(circle at 85% 20%, rgba(14,165,233,.08), transparent 30%);
+  background-attachment:fixed;min-height:100vh;
+}
+.container{max-width:1000px;margin:0 auto;padding:0 32px}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.98}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+header{padding:96px 0 56px}
+header .kicker{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:15px;color:var(--ink-faint);margin-bottom:22px}
+header h1{font-size:clamp(40px,7vw,74px);margin-bottom:24px;
+  background:linear-gradient(135deg,var(--violet),#6366f1,var(--sky));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+header h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+header .sub{font-size:clamp(17px,2.2vw,20px);max-width:660px;color:var(--ink-dim);font-weight:300}
+
+.decks{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;padding-bottom:16px}
+.deck{
+  display:flex;flex-direction:column;background:var(--card-bg);border:1px solid var(--card-border);
+  border-radius:14px;padding:28px 28px 24px;text-decoration:none;color:inherit;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease;
+}
+.deck:hover{transform:translateY(-3px);background:rgba(255,255,255,.055)}
+.deck.violet{border-top:3px solid var(--violet)}
+.deck.violet:hover{border-color:color-mix(in srgb,var(--violet) 45%,var(--card-border));border-top-color:var(--violet)}
+.deck.sky{border-top:3px solid var(--sky)}
+.deck.sky:hover{border-color:color-mix(in srgb,var(--sky) 45%,var(--card-border));border-top-color:var(--sky)}
+.deck.emerald{border-top:3px solid var(--emerald)}
+.deck.emerald:hover{border-color:color-mix(in srgb,var(--emerald) 45%,var(--card-border));border-top-color:var(--emerald)}
+.deck.emerald .go{color:var(--emerald)}
+.deck.amber{border-top:3px solid var(--amber)}
+.deck.amber:hover{border-color:color-mix(in srgb,var(--amber) 45%,var(--card-border));border-top-color:var(--amber)}
+.deck.amber .go{color:var(--amber)}
+.deck.rose{border-top:3px solid var(--rose)}
+.deck.rose:hover{border-color:color-mix(in srgb,var(--rose) 45%,var(--card-border));border-top-color:var(--rose)}
+.deck.rose .go{color:var(--rose)}
+.deck .num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:15px;color:var(--ink-faint);margin-bottom:14px}
+.deck h2{font-family:'Fraunces',serif;font-weight:800;font-size:26px;letter-spacing:-.025em;line-height:1.12;margin-bottom:10px}
+.deck p{font-size:15px;color:var(--ink-dim);font-weight:300;margin-bottom:18px}
+.deck ul{list-style:none;margin-bottom:22px}
+.deck li{font-size:13.5px;color:var(--ink-dim);font-weight:300;padding-left:18px;position:relative;margin-bottom:6px}
+.deck li::before{content:"→";position:absolute;left:0;color:var(--ink-faint)}
+.deck .go{margin-top:auto;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;
+  letter-spacing:.14em;text-transform:uppercase}
+.deck.violet .go{color:var(--violet)}
+.deck.sky .go{color:var(--sky)}
+
+.note{
+  margin:34px 0 0;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.24);
+  border-radius:12px;padding:22px 24px;
+}
+.note .t{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--emerald);margin-bottom:9px}
+.note p{font-size:15px;color:var(--ink-dim);font-weight:300;margin-bottom:9px}
+.note p:last-child{margin-bottom:0}
+.note strong{color:var(--ink);font-weight:600}
+.note a{color:var(--sky);text-decoration:none;border-bottom:1px solid rgba(14,165,233,.35)}
+.note a:hover{color:#7cc5f0}
+code{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:rgba(139,92,246,.12);
+  border:1px solid rgba(139,92,246,.22);border-radius:4px;padding:2px 6px;color:#d6ccff}
+
+footer{padding:60px 0 80px;margin-top:44px;border-top:1px solid var(--card-border);
+  text-align:center;color:var(--ink-faint);font-size:13.5px}
+
+@media(max-width:1000px){
+  .decks{grid-template-columns:1fr 1fr}
+}
+@media(max-width:820px){
+  .decks{grid-template-columns:1fr}
+  header{padding:64px 0 40px}
+  .container{padding:0 22px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="kicker">Generative &amp; Agentic AI Development</div>
+    <h1 class="display">Teaching<br><em>Decks</em></h1>
+    <p class="sub">Five sessions, built to be read straight through. Start on the left if you have never written code. Use the Slides menu at the top of each deck, or just press the arrow keys.</p>
+  </header>
+
+  <div class="decks">
+
+    <a class="deck emerald" href="web-foundations.html">
+      <div class="num">Start here · 12 slides</div>
+      <h2>How A Web App Actually Works</h2>
+      <p>For people who have never written code. Opens the bonnet on the apps you already use every day — no prior tech knowledge assumed.</p>
+      <ul>
+        <li>HTML, CSS and JavaScript</li>
+        <li>JSON, and what it looks like</li>
+        <li>Servers, APIs, GET / POST / PUT / DELETE</li>
+        <li>FastAPI, and backend logic</li>
+        <li>Databases, SQL, and CRUD end to end</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck violet" href="genai-foundations.html">
+      <div class="num">Session one · 9 slides</div>
+      <h2>How Models Are Built, Licensed &amp; Run</h2>
+      <p>The ideas behind every AI system you will build — where the models came from, and how to run one on your own laptop with the internet switched off.</p>
+      <ul>
+        <li>Classical ML vs deep learning vs Gen AI</li>
+        <li>The timeline, 1936 to now</li>
+        <li>Diffusion vs autoregressive</li>
+        <li>Open vs closed licences</li>
+        <li>HuggingFace, and Ollama step by step</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck sky" href="agent-architecture.html">
+      <div class="num">Session two · 13 slides</div>
+      <h2>What An Agent Really Is, And What To Build</h2>
+      <p>The loop is twenty lines of code. This session is about the eleven layers wrapped around it — the ones that decide whether an agent survives real users.</p>
+      <ul>
+        <li>Workflow vs autonomous architectures</li>
+        <li>The core loop, and its brakes</li>
+        <li>Tools, context and memory</li>
+        <li>Safety, state and evaluation</li>
+        <li>Cost, and what to ship first</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck amber" href="simple-agent-architecture.html">
+      <div class="num">Session three · 15 slides</div>
+      <h2>Building A Tool-Calling Agent</h2>
+      <p>The same loop, now in code you can run. Walks through the companion chatbot project one file at a time, from the system prompt to the React screen.</p>
+      <ul>
+        <li>What an agent actually is</li>
+        <li>Tools, and the tool registry</li>
+        <li>How tool calls travel as messages</li>
+        <li>Short term vs long term memory</li>
+        <li>FastAPI and React, wired together</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck rose" href="mini-gpt.html">
+      <div class="num">Session four · 16 slides</div>
+      <h2>MiniGPT — How A Tiny Transformer Learns</h2>
+      <p>Inside the model itself. A GPT small enough to follow end to end, from raw characters to a trained network writing new text.</p>
+      <ul>
+        <li>Characters become numbers, then vectors</li>
+        <li>Self-attention, the heart of GPT</li>
+        <li>Residuals and the feed-forward layer</li>
+        <li>Softmax, sampling, and generation</li>
+        <li>How the weights got smart</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+  </div>
+
+  <div class="note">
+    <div class="t">The companion projects</div>
+    <p><strong>mood-app</strong> is the worked example for session two: a notes app with a chatbot that calls seventeen real tools. Every answer has an eye button that opens the full JSON of what was sent to the LLM, which tools ran, and what came back. <strong>simple_agent_chatbot</strong> is the smaller one from session three — the agent loop with nothing else around it.</p>
+    <p>Both need a Python backend, so they cannot run on this page. They live in the same <a href="https://github.com/jadenitishraj/bia-batch-july">repository</a> as these decks — clone it and follow the <code>SETUP.md</code> inside each project folder.</p>
+  </div>
+
+  <footer>Generative &amp; Agentic AI Development · Boston Institute of Analytics</footer>
+
+</div>
+
+</body></html>

@@ -1,0 +1,404 @@
+/* App.css
+   Plain CSS. No framework. The colours are set once at the top,
+   so you can change the whole look by editing these few lines. */
+
+:root {
+  --bg: #faf9f5; /* warm off white, the page */
+  --panel: #ffffff; /* cards and the side panel */
+  --ink: #1f1e1d; /* main text */
+  --ink-soft: #6b6862; /* secondary text */
+  --ink-faint: #9a968e; /* labels */
+  --line: #e8e5dd; /* borders */
+  --accent: #c96442; /* the coral used for buttons and the avatar */
+  --user-bubble: #f0eee6; /* the user's message background */
+
+  /* one colour per phase, used in the right hand panel */
+  --p-system: #8b7cc8;
+  --p-user: #4a7ba7;
+  --p-tool: #c9803f;
+  --p-result: #4f9068;
+  --p-final: #1f1e1d;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* the two columns */
+.app {
+  display: flex;
+  height: 100vh;
+  gap: 0;
+}
+
+/* ============ LEFT: the conversation ============ */
+
+.chat-panel {
+  flex: 1 1 58%;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.topbar-sub {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.avatar.small {
+  width: 26px;
+  height: 26px;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* the scrolling list of messages */
+.thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  max-width: 720px;
+}
+
+/* the user's messages sit on the right, in a soft bubble */
+.row.user {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.row.user .bubble {
+  background: var(--user-bubble);
+  padding: 11px 16px;
+  border-radius: 16px;
+  max-width: 78%;
+}
+
+/* the bot's messages are plain text, like a person talking */
+.row.bot .bubble {
+  padding-top: 2px;
+  line-height: 1.7;
+  font-size: 15.5px;
+  white-space: pre-wrap;
+}
+
+/* the empty screen */
+.welcome {
+  max-width: 620px;
+  margin: 12vh auto 0;
+  text-align: center;
+}
+
+.welcome h1 {
+  font-family: ui-serif, Georgia, serif;
+  font-weight: 400;
+  font-size: 34px;
+  letter-spacing: -0.5px;
+  margin-bottom: 10px;
+}
+
+.welcome p {
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.6;
+  margin-bottom: 26px;
+}
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  justify-content: center;
+}
+
+.suggestions button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 9px 16px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.suggestions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* the three bouncing dots while we wait */
+.typing {
+  display: flex;
+  gap: 4px;
+  padding: 10px 0;
+}
+
+.typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  animation: bounce 1.2s infinite;
+}
+
+.typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes bounce {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* the box you type in */
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 32px 28px;
+  padding: 8px 8px 8px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.composer:focus-within {
+  border-color: #d6d2c7;
+}
+
+.composer input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--ink);
+  padding: 10px 0;
+}
+
+.composer .send {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 17px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: opacity 0.15s;
+}
+
+.composer .send:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+/* ============ RIGHT: what the agent did ============ */
+
+.side-panel {
+  flex: 1 1 42%;
+  min-width: 0;
+  background: var(--panel);
+  border-left: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.side-block {
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--line);
+}
+
+.side-block.grow {
+  flex: 1;
+  overflow-y: auto;
+  border-bottom: none;
+}
+
+.side-block h2 {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+
+.side-note {
+  font-size: 12.5px;
+  color: var(--ink-faint);
+  margin-bottom: 12px;
+}
+
+/* the saved facts, as small pills */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 5px 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.chip.empty {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* the raw conversation JSON */
+.json {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.memory-note {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+/* one phase of the agent run */
+.step {
+  border-left: 2px solid var(--line);
+  padding: 2px 0 2px 14px;
+  margin-bottom: 18px;
+}
+
+.step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.step-num {
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.step-phase {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.step-title {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 7px;
+}
+
+.step pre {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+/* a colour per phase, so the pattern is easy to follow */
+.step.SYSTEM-PROMPT { border-left-color: var(--p-system); }
+.step.SYSTEM-PROMPT .step-phase { color: var(--p-system); }
+/* the system prompt is long and the same every time, so keep it short
+   here and let the reader scroll inside it if they want to */
+.step.SYSTEM-PROMPT pre { max-height: 110px; }
+
+.step.USER-MESSAGE { border-left-color: var(--p-user); }
+.step.USER-MESSAGE .step-phase { color: var(--p-user); }
+
+.step.TOOL-CALL { border-left-color: var(--p-tool); }
+.step.TOOL-CALL .step-phase { color: var(--p-tool); }
+
+.step.TOOL-RESULT { border-left-color: var(--p-result); }
+.step.TOOL-RESULT .step-phase { color: var(--p-result); }
+
+.step.FINAL-ANSWER { border-left-color: var(--p-final); }
+.step.FINAL-ANSWER .step-phase { color: var(--p-final); }
+
+/* on a narrow screen, stack the two columns */
+@media (max-width: 900px) {
+  .app { flex-direction: column; height: auto; }
+  .side-panel { border-left: none; border-top: 1px solid var(--line); }
+  .thread { padding: 20px; }
+  .composer { margin: 0 20px 20px; }
+}

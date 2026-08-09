@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How A Web App Actually Works — For People Who Do Not Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#8b5cf6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 15% 50%, rgba(139,92,246,.08), transparent 25%),radial-gradient(circle at 85% 30%, rgba(99,102,241,.08), transparent 25%);background-attachment:fixed;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* ===== top site nav ===== */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--violet)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#e7e1ff;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:360px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--violet);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--sky));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:86vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(42px,7.6vw,88px);margin-bottom:28px;background:linear-gradient(135deg,var(--violet),var(--indigo),var(--sky));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:48px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* tabs */
+.tabs{position:sticky;top:57px;z-index:50;background:rgba(8,8,12,.91);backdrop-filter:blur(14px);border-bottom:1px solid var(--card-border);padding:14px 0}
+.tabs-inner{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tab-btn{font:600 11.5px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:10px 12px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:4px;color:var(--ink-dim);cursor:pointer;transition:all .2s}
+.tab-btn:hover{color:var(--ink);background:rgba(255,255,255,.055)}
+.tab-btn.active{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* slide */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+.stage{padding:64px 0 84px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:36px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:60px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:870px}
+
+/* body */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:880px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(139,92,246,.12);border:1px solid rgba(139,92,246,.22);border-radius:4px;padding:2px 6px;color:#d6ccff}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+
+/* vocab */
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#d6ccff;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* concept cards -> modal */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--sky);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--violet)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--sky);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--violet)}
+
+/* code block */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:18px 0;overflow:hidden}
+.codeblock .cb-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.codeblock .cb-title{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.codeblock pre{margin:0;padding:16px 18px;overflow-x:auto}
+.codeblock code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#cfd3e0;white-space:pre}
+.cmt{color:#6a6a85}.kw{color:#c4b5fd}.str{color:#7fd4a0}.flg{color:#7cc5f0}
+
+/* table */
+.cmp{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px}
+.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--card-border)}
+.cmp th{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.cmp td{color:var(--ink-dim);font-weight:300}
+.cmp td:first-child{color:var(--ink);font-weight:500}
+.cmp tr:hover td{background:rgba(255,255,255,.02)}
+.yes{color:var(--emerald);font-weight:600}.no{color:var(--rose);font-weight:600}
+
+/* diagram */
+.diagram{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:26px 22px;margin:22px 0}
+.diagram .dg-cap{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);text-align:center;margin-top:16px}
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.node{background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;padding:11px 15px;font:600 13px 'Inter Tight',sans-serif;color:var(--ink);text-align:center;min-width:96px}
+.node.sky{background:rgba(14,165,233,.13);border-color:rgba(14,165,233,.34)}
+.node.em{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
+.node.am{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.node.ro{background:rgba(244,63,94,.13);border-color:rgba(244,63,94,.36)}
+.arrow{color:var(--ink-faint);font-size:18px}
+.box-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.mbox{flex:1;min-width:150px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.mbox .mb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.mbox .mb-d{font-size:13px;color:var(--ink-dim);font-weight:300}
+
+/* nested rings diagram */
+.rings{display:flex;align-items:center;justify-content:center;padding:10px 0}
+.ring{border:1px solid;border-radius:14px;padding:18px;text-align:center;width:100%}
+.ring .rl{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px;display:block}
+.r1{border-color:rgba(14,165,233,.35);background:rgba(14,165,233,.04)}.r1>.rl{color:var(--sky)}
+.r2{border-color:rgba(99,102,241,.35);background:rgba(99,102,241,.05)}.r2>.rl{color:var(--indigo)}
+.r3{border-color:rgba(139,92,246,.4);background:rgba(139,92,246,.06)}.r3>.rl{color:var(--violet)}
+.r4{border-color:rgba(244,63,94,.4);background:rgba(244,63,94,.07);padding:16px}.r4>.rl{color:var(--rose);margin-bottom:6px}
+.r4 .rd{font-size:13.5px;color:var(--ink-dim);font-weight:300}
+
+/* timeline */
+.tl{margin:22px 0;border-left:1px solid var(--card-border);padding-left:0}
+.tl-item{display:grid;grid-template-columns:78px 1fr;gap:18px;padding:0 0 22px 20px;position:relative;border-left:2px solid rgba(139,92,246,.25);margin-left:6px}
+.tl-item:last-child{border-left-color:transparent;padding-bottom:4px}
+.tl-item::before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--violet);box-shadow:0 0 0 4px rgba(139,92,246,.14)}
+.tl-item.big::before{background:var(--rose);box-shadow:0 0 0 5px rgba(244,63,94,.18)}
+.tl-yr{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--violet);padding-top:2px}
+.tl-item.big .tl-yr{color:var(--rose)}
+.tl-t{font-size:16.5px;color:var(--ink);font-weight:600;line-height:1.3;margin-bottom:5px}
+.tl-d{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+
+/* two-column compare */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.duo-col{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-radius:9px;padding:20px}
+.duo-col.a{border-top:3px solid var(--sky)}
+.duo-col.b{border-top:3px solid var(--amber)}
+.duo-col h5{font-family:'Fraunces',serif;font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:4px;color:var(--ink)}
+.duo-col .dsub{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px}
+.duo-col ul{margin:0}
+.duo-col li{font-size:14.5px;margin-bottom:8px}
+
+/* step list */
+.steps{counter-reset:st;margin:20px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--card-border)}
+.step:last-child{border-bottom:none}
+.step .sn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#fff;background:color-mix(in srgb,var(--accent) 40%,transparent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.step .st{font-size:16.5px;color:var(--ink);font-weight:600;margin-bottom:6px}
+.step .sd{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.step .codeblock{margin:12px 0 0}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:18px 0}
+.quiz .q{font-size:16.5px;color:var(--ink);font-weight:500;margin-bottom:14px}
+.quiz .opt{display:block;width:100%;text-align:left;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:7px;padding:12px 16px;margin-bottom:9px;color:var(--ink-dim);font-size:15px;cursor:pointer;transition:all .15s;font-family:'Inter Tight',sans-serif}
+.quiz .opt:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.quiz .opt.correct{border-color:var(--emerald);background:rgba(16,185,129,.12);color:var(--ink)}
+.quiz .opt.wrong{border-color:var(--rose);background:rgba(244,63,94,.1)}
+.quiz .explain{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6;margin-top:10px;padding-top:12px;border-top:1px solid var(--card-border);display:none}
+.quiz .explain.show{display:block}.quiz .explain strong{color:var(--ink)}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(4,4,8,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex;animation:fadeIn .25s ease}
+.modal{max-width:820px;width:100%;max-height:88vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 34%,var(--card-border));border-radius:10px;padding:34px 36px 30px;position:relative;box-shadow:0 30px 90px rgba(0,0,0,.65);}
+.modal .m-cat{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.modal .m-q{font-family:'Fraunces',serif;font-weight:800;font-size:26px;line-height:1.15;letter-spacing:-.02em;margin-bottom:6px}
+.modal .m-hint{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:20px}
+.modal .m-body{font-size:15.5px;color:var(--ink-dim);font-weight:300;line-height:1.68}
+.modal .m-body p{margin-bottom:13px}.modal .m-body strong{color:var(--ink);font-weight:600}
+.modal .m-body ul{list-style:none;margin:6px 0 14px}
+.modal .m-body li{padding-left:22px;position:relative;margin-bottom:8px}
+.modal .m-body li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.modal-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;border:1px solid var(--card-border);background:rgba(255,255,255,.04);color:var(--ink-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:2}
+.modal-close:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 20%,transparent)}
+
+.foot{padding:50px 0 80px;text-align:center;border-top:1px solid var(--card-border);color:var(--ink-faint);font-size:14px}
+
+/* bottom slide pager */
+.pager{display:flex;justify-content:space-between;gap:12px;padding:26px 0 70px}
+.pager button{flex:1;max-width:340px;text-align:left;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;padding:16px 20px;cursor:pointer;transition:all .18s;font-family:'Inter Tight',sans-serif}
+.pager button:hover{background:rgba(255,255,255,.05);border-color:var(--accent);transform:translateY(-2px)}
+.pager button.rt{text-align:right}
+.pager .pg-l{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.pager .pg-t{font-family:'Fraunces',serif;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.pager button:disabled{opacity:.25;pointer-events:none}
+
+/* widget */
+.widget{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:24px 0}
+.widget .w-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:6px}
+.widget .w-title{font-family:'Fraunces',serif;font-weight:800;font-size:20px;letter-spacing:-.02em;margin-bottom:16px;color:var(--ink)}
+.widget label{display:block;font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+.widget input[type=range]{width:100%;accent-color:var(--violet);margin-bottom:6px}
+.widget .w-val{font-family:'JetBrains Mono',monospace;color:#d6ccff;font-weight:700}
+.widget select{background:#11111a;color:var(--ink);border:1px solid var(--card-border);border-radius:6px;padding:9px 12px;font-family:'Inter Tight',sans-serif;font-size:14px;margin-bottom:10px;width:100%}
+.w-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.w-out{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.w-out .wo{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.w-out .wo .wo-n{font-family:'Fraunces',serif;font-weight:800;font-size:26px;letter-spacing:-.02em;color:var(--ink)}
+.w-out .wo .wo-l{font:600 9.5px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:4px}
+.verdict{margin-top:16px;padding:14px 16px;border-radius:8px;font-size:15px;font-weight:300;border:1px solid}
+.v-ok{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.3);color:var(--ink-dim)}
+.v-tight{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3);color:var(--ink-dim)}
+.v-no{background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.32);color:var(--ink-dim)}
+.verdict strong{color:var(--ink);font-weight:600}
+
+@media(max-width:900px){
+  .stats,.vocab-grid,.code-cards,.duo,.w-grid{grid-template-columns:1fr}
+  .stage-header,.body-wrap{grid-template-columns:1fr}
+  .dropmenu{min-width:280px}
+  .nav-prevnext{display:none}
+  .modal{padding:28px 22px 24px}
+  .cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}
+  .tabs{top:55px}
+  .tl-item{grid-template-columns:1fr;gap:4px}
+  .pager{flex-direction:column}.pager button{max-width:none}
+  .w-out{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body style="--accent:var(--emerald)">
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="home-link" href="../index.html" title="Back to all decks">← Home</a>
+    <a class="brand" href="#" onclick="go(0);return false;">Web apps <em>explained</em></a>
+    <div class="dropdown" id="chDrop">
+      <button class="dropbtn" id="chDropBtn">Slides <span class="chev">▾</span></button>
+      <div class="dropmenu" id="dropMenu"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-prevnext">
+      <button id="btnPrev" onclick="go(cur-1)">← Prev</button>
+      <button id="btnNext" onclick="go(cur+1)">Next →</button>
+    </div>
+  </div>
+  <div class="rail"><div class="rail-fill" id="railFill"></div></div>
+</nav>
+
+<!-- ================= SLIDE 0 · TITLE ================= -->
+<section class="slide active" data-title="Session overview">
+<div class="hero"><div class="container">
+  <div class="stage-num">Generative &amp; Agentic AI Development · Foundations for non-engineers</div>
+  <h1 class="display">How A Web App<br><em>Actually</em><br>Works</h1>
+  <p class="sub">You have used hundreds of these. Net banking, a trading terminal, a portfolio dashboard. This session opens the bonnet. No prior coding needed — if you can read a bank statement, you can read everything in here.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">4</div><div class="label">Layers in every app you use</div></div>
+    <div class="stat"><div class="num">4</div><div class="label">Verbs that cover almost everything</div></div>
+    <div class="stat"><div class="num">1</div><div class="label">Format they all talk in</div></div>
+    <div class="stat"><div class="num">0</div><div class="label">Coding experience assumed</div></div>
+  </div>
+</div></div>
+<div class="container">
+  <div class="prose" style="max-width:880px;padding-bottom:20px">
+    <h3>What we cover today</h3>
+    <div class="code-cards">
+      <div class="code-card" onclick="go(1)"><span class="cc-ico">01</span><div><div class="cc-t">The whole picture</div><div class="cc-s">What happens when you click</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(2)"><span class="cc-ico">02</span><div><div class="cc-t">HTML</div><div class="cc-s">The structure of a page</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(3)"><span class="cc-ico">03</span><div><div class="cc-t">CSS</div><div class="cc-s">How it looks</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(4)"><span class="cc-ico">04</span><div><div class="cc-t">JavaScript</div><div class="cc-s">How it reacts</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(5)"><span class="cc-ico">05</span><div><div class="cc-t">JSON</div><div class="cc-s">The shared language for data</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(6)"><span class="cc-ico">06</span><div><div class="cc-t">The server</div><div class="cc-s">What a backend is for</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(7)"><span class="cc-ico">07</span><div><div class="cc-t">APIs · GET POST PUT DELETE</div><div class="cc-s">How the two halves talk</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(8)"><span class="cc-ico">08</span><div><div class="cc-t">FastAPI</div><div class="cc-s">Writing the backend</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(9)"><span class="cc-ico">09</span><div><div class="cc-t">The database and SQL</div><div class="cc-s">Where it is actually kept</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(10)"><span class="cc-ico">10</span><div><div class="cc-t">One click, end to end</div><div class="cc-s">Traced through every layer</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(11)"><span class="cc-ico">11</span><div><div class="cc-t">The whole project</div><div class="cc-s">CRUD, and what you now know</div></div><span class="cc-go">Open</span></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">How to use this deck</span>
+      <p>Use the <strong>Slides</strong> menu at the top, or just press the arrow keys. Each slide keeps going down, so scroll to the bottom before you move on.</p>
+      <p>There is code on nearly every slide. <strong>You are not expected to write any of it.</strong> You are expected to look at it and say "right, I can see roughly what that is doing". That is the whole goal.</p>
+    </div>
+  </div>
+  <div class="pager"><button disabled></button><button class="rt" onclick="go(1)"><div class="pg-l">Next slide →</div><div class="pg-t">The whole picture</div></button></div>
+</div>
+</section>
+
+<!-- ================= SLIDE 1 ================= -->
+<section class="slide" data-title="The whole picture">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">01</div>
+    <div>
+      <h2 class="stage-title">The Whole Picture</h2>
+      <p class="stage-kicker">Before any of the parts, the shape. Every app you have ever used is the same four boxes, in the same order, every single time.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Think of a bank branch</h3>
+    <p>You want your balance. You do not walk into the vault. You go to the counter, ask, and the counter staff go and find out.</p>
+
+    <div class="diagram">
+      <div class="box-row">
+        <div class="mbox"><div class="mb-t">The counter</div><div class="mb-d">Where you stand. Forms, signs, a person who takes your request. <strong>This is the frontend.</strong></div></div>
+        <div class="mbox"><div class="mb-t">The back office</div><div class="mb-d">Checks who you are, checks the rules, decides what you are allowed to see. <strong>This is the backend.</strong></div></div>
+        <div class="mbox"><div class="mb-t">The ledger</div><div class="mb-d">The actual record of every account and every transaction. <strong>This is the database.</strong></div></div>
+      </div>
+      <div class="dg-cap">You only ever see the counter. Everything else happens where you cannot reach it — deliberately</div>
+    </div>
+
+    <h3>The same thing, in software words</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Browser<br><span style="font:400 11px 'JetBrains Mono',monospace;color:var(--ink-faint)">HTML · CSS · JavaScript</span></div><span class="arrow">→</span>
+        <div class="node am">Request<br><span style="font:400 11px 'JetBrains Mono',monospace;color:var(--ink-faint)">over the internet</span></div><span class="arrow">→</span>
+        <div class="node em">Server<br><span style="font:400 11px 'JetBrains Mono',monospace;color:var(--ink-faint)">Python · FastAPI</span></div><span class="arrow">→</span>
+        <div class="node ro">Database<br><span style="font:400 11px 'JetBrains Mono',monospace;color:var(--ink-faint)">SQL</span></div>
+      </div>
+      <div class="flow" style="margin-top:12px"><span class="arrow">←</span><div class="node">and the answer comes back the same way</div></div>
+      <div class="dg-cap">Four boxes. Learn these and you can place any technology you ever hear about</div>
+    </div>
+
+    <h3>Who does what</h3>
+    <table class="cmp">
+      <tr><th>Layer</th><th>Runs where</th><th>Its one job</th><th>Branch equivalent</th></tr>
+      <tr><td>Frontend</td><td>On your laptop, inside the browser</td><td>Show things, collect what you type</td><td>The counter and the forms</td></tr>
+      <tr><td>Backend</td><td>On a computer somewhere else</td><td>Check the rules, decide, calculate</td><td>The back office</td></tr>
+      <tr><td>Database</td><td>Next to the backend</td><td>Remember everything, permanently</td><td>The ledger</td></tr>
+      <tr><td>The API</td><td>Between the first two</td><td>The agreed list of things you may ask for</td><td>The forms you are allowed to submit</td></tr>
+    </table>
+
+    <div class="callout co-note"><span class="co-tag">The one sentence to hold on to</span>
+      <p><strong>The frontend asks. The backend decides. The database remembers.</strong></p>
+      <p>Everything for the rest of this session is a detail hanging off that sentence.</p>
+    </div>
+
+    <h3>Why split it up at all?</h3>
+    <p>A fair question. Why not just let the page talk to the ledger directly?</p>
+    <ul>
+      <li><strong>Trust.</strong> The frontend is on the customer's machine. They can change it. Anyone determined enough can open a browser's developer tools and edit the page. So nothing that matters can be decided there.</li>
+      <li><strong>One truth.</strong> The website, the phone app and the partner bank's system all ask the same backend. One set of rules, not three.</li>
+      <li><strong>Safety.</strong> The database is never exposed to the outside world. Only the backend can reach it, and only through the specific questions it knows how to ask.</li>
+    </ul>
+
+    <div class="callout co-trap"><span class="co-tag">The mistake this prevents</span>
+      <p>Imagine the discount on a trading fee were calculated in the browser. A user edits the page, sets the discount to 100%, and submits. If the backend simply trusts what arrives, the trade goes through free.</p>
+      <p>This is why the rule is absolute: <strong>the frontend is a display, never an authority.</strong> Every check that matters is repeated on the server, even if the page already did it.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(0)"><div class="pg-l">← Previous</div><div class="pg-t">Session overview</div></button>
+    <button class="rt" onclick="go(2)"><div class="pg-l">Next slide →</div><div class="pg-t">HTML</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 2 ================= -->
+<section class="slide" data-title="HTML — the structure">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">02</div>
+    <div>
+      <h2 class="stage-title">HTML — The Structure</h2>
+      <p class="stage-kicker">The bones of the page. What things are, and in what order. Not what they look like — that comes next.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>It is a set of labelled boxes</h3>
+    <p>HTML marks up your content so the browser knows what each piece <em>is</em>. This bit is a heading. This bit is a paragraph. This bit is a button.</p>
+    <p>Think of a printed form: there is a title at the top, some labelled fields, and a signature box. HTML is you writing down that layout.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">html · a tiny page</span></div>
+      <pre><code>&lt;h1&gt;My Portfolio&lt;/h1&gt;
+
+&lt;p&gt;Total value: 12,40,000&lt;/p&gt;
+
+&lt;input id="amount" placeholder="Amount to invest"&gt;
+
+&lt;button&gt;Invest&lt;/button&gt;</code></pre>
+    </div>
+
+    <p>That is a real page. Open it in a browser and you get a heading, a line of text, a box to type in, and a clickable button. Plain and grey, but working.</p>
+
+    <h3>Reading the syntax</h3>
+    <p>Almost everything comes in a pair — an opening tag and a closing tag with a slash. What sits between them is the content.</p>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">&lt;h1&gt; … &lt;/h1&gt;</div><div class="vd">A heading. <code class="inl">h1</code> is the biggest, down to <code class="inl">h6</code>. Use one <code class="inl">h1</code> per page.</div></div>
+      <div class="vocab"><div class="vt">&lt;p&gt; … &lt;/p&gt;</div><div class="vd">A paragraph of text.</div></div>
+      <div class="vocab"><div class="vt">&lt;div&gt; … &lt;/div&gt;</div><div class="vd">A plain container. Means nothing on its own — it exists to group things so you can position or style them together.</div></div>
+      <div class="vocab"><div class="vt">&lt;input&gt;</div><div class="vd">A box the user types into. No closing tag, because there is nothing to put inside it.</div></div>
+      <div class="vocab"><div class="vt">&lt;button&gt; … &lt;/button&gt;</div><div class="vd">A thing you can click.</div></div>
+      <div class="vocab"><div class="vt">id="amount"</div><div class="vd">A name tag. Lets the styling and the code find this exact element later. Must be unique on the page.</div></div>
+    </div>
+
+    <h3>Boxes inside boxes</h3>
+    <p>Real pages nest. A card contains a heading, some text and a button — so you wrap them in a container and the whole thing moves as one.</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">html · one card</span></div>
+      <pre><code>&lt;div class="card"&gt;
+    &lt;h3&gt;HDFC Bank&lt;/h3&gt;
+    &lt;p&gt;120 shares · 1,680 each&lt;/p&gt;
+    &lt;button&gt;Sell&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+    </div>
+    <p>Note <code class="inl">class="card"</code>. Where <code class="inl">id</code> names one specific element, <code class="inl">class</code> is a group label — you can put <code class="inl">class="card"</code> on fifty holdings and style all fifty at once. That is the whole point of it.</p>
+
+    <div class="callout co-note"><span class="co-tag">What HTML is not</span>
+      <p>HTML is <strong>not a programming language</strong>. It cannot add two numbers, make a decision, or repeat something. It has no logic in it at all.</p>
+      <p>It is a description of structure, and nothing more. That is genuinely all it does, and it is why it takes an afternoon to learn the basics.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You want to style all forty holdings in a portfolio the same way. Do you give them an id or a class?</div>
+      <button class="opt" onclick="qa(this,0)">An id, one for each</button>
+      <button class="opt" onclick="qa(this,1)">A class — the same class on all forty</button>
+      <button class="opt" onclick="qa(this,0)">Neither, style each one by hand</button>
+      <div class="explain"><strong>A class.</strong> An id names one unique element — useful when code needs to find that exact box. A class is a group label, so one styling rule reaches every holding at once. Forty ids would mean forty copies of the same styling rule, and forty places to change when the design does.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(1)"><div class="pg-l">← Previous</div><div class="pg-t">The whole picture</div></button>
+    <button class="rt" onclick="go(3)"><div class="pg-l">Next slide →</div><div class="pg-t">CSS</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 3 ================= -->
+<section class="slide" data-title="CSS — how it looks">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">03</div>
+    <div>
+      <h2 class="stage-title">CSS — How It Looks</h2>
+      <p class="stage-kicker">Same content, different appearance. CSS is the branding sheet: colours, spacing, fonts, where things sit.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Point at something, then describe it</h3>
+    <p>Every CSS rule is two halves. <strong>Which</strong> elements you mean, then <strong>what</strong> they should look like.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">css</span></div>
+      <pre><code>.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e4e0d6;
+}
+
+button {
+    background: #c96442;
+    color: white;
+    padding: 10px 18px;
+}</code></pre>
+    </div>
+
+    <p>The first rule says: <em>find everything labelled "card", give it a white background, round the corners, put 20 pixels of space inside it, and draw a thin line around it.</em> The second says: <em>make every button clay-coloured with white text.</em></p>
+
+    <h3>The words you will meet most</h3>
+    <table class="cmp">
+      <tr><th>Property</th><th>Controls</th><th>Example</th></tr>
+      <tr><td>color</td><td>The colour of the text itself</td><td><code class="inl">color: #1f1e1c</code></td></tr>
+      <tr><td>background</td><td>What is behind it</td><td><code class="inl">background: white</code></td></tr>
+      <tr><td>padding</td><td>Space <em>inside</em> the box, around the content</td><td><code class="inl">padding: 20px</code></td></tr>
+      <tr><td>margin</td><td>Space <em>outside</em> the box, pushing others away</td><td><code class="inl">margin: 12px</code></td></tr>
+      <tr><td>font-size</td><td>How big the text is</td><td><code class="inl">font-size: 16px</code></td></tr>
+      <tr><td>border</td><td>The line around the edge</td><td><code class="inl">border: 1px solid grey</code></td></tr>
+      <tr><td>display: flex</td><td>Lay the children out in a row</td><td>The usual way to arrange things</td></tr>
+    </table>
+
+    <p><strong>Padding versus margin</strong> catches everyone at first. Padding is the gap between a box's edge and its contents — like the white space inside a printed form's field. Margin is the gap between this box and the next one.</p>
+
+    <h3>Colours look odd at first</h3>
+    <p>You will see things like <code class="inl">#c96442</code>. That is a colour written in hexadecimal: two characters of red, two of green, two of blue. <code class="inl">#000000</code> is black, <code class="inl">#ffffff</code> is white. You never work these out by hand — every design tool hands you the code.</p>
+
+    <div class="callout co-win"><span class="co-tag">Why this is kept separate</span>
+      <p>The content lives in HTML. The appearance lives in CSS. Change the CSS file and the entire product is rebranded — every page, every screen — without touching a single word of content.</p>
+      <p>That separation is why a company can roll out a new visual identity in days rather than rewriting everything.</p>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">A useful reference point</span>
+      <p>The deck you are reading right now is HTML for the words and structure, and about 250 lines of CSS for everything you can see — the dark background, the serif headings, the coloured boxes, the layout.</p>
+      <p>That is the whole thing. There is no other magic in the appearance.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(2)"><div class="pg-l">← Previous</div><div class="pg-t">HTML</div></button>
+    <button class="rt" onclick="go(4)"><div class="pg-l">Next slide →</div><div class="pg-t">JavaScript</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 4 ================= -->
+<section class="slide" data-title="JavaScript — how it reacts">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">04</div>
+    <div>
+      <h2 class="stage-title">JavaScript — How It Reacts</h2>
+      <p class="stage-kicker">HTML and CSS give you a poster. JavaScript is what makes it respond when you touch it. This one <em>is</em> a real programming language.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>It waits for things to happen</h3>
+    <p>Most frontend code is the same shape: <em>when the user does X, do Y.</em> A click, a keystroke, a page finishing loading.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">javascript</span></div>
+      <pre><code><span class="cmt">// find the button on the page</span>
+<span class="kw">const</span> button = document.getElementById(<span class="str">"invest"</span>);
+
+<span class="cmt">// when it is clicked, run this</span>
+button.onclick = <span class="kw">function</span>() {
+    <span class="kw">const</span> amount = document.getElementById(<span class="str">"amount"</span>).value;
+
+    <span class="kw">if</span> (amount &lt; <span class="flg">500</span>) {
+        alert(<span class="str">"Minimum investment is 500"</span>);
+    } <span class="kw">else</span> {
+        alert(<span class="str">"Investing "</span> + amount);
+    }
+};</code></pre>
+    </div>
+
+    <p>Read it in English: <em>find the invest button; when someone clicks it, read whatever is in the amount box; if that is under 500, show a warning; otherwise show a confirmation.</em></p>
+
+    <h3>The handful of ideas that cover most code</h3>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">variable</div><div class="vd">A named box holding a value. <code class="inl">const rate = 7.5</code>. Named so you can refer to it later.</div></div>
+      <div class="vocab"><div class="vt">if / else</div><div class="vd">A decision. If this is true do one thing, otherwise do another. Exactly like a spreadsheet IF.</div></div>
+      <div class="vocab"><div class="vt">function</div><div class="vd">A named set of steps you can run whenever you want. Like a saved formula.</div></div>
+      <div class="vocab"><div class="vt">loop</div><div class="vd">Do the same thing for every item in a list. "For each holding, add up its value."</div></div>
+      <div class="vocab"><div class="vt">event</div><div class="vd">Something the user did. A click, a keypress, a form submission.</div></div>
+      <div class="vocab"><div class="vt">array</div><div class="vd">An ordered list of things, written in square brackets. A column in a spreadsheet.</div></div>
+    </div>
+
+    <p>If you have written a nested IF in Excel, or recorded a macro, you have already used every idea in that box. The vocabulary differs; the thinking does not.</p>
+
+    <h3>Where JavaScript runs — and why it matters</h3>
+    <p>It runs <strong>on the customer's machine</strong>, inside their browser. Which leads directly to the most important rule on this slide.</p>
+
+    <div class="callout co-trap"><span class="co-tag">Never trust the browser</span>
+      <p>That <code class="inl">if (amount &lt; 500)</code> check is a <em>courtesy</em>. It gives instant feedback without a round trip to the server. It is not security.</p>
+      <p>Anyone can open their browser's developer tools and delete that check, or send a request that skips the page entirely. <strong>The server must check the 500 minimum again</strong>, and the server's answer is the one that counts.</p>
+      <p>Check twice: once in the browser for a good experience, once on the server because it is the only one you control.</p>
+    </div>
+
+    <h3>Three languages, three jobs</h3>
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">HTML</div><div class="mb-d">What is on the page. The structure. <em>Not a programming language.</em></div></div>
+      <div class="mbox"><div class="mb-t">CSS</div><div class="mb-d">What it looks like. Colours, spacing, layout. <em>Also not a programming language.</em></div></div>
+      <div class="mbox"><div class="mb-t">JavaScript</div><div class="mb-d">What it does. Decisions, calculations, talking to the server. <em>A real programming language.</em></div></div>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your page checks in JavaScript that a transfer is under the daily limit. Is that enough?</div>
+      <button class="opt" onclick="qa(this,0)">Yes, the check runs before anything is sent</button>
+      <button class="opt" onclick="qa(this,1)">No — the server has to check it again</button>
+      <button class="opt" onclick="qa(this,0)">Only if the user is logged in</button>
+      <div class="explain"><strong>The server must check again.</strong> JavaScript runs on the user's own computer, so they can edit it, disable it, or bypass the page completely and send the request directly. Browser checks make the app pleasant to use. Server checks make it correct. You need both, and only the second one is enforcement.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(3)"><div class="pg-l">← Previous</div><div class="pg-t">CSS</div></button>
+    <button class="rt" onclick="go(5)"><div class="pg-l">Next slide →</div><div class="pg-t">JSON</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 5 ================= -->
+<section class="slide" data-title="JSON — the shared language">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">05</div>
+    <div>
+      <h2 class="stage-title">JSON — The Shared Language For Data</h2>
+      <p class="stage-kicker">When the frontend and the backend send each other information, it is almost always written this way. It is far simpler than it looks.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>It is a labelled record</h3>
+    <p>Think of a single row of a spreadsheet, written out with its column headings attached so it can travel on its own.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">json · one holding</span></div>
+      <pre><code>{
+  <span class="str">"symbol"</span>: <span class="str">"HDFCBANK"</span>,
+  <span class="str">"quantity"</span>: <span class="flg">120</span>,
+  <span class="str">"price"</span>: <span class="flg">1680.50</span>,
+  <span class="str">"sector"</span>: <span class="str">"Financials"</span>,
+  <span class="str">"is_pledged"</span>: <span class="kw">false</span>
+}</code></pre>
+    </div>
+
+    <p>Curly brackets open and close the record. Inside, each line is a <strong>name, a colon, and a value</strong>, separated by commas. You can read that without anyone explaining it, which is exactly why it won.</p>
+
+    <h3>The rules, all of them</h3>
+    <table class="cmp">
+      <tr><th>Value type</th><th>How it is written</th><th>Example</th></tr>
+      <tr><td>Text</td><td>Always in double quotes</td><td><code class="inl">"HDFCBANK"</code></td></tr>
+      <tr><td>Number</td><td>No quotes, full stop for decimals</td><td><code class="inl">1680.50</code></td></tr>
+      <tr><td>Yes or no</td><td><code class="inl">true</code> or <code class="inl">false</code>, no quotes</td><td><code class="inl">false</code></td></tr>
+      <tr><td>Nothing</td><td><code class="inl">null</code> — the value is deliberately empty</td><td><code class="inl">null</code></td></tr>
+      <tr><td>A list</td><td>Square brackets, items separated by commas</td><td><code class="inl">["NSE", "BSE"]</code></td></tr>
+      <tr><td>A record inside a record</td><td>Curly brackets again, nested</td><td>See below</td></tr>
+    </table>
+
+    <h3>Lists and nesting</h3>
+    <p>A whole portfolio is a <em>list</em> of holdings — square brackets around several records:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">json · a list, with nesting</span></div>
+      <pre><code>{
+  <span class="str">"client"</span>: <span class="str">"Ravi Menon"</span>,
+  <span class="str">"total_value"</span>: <span class="flg">1240000</span>,
+  <span class="str">"holdings"</span>: [
+    { <span class="str">"symbol"</span>: <span class="str">"HDFCBANK"</span>, <span class="str">"quantity"</span>: <span class="flg">120</span> },
+    { <span class="str">"symbol"</span>: <span class="str">"INFY"</span>,     <span class="str">"quantity"</span>: <span class="flg">80</span>  }
+  ],
+  <span class="str">"advisor"</span>: {
+    <span class="str">"name"</span>: <span class="str">"Priya S"</span>,
+    <span class="str">"branch"</span>: <span class="str">"Mumbai"</span>
+  }
+}</code></pre>
+    </div>
+    <p>Read it top down: a client name, a total, a <em>list</em> of two holdings, and an advisor record tucked inside. Nesting is just a record used as a value.</p>
+
+    <div class="callout co-note"><span class="co-tag">Why everyone agreed on this</span>
+      <p>The frontend might be JavaScript. The backend might be Python. A partner's system might be Java. None of them can read each other's internal data directly.</p>
+      <p>JSON is the neutral middle. Every language can produce it and every language can read it, so it became the format the whole industry sends data in. <strong>It is plain text</strong> — you could type it in Notepad.</p>
+    </div>
+
+    <h3>The mistakes that break it</h3>
+    <ul>
+      <li><strong>A trailing comma.</strong> A comma after the last item is invalid. This is the single most common error.</li>
+      <li><strong>Single quotes.</strong> JSON demands double quotes. <code class="inl">'HDFCBANK'</code> is not valid.</li>
+      <li><strong>Unquoted names.</strong> The name on the left of the colon must be in quotes too.</li>
+      <li><strong>Comments.</strong> There is no way to write a note inside JSON. It is data only.</li>
+    </ul>
+    <p>Miss one of those and the receiving system rejects the whole message, not just the bad line. JSON is strict on purpose — strict means unambiguous.</p>
+
+    <div class="quiz">
+      <div class="q">In JSON, how do you write the number 120 and the word Infosys?</div>
+      <button class="opt" onclick="qa(this,1)">120 with no quotes, "Infosys" with double quotes</button>
+      <button class="opt" onclick="qa(this,0)">Both in double quotes</button>
+      <button class="opt" onclick="qa(this,0)">"120" in quotes, Infosys without</button>
+      <div class="explain"><strong>Numbers bare, text quoted.</strong> The quotes are how the receiving system knows which is which. Put quotes around 120 and it arrives as the <em>text</em> "120" — so the backend may refuse to do arithmetic with it, or worse, sort it alphabetically. This distinction causes a lot of real bugs.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(4)"><div class="pg-l">← Previous</div><div class="pg-t">JavaScript</div></button>
+    <button class="rt" onclick="go(6)"><div class="pg-l">Next slide →</div><div class="pg-t">The server</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 6 ================= -->
+<section class="slide" data-title="The server">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">06</div>
+    <div>
+      <h2 class="stage-title">What A Server Actually Is</h2>
+      <p class="stage-kicker">Not a mysterious black box. A computer that never sleeps, running a program that waits for questions and answers them.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The whole idea</h3>
+    <p>A server is an ordinary computer with two unusual habits: it is always switched on, and it is always listening for requests. When one arrives it works out the answer and sends it back.</p>
+    <p>The word gets used for both the machine and the program running on it. In practice people mean the program.</p>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Request arrives</div><span class="arrow">→</span>
+        <div class="node">Who is asking?</div><span class="arrow">→</span>
+        <div class="node">Are they allowed?</div><span class="arrow">→</span>
+        <div class="node am">Fetch and calculate</div><span class="arrow">→</span>
+        <div class="node em">Send the answer</div>
+      </div>
+      <div class="dg-cap">Then it forgets you and waits for the next one. Thousands of times a second</div>
+    </div>
+
+    <h3>What belongs on the server, and nothing else</h3>
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>Server only</h5>
+        <div class="dsub">never in the browser</div>
+        <ul>
+          <li><strong>Rules that matter</strong> — limits, eligibility, fees</li>
+          <li><strong>Who you are</strong> — passwords, sessions, permissions</li>
+          <li><strong>Secrets</strong> — database passwords, API keys</li>
+          <li><strong>The real numbers</strong> — anything money depends on</li>
+          <li><strong>Database access</strong> — always, without exception</li>
+        </ul>
+      </div>
+      <div class="duo-col b">
+        <h5>Browser is fine</h5>
+        <div class="dsub">for speed and comfort</div>
+        <ul>
+          <li>Showing and hiding things</li>
+          <li>Instant "this field is empty" nudges</li>
+          <li>Sorting a table already on screen</li>
+          <li>Animations and layout</li>
+          <li>A first check before sending</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Addresses, ports and hosting</h3>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">localhost</div><div class="vd">"This very computer." While building, the server runs on your own laptop and you reach it at <code class="inl">localhost</code>. Nobody else can.</div></div>
+      <div class="vocab"><div class="vt">port</div><div class="vd">A numbered door on a machine. One computer runs many programs, so each picks a door — <code class="inl">8000</code>, <code class="inl">5173</code>. That is what the number after the colon means.</div></div>
+      <div class="vocab"><div class="vt">deploy</div><div class="vd">Moving your program from your laptop onto a machine that is always on, so other people can reach it.</div></div>
+      <div class="vocab"><div class="vt">the cloud</div><div class="vd">Renting that always-on machine from Amazon, Google or Microsoft instead of buying and running one yourself.</div></div>
+    </div>
+
+    <p>So <code class="inl">http://localhost:8000</code> reads as: <em>on this computer, knock on door 8000.</em> Once deployed that becomes a real address like <code class="inl">https://api.yourbank.com</code>, but nothing about how it works changes.</p>
+
+    <div class="callout co-note"><span class="co-tag">Static versus dynamic — worth knowing</span>
+      <p>Some websites are just files sitting on a disk being handed out — a brochure, a slide deck like this one. Nothing is calculated. That is <strong>static</strong>, and it is cheap and simple to host.</p>
+      <p>The moment a page has to look something up, check who you are, or work out a number, you need a program running. That is <strong>dynamic</strong>, and that program is your backend.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(5)"><div class="pg-l">← Previous</div><div class="pg-t">JSON</div></button>
+    <button class="rt" onclick="go(7)"><div class="pg-l">Next slide →</div><div class="pg-t">APIs · GET POST PUT DELETE</div></button>
+  </div>
+</div></div>
+</section>
+<!-- ================= SLIDE 7 ================= -->
+<section class="slide" data-title="APIs · GET POST PUT DELETE">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">07</div>
+    <div>
+      <h2 class="stage-title">APIs — How The Two Halves Talk</h2>
+      <p class="stage-kicker">An API is the published list of things you are allowed to ask a server for. Like the set of forms at the counter: you cannot ask for anything, only what is on a form.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>An endpoint is one address you can ask</h3>
+    <p>Each thing the server can do gets an address. Together they are the API.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">a small API</span></div>
+      <pre><code>GET     /holdings          list every holding
+GET     /holdings/12       get holding number 12
+POST    /holdings          create a new holding
+PUT     /holdings/12       update holding number 12
+DELETE  /holdings/12       remove holding number 12</code></pre>
+    </div>
+
+    <p>Two parts on every line. The <strong>verb</strong> says what kind of action. The <strong>path</strong> says which thing. Notice the path is the same for all five — it is the verb that changes the meaning.</p>
+
+    <h3>The four verbs</h3>
+    <table class="cmp">
+      <tr><th>Verb</th><th>Means</th><th>At the bank counter</th><th>Changes anything?</th></tr>
+      <tr><td>GET</td><td>Give me this</td><td>"Show me my balance"</td><td class="yes">No — safe to repeat</td></tr>
+      <tr><td>POST</td><td>Create something new</td><td>"Open a new account"</td><td class="no">Yes — repeating creates duplicates</td></tr>
+      <tr><td>PUT</td><td>Update what is there</td><td>"Change my address to this"</td><td>Yes, but repeating is harmless</td></tr>
+      <tr><td>DELETE</td><td>Remove it</td><td>"Close this account"</td><td class="no">Yes, and usually permanent</td></tr>
+    </table>
+
+    <p>That distinction in the last column is real and it matters. If your internet drops mid-request, a GET can be retried safely. A POST cannot — retry it and you may open two accounts. This is why a wobbly connection at a payment page is genuinely dangerous, and why serious systems put protections around exactly this.</p>
+
+    <h3>What a request actually contains</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">a POST request, in full</span></div>
+      <pre><code>POST /holdings
+Content-Type: application/json
+Authorization: Bearer eyJhbGci...
+
+{
+  <span class="str">"symbol"</span>: <span class="str">"INFY"</span>,
+  <span class="str">"quantity"</span>: <span class="flg">80</span>,
+  <span class="str">"price"</span>: <span class="flg">1520.00</span>
+}</code></pre>
+    </div>
+    <ul>
+      <li><strong>The verb and path</strong> — what you want done, and to what.</li>
+      <li><strong>Headers</strong> — notes about the request. <code class="inl">Content-Type</code> says "the body is JSON". <code class="inl">Authorization</code> proves who you are.</li>
+      <li><strong>The body</strong> — the actual data, as JSON. GET and DELETE usually have no body; there is nothing to send.</li>
+    </ul>
+
+    <h3>And what comes back</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">the response</span></div>
+      <pre><code>201 Created
+
+{
+  <span class="str">"id"</span>: <span class="flg">13</span>,
+  <span class="str">"symbol"</span>: <span class="str">"INFY"</span>,
+  <span class="str">"quantity"</span>: <span class="flg">80</span>,
+  <span class="str">"price"</span>: <span class="flg">1520.00</span>
+}</code></pre>
+    </div>
+    <p>A number, then the data. The server assigned <code class="inl">id: 13</code> — the frontend did not choose that, and should never try to. Identity is the server's job.</p>
+
+    <h3>Status codes — read the first digit</h3>
+    <table class="cmp">
+      <tr><th>Code</th><th>Means</th><th>Whose fault</th></tr>
+      <tr><td>200 OK</td><td>Worked. Here is your answer</td><td>—</td></tr>
+      <tr><td>201 Created</td><td>Worked, and something new exists now</td><td>—</td></tr>
+      <tr><td>400 Bad Request</td><td>Your message was malformed or missing a field</td><td class="no">The caller</td></tr>
+      <tr><td>401 Unauthorized</td><td>You have not proved who you are</td><td class="no">The caller</td></tr>
+      <tr><td>403 Forbidden</td><td>We know who you are. You still may not do this</td><td class="no">The caller</td></tr>
+      <tr><td>404 Not Found</td><td>No such thing at that address</td><td class="no">The caller</td></tr>
+      <tr><td>500 Server Error</td><td>Something broke on our side</td><td class="no">The server</td></tr>
+    </table>
+    <p><strong>The shortcut:</strong> 2xx worked, 4xx means the caller got it wrong, 5xx means the server got it wrong. That one rule tells you which team to talk to, and it is most of what a status code is for.</p>
+
+    <div class="callout co-win"><span class="co-tag">Why an API is worth having at all</span>
+      <p>Once the backend publishes this list, <strong>anything</strong> can use it. The website, the phone app, an Excel macro, a partner bank, an automated report at 6am.</p>
+      <p>None of them need to know a single thing about how the backend works inside, or even what language it is written in. They only need the list of addresses and the shape of the JSON. That is the entire value of an API: the two sides can change independently, forever, as long as the agreement holds.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your payment request times out and you never see a response. Is it safe to press the button again?</div>
+      <button class="opt" onclick="qa(this,0)">Yes, nothing happened if there was no response</button>
+      <button class="opt" onclick="qa(this,1)">No — a POST may have succeeded before the reply got lost</button>
+      <button class="opt" onclick="qa(this,0)">Only if it took more than 30 seconds</button>
+      <div class="explain"><strong>Not safe.</strong> No response does not mean no action. The server may have completed the payment and the reply got lost coming back. Retrying can pay twice. This is why payment systems attach a unique reference to each attempt, so the server recognises a repeat and refuses to act on it twice.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(6)"><div class="pg-l">← Previous</div><div class="pg-t">The server</div></button>
+    <button class="rt" onclick="go(8)"><div class="pg-l">Next slide →</div><div class="pg-t">FastAPI</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 8 ================= -->
+<section class="slide" data-title="FastAPI">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">08</div>
+    <div>
+      <h2 class="stage-title">FastAPI — Writing The Backend</h2>
+      <p class="stage-kicker">A Python toolkit for building exactly the API on the last slide. It turns "I want an address that does this" into about three lines.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>An endpoint, in full</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">python · fastapi</span></div>
+      <pre><code><span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI
+
+app = FastAPI()
+
+<span class="cmt"># when a GET arrives at /holdings, run this function</span>
+<span class="kw">@app</span>.get(<span class="str">"/holdings"</span>)
+<span class="kw">def</span> list_holdings():
+    <span class="kw">return</span> [
+        {<span class="str">"symbol"</span>: <span class="str">"HDFCBANK"</span>, <span class="str">"quantity"</span>: <span class="flg">120</span>},
+        {<span class="str">"symbol"</span>: <span class="str">"INFY"</span>,     <span class="str">"quantity"</span>: <span class="flg">80</span>},
+    ]</code></pre>
+    </div>
+
+    <p>The line beginning with <code class="inl">@</code> is a <strong>decorator</strong> — a label stuck on the function underneath. It reads as: <em>"when a GET request arrives at /holdings, run the function below."</em> That is the one piece of unfamiliar punctuation on this slide, and it means nothing more than that.</p>
+    <p>The function returns an ordinary Python list. <strong>FastAPI converts it to JSON automatically.</strong> Nobody writes the curly brackets and quotes by hand.</p>
+
+    <h3>Reading part of the address</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">python · a value from the path</span></div>
+      <pre><code><span class="kw">@app</span>.get(<span class="str">"/holdings/{holding_id}"</span>)
+<span class="kw">def</span> get_holding(holding_id: <span class="kw">int</span>):
+    <span class="kw">return</span> {<span class="str">"id"</span>: holding_id, <span class="str">"symbol"</span>: <span class="str">"HDFCBANK"</span>}</code></pre>
+    </div>
+    <p>The curly brackets in the path mark a blank to be filled in. Ask for <code class="inl">/holdings/12</code> and <code class="inl">holding_id</code> arrives as 12.</p>
+    <p>Note <code class="inl">: int</code>. That says this must be a whole number. If somebody requests <code class="inl">/holdings/banana</code>, FastAPI rejects it with a clear 400 before your function runs at all. <strong>You did not write that check.</strong> Declaring the type was enough.</p>
+
+    <h3>Receiving data, and checking it</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">python · POST with validation</span></div>
+      <pre><code><span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel
+
+<span class="cmt"># the shape we will accept. nothing else gets through.</span>
+<span class="kw">class</span> NewHolding(BaseModel):
+    symbol: <span class="kw">str</span>
+    quantity: <span class="kw">int</span>
+    price: <span class="kw">float</span>
+
+<span class="kw">@app</span>.post(<span class="str">"/holdings"</span>)
+<span class="kw">def</span> create_holding(holding: NewHolding):
+    <span class="kw">if</span> holding.quantity &lt;= <span class="flg">0</span>:
+        <span class="kw">return</span> {<span class="str">"error"</span>: <span class="str">"Quantity must be positive"</span>}
+
+    value = holding.quantity * holding.price   <span class="cmt"># the backend logic</span>
+    <span class="kw">return</span> {<span class="str">"symbol"</span>: holding.symbol, <span class="str">"value"</span>: value}</code></pre>
+    </div>
+
+    <p>That class is a contract. Send JSON missing <code class="inl">price</code>, or with <code class="inl">quantity</code> as the text <code class="inl">"eighty"</code>, and FastAPI refuses it with a message naming the exact field. Your code only ever runs on data that already fits the shape.</p>
+    <p>Then comes the part only the server can do: the <strong>logic</strong>. Checking the quantity is positive. Multiplying out the value. This is the "back office decides" step from slide one, and here it is in three lines.</p>
+
+    <div class="callout co-win"><span class="co-tag">The free documentation</span>
+      <p>Start a FastAPI server and visit <code class="inl">/docs</code> in a browser. You get a full page listing every endpoint, the shape of every request, and a button to try each one live — generated from the code itself.</p>
+      <p>Nobody wrote that page. It cannot go out of date, because it is built from the same declarations that run the server. For a non-engineer this is the single most useful thing in this deck: <strong>you can explore any FastAPI backend yourself, without reading code.</strong></p>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">Where it fits</span>
+      <p>FastAPI is one of several tools that do this job. You will hear Django and Flask in Python, Express in JavaScript, Spring in Java.</p>
+      <p>They differ in style and in how much they do for you. The <em>shape</em> is identical in all of them: an address, a verb, a function, JSON back. Learn it once and every backend you meet is recognisable.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(7)"><div class="pg-l">← Previous</div><div class="pg-t">APIs · GET POST PUT DELETE</div></button>
+    <button class="rt" onclick="go(9)"><div class="pg-l">Next slide →</div><div class="pg-t">The database and SQL</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 9 ================= -->
+<section class="slide" data-title="The database and SQL">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">09</div>
+    <div>
+      <h2 class="stage-title">The Database And SQL</h2>
+      <p class="stage-kicker">The server forgets everything the moment it answers. The database is the part that remembers — and this is the layer closest to what you already know.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>It is a set of very disciplined spreadsheets</h3>
+    <p>A database holds <strong>tables</strong>. A table has fixed <strong>columns</strong> and any number of <strong>rows</strong>. If you can picture a spreadsheet, you can picture this.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">table: holdings</span></div>
+      <pre><code>id | symbol    | quantity | price   | client_id
+---+-----------+----------+---------+----------
+ 1 | HDFCBANK  |      120 | 1680.50 |        7
+ 2 | INFY      |       80 | 1520.00 |        7
+ 3 | TCS       |       45 | 3890.00 |        9</code></pre>
+    </div>
+
+    <p>Three differences from a spreadsheet, and they are the whole reason databases exist:</p>
+    <ul>
+      <li><strong>Columns have fixed types.</strong> <code class="inl">quantity</code> holds whole numbers. You cannot type "eighty" into it. The database refuses.</li>
+      <li><strong>Every row has an id.</strong> A permanent, unique handle. Two clients named R. Menon are still row 7 and row 41.</li>
+      <li><strong>Rows point at each other.</strong> <code class="inl">client_id: 7</code> means "this belongs to client number 7 in the clients table". That is how a portfolio links to its owner without copying their details onto every row.</li>
+    </ul>
+
+    <h3>SQL — asking the questions</h3>
+    <p>SQL is the language for talking to a database. It was designed to read like English, and it very nearly does.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">sql · the four operations</span></div>
+      <pre><code><span class="cmt">-- read</span>
+<span class="kw">SELECT</span> symbol, quantity <span class="kw">FROM</span> holdings <span class="kw">WHERE</span> client_id = <span class="flg">7</span>;
+
+<span class="cmt">-- create</span>
+<span class="kw">INSERT INTO</span> holdings (symbol, quantity, price, client_id)
+<span class="kw">VALUES</span> (<span class="str">'INFY'</span>, <span class="flg">80</span>, <span class="flg">1520.00</span>, <span class="flg">7</span>);
+
+<span class="cmt">-- update</span>
+<span class="kw">UPDATE</span> holdings <span class="kw">SET</span> quantity = <span class="flg">100</span> <span class="kw">WHERE</span> id = <span class="flg">2</span>;
+
+<span class="cmt">-- remove</span>
+<span class="kw">DELETE FROM</span> holdings <span class="kw">WHERE</span> id = <span class="flg">2</span>;</code></pre>
+    </div>
+
+    <p>Read the first one aloud: <em>select symbol and quantity from holdings where client id is 7.</em> It says what it does.</p>
+
+    <h3>The parts you will actually use</h3>
+    <table class="cmp">
+      <tr><th>Word</th><th>What it does</th><th>Example</th></tr>
+      <tr><td>SELECT</td><td>Which columns you want</td><td><code class="inl">SELECT symbol, price</code></td></tr>
+      <tr><td>FROM</td><td>Which table</td><td><code class="inl">FROM holdings</code></td></tr>
+      <tr><td>WHERE</td><td>Only rows matching a condition</td><td><code class="inl">WHERE quantity &gt; 50</code></td></tr>
+      <tr><td>ORDER BY</td><td>Sort the result</td><td><code class="inl">ORDER BY price DESC</code></td></tr>
+      <tr><td>LIMIT</td><td>Only the first few</td><td><code class="inl">LIMIT 10</code></td></tr>
+      <tr><td>COUNT, SUM, AVG</td><td>Totals and averages</td><td><code class="inl">SELECT SUM(quantity)</code></td></tr>
+      <tr><td>GROUP BY</td><td>Totals per category</td><td><code class="inl">GROUP BY sector</code></td></tr>
+      <tr><td>JOIN</td><td>Pull two tables together on a shared id</td><td><code class="inl">JOIN clients ON ...</code></td></tr>
+    </table>
+
+    <p><strong>GROUP BY is a pivot table.</strong> "Total holdings per sector" is one line of SQL and is exactly the thing you would build with a pivot in Excel:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">sql · a pivot, essentially</span></div>
+      <pre><code><span class="kw">SELECT</span> sector, <span class="kw">SUM</span>(quantity * price) <span class="kw">AS</span> total
+<span class="kw">FROM</span> holdings
+<span class="kw">GROUP BY</span> sector
+<span class="kw">ORDER BY</span> total <span class="kw">DESC</span>;</code></pre>
+    </div>
+
+    <h3>Who writes the SQL?</h3>
+    <p>Often nobody, by hand. Most backends use a translator — an <strong>ORM</strong> — so you write Python and it produces the SQL underneath:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">python · the same query, written in Python</span></div>
+      <pre><code>session.exec(
+    select(Holding).where(Holding.client_id == <span class="flg">7</span>)
+)
+
+<span class="cmt"># the library turns that into:</span>
+<span class="cmt">--   SELECT * FROM holdings WHERE client_id = 7</span></code></pre>
+    </div>
+    <p>It is worth understanding SQL anyway. When something is slow or a report is wrong, the SQL is what you end up reading.</p>
+
+    <div class="callout co-trap"><span class="co-tag">The famous one — SQL injection</span>
+      <p>If a server glues user input straight into a query, a visitor can type SQL into a search box and have the database run it. That is how real breaches have dumped entire customer tables.</p>
+      <p>The fix is old and completely settled: <strong>never paste user input into a query.</strong> Pass it as a separate parameter, which every modern library does by default. This is why "we wrote our own database layer" should always prompt a follow-up question.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You want each sector's total holding value, biggest first. Which SQL words do you need?</div>
+      <button class="opt" onclick="qa(this,1)">SELECT with SUM, GROUP BY sector, ORDER BY total DESC</button>
+      <button class="opt" onclick="qa(this,0)">SELECT with WHERE sector</button>
+      <button class="opt" onclick="qa(this,0)">INSERT and then ORDER BY</button>
+      <div class="explain"><strong>SUM, GROUP BY, ORDER BY.</strong> GROUP BY collapses the rows into one per sector, SUM totals each group, ORDER BY … DESC sorts biggest first. It is a pivot table written as a sentence. WHERE is different — it filters individual rows <em>before</em> any grouping happens.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(8)"><div class="pg-l">← Previous</div><div class="pg-t">FastAPI</div></button>
+    <button class="rt" onclick="go(10)"><div class="pg-l">Next slide →</div><div class="pg-t">One click, end to end</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 10 ================= -->
+<section class="slide" data-title="One click, end to end">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">10</div>
+    <div>
+      <h2 class="stage-title">One Click, End To End</h2>
+      <p class="stage-kicker">Every piece from this session, in the order they actually happen. A user adds a holding. Follow it all the way down and back.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div>
+        <div class="st">The user types and clicks — HTML</div>
+        <div class="sd">The form is on the page because HTML put it there, and it looks the way it does because of CSS.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">html</span></div><pre><code>&lt;input id="symbol" placeholder="Symbol"&gt;
+&lt;input id="qty" placeholder="Quantity"&gt;
+&lt;button id="save"&gt;Add holding&lt;/button&gt;</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">2</div><div>
+        <div class="st">JavaScript wakes up and packs a parcel — JSON</div>
+        <div class="sd">It reads both boxes, does a quick courtesy check, and turns the values into JSON.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">javascript</span></div><pre><code><span class="kw">const</span> body = {
+    symbol: document.getElementById(<span class="str">"symbol"</span>).value,
+    quantity: <span class="kw">Number</span>(document.getElementById(<span class="str">"qty"</span>).value)
+};</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">3</div><div>
+        <div class="st">It sends the request — the API call</div>
+        <div class="sd">POST, because this creates something new. The address, the verb, the JSON body.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">javascript · the call</span></div><pre><code><span class="kw">const</span> response = <span class="kw">await</span> fetch(<span class="str">"http://localhost:8000/holdings"</span>, {
+    method: <span class="str">"POST"</span>,
+    headers: { <span class="str">"Content-Type"</span>: <span class="str">"application/json"</span> },
+    body: <span class="kw">JSON</span>.stringify(body)
+});</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">4</div><div>
+        <div class="st">It travels across the network</div>
+        <div class="sd">Out of the browser, to whichever machine answers on that address and port. Milliseconds, usually.</div>
+      </div></div>
+
+      <div class="step"><div class="sn">5</div><div>
+        <div class="st">FastAPI receives it and checks the shape</div>
+        <div class="sd">Right address, right verb, so this function runs. The <code class="inl">NewHolding</code> contract is enforced <em>before</em> the first line of your code — a missing field is already rejected.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">python</span></div><pre><code><span class="kw">@app</span>.post(<span class="str">"/holdings"</span>)
+<span class="kw">def</span> create_holding(holding: NewHolding, session = Depends(get_session)):</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">6</div><div>
+        <div class="st">The backend applies the real rules — the logic</div>
+        <div class="sd">This is the step that could not have happened in the browser, because the browser cannot be trusted.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">python · the part that matters</span></div><pre><code>    <span class="kw">if</span> holding.quantity &lt;= <span class="flg">0</span>:
+        <span class="kw">raise</span> HTTPException(<span class="flg">400</span>, <span class="str">"Quantity must be positive"</span>)
+
+    price = look_up_market_price(holding.symbol)   <span class="cmt"># not the user's number</span>
+    row   = Holding(**holding.model_dump(), price=price)</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">7</div><div>
+        <div class="st">It writes to the database — SQL</div>
+        <div class="sd">Two lines of Python. Underneath, an INSERT runs and the row is on disk permanently.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">python → sql</span></div><pre><code>    session.add(row)
+    session.commit()
+
+<span class="cmt"># INSERT INTO holdings (symbol, quantity, price) VALUES ('INFY', 80, 1520.0)</span></code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">8</div><div>
+        <div class="st">The answer goes back as JSON</div>
+        <div class="sd">Including the <code class="inl">id</code> the database just assigned — which nobody could know until this moment.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">the response</span></div><pre><code>201 Created
+
+{ <span class="str">"id"</span>: <span class="flg">13</span>, <span class="str">"symbol"</span>: <span class="str">"INFY"</span>, <span class="str">"quantity"</span>: <span class="flg">80</span>, <span class="str">"price"</span>: <span class="flg">1520.00</span> }</code></pre></div>
+      </div></div>
+
+      <div class="step"><div class="sn">9</div><div>
+        <div class="st">JavaScript updates the screen</div>
+        <div class="sd">It unpacks the JSON and adds a row. The page never reloaded — this is why modern apps feel instant.</div>
+        <div class="codeblock"><div class="cb-head"><span class="cb-title">javascript</span></div><pre><code><span class="kw">const</span> saved = <span class="kw">await</span> response.json();
+addRowToTable(saved);</code></pre></div>
+      </div></div>
+    </div>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">HTML form</div><span class="arrow">→</span>
+        <div class="node">JavaScript</div><span class="arrow">→</span>
+        <div class="node am">JSON over HTTP</div><span class="arrow">→</span>
+        <div class="node em">FastAPI</div><span class="arrow">→</span>
+        <div class="node ro">SQL · database</div>
+      </div>
+      <div class="flow" style="margin-top:12px">
+        <div class="node ro">row saved</div><span class="arrow">→</span>
+        <div class="node em">JSON response</div><span class="arrow">→</span>
+        <div class="node">JavaScript</div><span class="arrow">→</span>
+        <div class="node sky">screen updates</div>
+      </div>
+      <div class="dg-cap">Down and back. Every app you use does this, thousands of times a day</div>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">You have now seen the whole thing</span>
+      <p>There is no further layer hiding underneath. A trading terminal is this with more rules and far more care. Net banking is this with heavy security around step 5. Your portfolio dashboard is this, mostly GETs.</p>
+      <p><strong>The parts do not change. Only the number of them, and how much rides on getting them right.</strong></p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(9)"><div class="pg-l">← Previous</div><div class="pg-t">The database and SQL</div></button>
+    <button class="rt" onclick="go(11)"><div class="pg-l">Next slide →</div><div class="pg-t">The whole project</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 11 ================= -->
+<section class="slide" data-title="The whole project · CRUD">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">11</div>
+    <div>
+      <h2 class="stage-title">The Whole Project — CRUD</h2>
+      <p class="stage-kicker">Four operations cover the overwhelming majority of business software ever written. They have an ugly acronym and you now understand all of it.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>CRUD</h3>
+    <table class="cmp">
+      <tr><th>Letter</th><th>Operation</th><th>Verb</th><th>SQL</th><th>In a portfolio app</th></tr>
+      <tr><td>C</td><td>Create</td><td>POST</td><td>INSERT</td><td>Add a holding</td></tr>
+      <tr><td>R</td><td>Read</td><td>GET</td><td>SELECT</td><td>View the portfolio</td></tr>
+      <tr><td>U</td><td>Update</td><td>PUT</td><td>UPDATE</td><td>Change a quantity</td></tr>
+      <tr><td>D</td><td>Delete</td><td>DELETE</td><td>DELETE</td><td>Remove a holding</td></tr>
+    </table>
+
+    <p>Look across each row. The verb, the SQL and the business action all line up. That is not a coincidence — the web's verbs were designed around exactly these four operations, which is why the mapping is so clean and why it is worth memorising this table alone.</p>
+
+    <div class="callout co-note"><span class="co-tag">How much of the world is this</span>
+      <p>A CRM, an inventory system, an HR portal, a ticketing tool, a loan tracker, a KYC system. Underneath the branding they are all lists of things you can create, read, update and delete, with rules attached.</p>
+      <p>When a vendor demos software to you, this is the first question worth asking: <em>what are the things, and who is allowed to do which of the four to each of them?</em> That single question maps most systems in about ten minutes.</p>
+    </div>
+
+    <h3>What a small real project looks like</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">the files, and what each is for</span></div>
+      <pre><code>backend/
+  main.py        starts the server, connects the addresses
+  models.py      the tables: what columns, what types
+  schemas.py     what the browser may send and receive
+  crud.py        the four operations, written once
+  routers/       the addresses, grouped by topic
+  database.py    the connection to the database file
+
+frontend/
+  index.html     the structure
+  styles.css     the appearance
+  api.js         every call to the backend, in one place
+  app.js         what happens when the user does things</code></pre>
+    </div>
+
+    <p>Two things worth noticing, because they are how professionals keep projects manageable:</p>
+    <ul>
+      <li><strong>Every file has one job.</strong> Tables in one place, appearance in another. When something is wrong with the styling you know which file to open without searching.</li>
+      <li><strong>The four operations are written once</strong>, in <code class="inl">crud.py</code>, and reused for every table. Holdings, clients and sectors all share them. Write it once, fix it once.</li>
+    </ul>
+
+    <h3>The words, so meetings make sense</h3>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">frontend</div><div class="vd">Everything running in the user's browser. What they see and touch.</div></div>
+      <div class="vocab"><div class="vt">backend</div><div class="vd">The program on the server. Rules, decisions, calculations.</div></div>
+      <div class="vocab"><div class="vt">API</div><div class="vd">The published list of requests the backend accepts.</div></div>
+      <div class="vocab"><div class="vt">endpoint</div><div class="vd">One address in that list, such as <code class="inl">/holdings</code>.</div></div>
+      <div class="vocab"><div class="vt">JSON</div><div class="vd">The text format both sides send data in.</div></div>
+      <div class="vocab"><div class="vt">database</div><div class="vd">Where it is stored so it survives a restart.</div></div>
+      <div class="vocab"><div class="vt">SQL</div><div class="vd">The language for asking the database questions.</div></div>
+      <div class="vocab"><div class="vt">CRUD</div><div class="vd">Create, read, update, delete. Most of business software.</div></div>
+      <div class="vocab"><div class="vt">deploy</div><div class="vd">Putting it on an always-on machine so others can use it.</div></div>
+      <div class="vocab"><div class="vt">full stack</div><div class="vd">Someone who works on both the frontend and the backend.</div></div>
+    </div>
+
+    <h3>The whole session in six lines</h3>
+    <ul>
+      <li><strong>Four layers.</strong> Browser, server, database, and the API agreement between the first two.</li>
+      <li><strong>Three languages in the browser.</strong> HTML is the structure, CSS the appearance, JavaScript the behaviour.</li>
+      <li><strong>JSON is how they talk</strong> — plain text, labelled values, readable by anyone.</li>
+      <li><strong>Four verbs.</strong> GET reads, POST creates, PUT updates, DELETE removes.</li>
+      <li><strong>The database remembers, SQL asks it questions.</strong> Tables are strict spreadsheets; GROUP BY is a pivot.</li>
+      <li><strong>The frontend asks, the backend decides.</strong> Never trust the browser — every rule that matters is enforced on the server.</li>
+    </ul>
+
+    <div class="callout co-win"><span class="co-tag">What to do with this</span>
+      <p>You are not going to go and build a trading platform this week. That was never the point.</p>
+      <p>The point is that the next time an engineer says "the endpoint returns a 500" or "that validation is only client-side" or "we need a JOIN across two tables", <strong>you know what they mean, and you can ask the next question.</strong> In a room where the business and the engineers have to agree on something, that is worth a great deal.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">A colleague says "the frontend already checks the limit, so the backend does not need to". What is your response?</div>
+      <button class="opt" onclick="qa(this,1)">The backend must check too — the browser can be bypassed entirely</button>
+      <button class="opt" onclick="qa(this,0)">Fair enough, that avoids duplicate code</button>
+      <button class="opt" onclick="qa(this,0)">Fine as long as the frontend is well tested</button>
+      <div class="explain"><strong>The backend must check too.</strong> Frontend code runs on the user's machine, so it can be edited or skipped completely — a request can be sent straight to the API with no page involved at all. The duplication is deliberate: the browser check is for a good experience, the server check is the actual rule. If you only get one, keep the server one.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(10)"><div class="pg-l">← Previous</div><div class="pg-t">One click, end to end</div></button>
+    <button class="rt" onclick="go(0)"><div class="pg-l">Back to start →</div><div class="pg-t">Session overview</div></button>
+  </div>
+</div></div>
+</section>
+
+<div class="foot container">Generative &amp; Agentic AI Development · How a web app actually works · Twelve slides, one session.</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+
+/* build dropdown */
+const menu=document.getElementById('dropMenu');
+menu.innerHTML='<div class="part">Session</div>'+slides.map((s,i)=>
+  `<a data-i="${i}" onclick="go(${i});return false;"><span class="dn">${i===0?'··':String(i).padStart(2,'0')}</span><span class="dt">${s.dataset.title}</span></a>`
+).join('');
+
+function go(i){
+  if(i<0||i>=slides.length)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  [...menu.querySelectorAll('a')].forEach(a=>a.classList.toggle('cur',+a.dataset.i===i));
+  document.getElementById('btnPrev').classList.toggle('disabled',i===0);
+  document.getElementById('btnNext').classList.toggle('disabled',i===slides.length-1);
+  document.getElementById('railFill').style.width=((i)/(slides.length-1)*100)+'%';
+  drop.classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* dropdown toggle */
+const drop=document.getElementById('chDrop');
+document.getElementById('chDropBtn').onclick=e=>{e.stopPropagation();drop.classList.toggle('open');};
+document.addEventListener('click',()=>drop.classList.remove('open'));
+
+/* keyboard */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+
+/* quiz */
+function qa(btn,correct){
+  const box=btn.closest('.quiz');
+  box.querySelectorAll('.opt').forEach(o=>o.disabled=true);
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    box.querySelectorAll('.opt').forEach(o=>{
+      if(o.getAttribute('onclick').includes(',1)'))o.classList.add('correct');
+    });
+  }
+  box.querySelector('.explain').classList.add('show');
+}
+
+go(0);
+</script>
+
+</body></html>

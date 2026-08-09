@@ -1,0 +1,6 @@
+notes.db
+.env
+__pycache__/
+.venv/
+node_modules/
+dist/

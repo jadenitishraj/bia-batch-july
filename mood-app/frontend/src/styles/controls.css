@@ -1,0 +1,173 @@
+/* The small pieces used everywhere: buttons, input boxes, chips and popups. */
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.primary {
+  background: var(--accent);
+  color: #fdfcf9;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.primary:hover {
+  background: #b4573a;
+}
+
+.primary:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.primary.small {
+  padding: 8px 14px;
+  font-size: 13.5px;
+}
+
+.ghost {
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.ghost:hover {
+  background: var(--surface-soft);
+  color: var(--ink);
+}
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  opacity: 0.4;
+  font-size: 14px;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.icon-btn:hover {
+  opacity: 1;
+  background: var(--surface-soft);
+}
+
+/* ---------- input boxes ---------- */
+
+.field,
+input,
+textarea {
+  font: inherit;
+  font-size: 14px;
+  color: inherit;
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field::placeholder,
+input::placeholder,
+textarea::placeholder {
+  color: #a9a59c;
+}
+
+.field:focus,
+input:focus,
+textarea:focus {
+  border-color: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.13);
+}
+
+.area {
+  min-height: 130px;
+  resize: vertical;
+  line-height: 1.65;
+}
+
+/* ---------- chips ---------- */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: color-mix(in srgb, var(--chip-color) 78%, #1f1e1c);
+  background: color-mix(in srgb, var(--chip-color) 14%, #fdfcf9);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 26%, #fdfcf9);
+  transition: background 0.15s ease;
+}
+
+.chip:hover {
+  background: color-mix(in srgb, var(--chip-color) 24%, #fdfcf9);
+}
+
+.chip-active {
+  background: var(--chip-color);
+  color: #fdfcf9;
+  border-color: var(--chip-color);
+}
+
+.chip-active:hover {
+  background: var(--chip-color);
+}
+
+/* ---------- popups ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(35, 30, 24, 0.34);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 10;
+}
+
+.modal {
+  width: min(600px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 26px;
+  box-shadow: 0 24px 60px -20px rgba(50, 40, 28, 0.35);
+}
+
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.modal-head h2 {
+  font-size: 21px;
+}
+
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 26px;
+}

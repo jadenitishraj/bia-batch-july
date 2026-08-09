@@ -1,0 +1,62 @@
+[
+  {
+    "id": "doc-1",
+    "title": "CloudDesk Pricing Plans",
+    "topic": "pricing",
+    "text": "CloudDesk has three plans. The Starter plan costs 15 dollars per user per month and includes 5 GB storage. The Team plan costs 30 dollars per user per month and includes 50 GB storage and priority email support. The Business plan costs 60 dollars per user per month and includes unlimited storage, phone support and a dedicated account manager. All plans are billed monthly. Yearly billing gives a 20 percent discount."
+  },
+  {
+    "id": "doc-2",
+    "title": "CloudDesk Free Trial",
+    "topic": "pricing",
+    "text": "Every new customer gets a 14 day free trial of the Team plan. No credit card is needed to start the trial. When the trial ends, the account moves to the Starter plan automatically unless the customer chooses a paid plan."
+  },
+  {
+    "id": "doc-3",
+    "title": "Refund Policy",
+    "topic": "policy",
+    "text": "Customers can ask for a full refund within 30 days of payment. Refunds are sent back to the original payment method and take 5 to 7 working days. After 30 days we do not give refunds, but the customer can cancel so they are not charged again."
+  },
+  {
+    "id": "doc-4",
+    "title": "How to Reset Your Password",
+    "topic": "support",
+    "text": "To reset a CloudDesk password, click Forgot Password on the login page and type your email. A reset link is sent to that email. The link is valid for 60 minutes. If the email does not arrive, check the spam folder or contact support at help@clouddesk.example."
+  },
+  {
+    "id": "doc-5",
+    "title": "Supported Integrations",
+    "topic": "product",
+    "text": "CloudDesk connects with Slack, Google Drive, Dropbox, Microsoft Teams and Zapier. The Slack and Google Drive integrations are available on all plans. The Microsoft Teams and Zapier integrations need the Team plan or higher."
+  },
+  {
+    "id": "doc-6",
+    "title": "Data Security",
+    "topic": "policy",
+    "text": "All CloudDesk data is encrypted in transit using TLS and encrypted at rest using AES-256. Backups run every 24 hours and are kept for 30 days. CloudDesk servers are located in Europe and India. The company is ISO 27001 certified."
+  },
+  {
+    "id": "doc-7",
+    "title": "Support Hours",
+    "topic": "support",
+    "text": "Email support is available Monday to Friday from 9 AM to 6 PM IST. Team plan customers get a reply within 8 working hours. Business plan customers get phone support 24 hours a day, 7 days a week."
+  },
+  {
+    "id": "doc-8",
+    "title": "Mobile Apps",
+    "topic": "product",
+    "text": "CloudDesk has a mobile app for Android and iOS. The app supports offline mode, so files opened recently can be read without internet. Changes made offline are synced when the phone gets internet again. The mobile app is free with every plan."
+  },
+  {
+    "id": "doc-9",
+    "title": "How to Cancel an Account",
+    "topic": "policy",
+    "text": "To cancel, go to Settings, then Billing, then click Cancel Subscription. The account stays active until the end of the paid period. Files are kept for 60 days after cancellation and then deleted permanently. Customers can download all their files as a ZIP before deletion."
+  },
+  {
+    "id": "doc-10",
+    "title": "User Roles and Permissions",
+    "topic": "product",
+    "text": "CloudDesk has three user roles. Admin can add users, change billing and delete files. Editor can upload and edit files but cannot change billing. Viewer can only read files. Only the Business plan allows creating custom roles."
+  }
+]
