@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
-  --sky:#0ea5e9;--violet:#8b5cf6;--emerald:#10b981;--amber:#f59e0b;--rose:#f43f5e;
+  --sky:#0ea5e9;--violet:#8b5cf6;--emerald:#10b981;--amber:#f59e0b;--rose:#f43f5e;--indigo:#6366f1;
   --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -47,6 +47,9 @@ header .sub{font-size:clamp(17px,2.2vw,20px);max-width:660px;color:var(--ink-dim
 .deck.amber{border-top:3px solid var(--amber)}
 .deck.amber:hover{border-color:color-mix(in srgb,var(--amber) 45%,var(--card-border));border-top-color:var(--amber)}
 .deck.amber .go{color:var(--amber)}
+.deck.indigo{border-top:3px solid var(--indigo)}
+.deck.indigo:hover{border-color:color-mix(in srgb,var(--indigo) 45%,var(--card-border));border-top-color:var(--indigo)}
+.deck.indigo .go{color:var(--indigo)}
 .deck.rose{border-top:3px solid var(--rose)}
 .deck.rose:hover{border-color:color-mix(in srgb,var(--rose) 45%,var(--card-border));border-top-color:var(--rose)}
 .deck.rose .go{color:var(--rose)}
@@ -95,7 +98,7 @@ footer{padding:60px 0 80px;margin-top:44px;border-top:1px solid var(--card-borde
   <header>
     <div class="kicker">Generative &amp; Agentic AI Development</div>
     <h1 class="display">Teaching<br><em>Decks</em></h1>
-    <p class="sub">Five sessions, built to be read straight through. Start on the left if you have never written code. Use the Slides menu at the top of each deck, or just press the arrow keys.</p>
+    <p class="sub">Six sessions, built to be read straight through. Start on the left if you have never written code. Use the Slides menu at the top of each deck, or just press the arrow keys.</p>
   </header>
 
   <div class="decks">
@@ -166,6 +169,20 @@ footer{padding:60px 0 80px;margin-top:44px;border-top:1px solid var(--card-borde
         <li>Residuals and the feed-forward layer</li>
         <li>Softmax, sampling, and generation</li>
         <li>How the weights got smart</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck indigo" href="prompt-essentials.html">
+      <div class="num">Session five · 13 slides</div>
+      <h2>Prompt Essentials — Wrong Prompt, Right Prompt</h2>
+      <p>Thirty worked before-and-after pairs. Every bad prompt sits next to the fixed version, so you can see exactly which words did the work.</p>
+      <ul>
+        <li>The seven parts of a prompt contract</li>
+        <li>Six failures that cover almost everything</li>
+        <li>Zero-shot, one-shot and few-shot</li>
+        <li>System messages, templates, versions</li>
+        <li>Temperature, and debugging by trace</li>
       </ul>
       <span class="go">Open deck →</span>
     </a>
