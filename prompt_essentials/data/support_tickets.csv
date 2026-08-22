@@ -1,0 +1,6 @@
+ticket_id,customer_message,expected_category,expected_priority
+T-1001,"I was charged twice for the annual plan and support has not replied for 3 days.",Billing,High
+T-1002,"The replacement laptop was promised yesterday, but tracking still says label created. My project starts tomorrow.",Logistics,High
+T-1003,"How do I change the email address linked to my account?",Account,Low
+T-1004,"The dashboard crashes every time I upload the monthly sales file.",Technical,Medium
+T-1005,"I need an invoice with my company GST details before finance closes today.",Billing,Medium
