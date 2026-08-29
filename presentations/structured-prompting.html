@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Structured Prompting — CoT, ToT, GoT, ReAct &amp; Skills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--teal:#2dd4bf;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 12% 45%, rgba(45,212,191,.07), transparent 26%),radial-gradient(circle at 88% 28%, rgba(139,92,246,.07), transparent 26%);background-attachment:fixed;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* ===== top site nav ===== */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--teal)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#c7f5ee;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:400px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--teal);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:86vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(42px,7.6vw,88px);margin-bottom:28px;background:linear-gradient(135deg,var(--teal),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:48px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:64px 0 84px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:36px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:60px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:870px}
+
+/* body */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:940px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(45,212,191,.13);border:1px solid rgba(45,212,191,.24);border-radius:4px;padding:2px 6px;color:#b8f0e8}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.callout ul{margin:8px 0 0}
+.callout li{font-size:15px}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+
+/* ===== the DO / DON'T pair — the workhorse of this deck ===== */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0 8px}
+.pcard{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.bad{border-top:3px solid var(--rose)}
+.pcard.good{border-top:3px solid var(--emerald)}
+.p-head{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--card-border)}
+.p-sig{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px 'JetBrains Mono',monospace;flex:0 0 auto}
+.pcard.bad .p-sig{background:rgba(244,63,94,.16);border:1px solid rgba(244,63,94,.42);color:var(--rose)}
+.pcard.good .p-sig{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--emerald)}
+.p-lab{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.pcard.bad .p-lab{color:var(--rose)}
+.pcard.good .p-lab{color:var(--emerald)}
+.p-sub{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right;line-height:1.3}
+.p-prompt{margin:0;padding:15px 17px;background:rgba(255,255,255,.012);overflow-x:auto}
+.p-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.p-prompt .role{color:#8b8bb5;font-weight:700}
+.p-prompt .hl{color:#8fe0b4}
+.p-prompt .bad-hl{color:#ff9aab}
+.p-out{border-top:1px dashed var(--card-border);padding:12px 17px 14px;margin-top:auto}
+.p-out .po-t{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+.p-out .po-b{font-size:13.6px;color:var(--ink-dim);font-weight:300;line-height:1.6;font-family:'JetBrains Mono',monospace;white-space:pre-wrap}
+.pcard.bad .p-out{background:rgba(244,63,94,.045)}
+.pcard.good .p-out{background:rgba(16,185,129,.04)}
+.p-why{padding:12px 17px 14px;border-top:1px solid var(--card-border);font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.p-why strong{color:var(--ink);font-weight:600}
+
+/* the one-line "what changed" strip under a pair */
+.fix{display:flex;gap:11px;align-items:flex-start;background:rgba(45,212,191,.06);border:1px solid rgba(45,212,191,.26);border-radius:7px;padding:12px 15px;margin:0 0 26px;font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.fix .fx-t{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);flex:0 0 auto;padding-top:3px}
+.fix strong{color:var(--ink);font-weight:600}
+
+/* compact example number heading */
+.exn{display:flex;align-items:baseline;gap:12px;margin:34px 0 6px}
+.exn .exn-n{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#04231f;background:color-mix(in srgb,var(--accent) 62%,transparent);border:1px solid color-mix(in srgb,var(--accent) 72%,transparent);border-radius:4px;padding:3px 8px;flex:0 0 auto}
+.exn .exn-t{font-family:'Fraunces',serif;font-weight:800;font-size:21px;letter-spacing:-.02em;color:var(--ink)}
+.exn .exn-s{font-size:14px;color:var(--ink-faint);font-weight:300}
+
+/* vocab */
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#b8f0e8;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* concept cards */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--teal);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--emerald)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--teal);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--emerald)}
+
+/* code block */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:18px 0;overflow:hidden}
+.codeblock .cb-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.codeblock .cb-title{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.codeblock pre{margin:0;padding:16px 18px;overflow-x:auto}
+.codeblock code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#cfd3e0;white-space:pre}
+.cmt{color:#6a6a85}.kw{color:#a5b4fc}.str{color:#7fd4a0}.flg{color:#7cc5f0}.yml{color:#f0c988}
+
+/* table */
+.cmp{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px}
+.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--card-border);vertical-align:top}
+.cmp th{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.cmp td{color:var(--ink-dim);font-weight:300}
+.cmp td:first-child{color:var(--ink);font-weight:500}
+.cmp tr:hover td{background:rgba(255,255,255,.02)}
+.yes{color:var(--emerald);font-weight:600}.no{color:var(--rose);font-weight:600}.mid{color:var(--amber);font-weight:600}
+.cmp code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#b8f0e8}
+.tblwrap{overflow-x:auto;margin:20px 0}
+.tblwrap .cmp{margin:0;min-width:720px}
+
+/* diagram */
+.diagram{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:26px 22px;margin:22px 0}
+.diagram .dg-cap{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);text-align:center;margin-top:16px}
+.diagram svg{display:block;width:100%;height:auto;max-width:860px;margin:0 auto}
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.node{background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;padding:11px 15px;font:600 13px 'Inter Tight',sans-serif;color:var(--ink);text-align:center;min-width:96px}
+.node small{display:block;font-weight:300;font-size:11.5px;color:var(--ink-faint);margin-top:2px}
+.node.sky{background:rgba(14,165,233,.13);border-color:rgba(14,165,233,.34)}
+.node.em{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
+.node.am{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.node.ro{background:rgba(244,63,94,.13);border-color:rgba(244,63,94,.36)}
+.node.vi{background:rgba(139,92,246,.13);border-color:rgba(139,92,246,.34)}
+.arrow{color:var(--ink-faint);font-size:18px}
+.box-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.mbox{flex:1;min-width:150px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.mbox .mb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.mbox .mb-d{font-size:13px;color:var(--ink-dim);font-weight:300}
+
+/* anatomy chips */
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 6px}
+.chip{background:rgba(255,255,255,.03);border:1px solid var(--card-border);border-radius:20px;padding:8px 15px;font:500 13.5px 'Inter Tight',sans-serif;color:var(--ink-dim);transition:all .18s}
+.chip.on{background:color-mix(in srgb,var(--accent) 16%,transparent);border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--ink)}
+.chip .cn{font:700 10px 'JetBrains Mono',monospace;color:var(--ink-faint);margin-right:7px}
+
+/* two-column compare */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.duo-col{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-radius:9px;padding:20px}
+.duo-col.a{border-top:3px solid var(--teal)}
+.duo-col.b{border-top:3px solid var(--amber)}
+.duo-col.ok{border-top:3px solid var(--emerald)}
+.duo-col.no{border-top:3px solid var(--rose)}
+.duo-col h5{font-family:'Fraunces',serif;font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:4px;color:var(--ink)}
+.duo-col .dsub{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px}
+.duo-col ul{margin:0}
+.duo-col li{font-size:14.5px;margin-bottom:8px}
+.duo-col.no li::before{content:"✗";color:var(--rose)}
+.duo-col.ok li::before{content:"✓";color:var(--emerald)}
+
+/* step list */
+.steps{counter-reset:st;margin:20px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--card-border)}
+.step:last-child{border-bottom:none}
+.step .sn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#04231f;background:color-mix(in srgb,var(--accent) 58%,transparent);border:1px solid color-mix(in srgb,var(--accent) 70%,transparent);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.step .st{font-size:16.5px;color:var(--ink);font-weight:600;margin-bottom:6px}
+.step .sd{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.step .codeblock{margin:12px 0 0}
+.step .pair{margin:14px 0 0}
+
+/* version ladder */
+.tl{margin:22px 0}
+.tl-item{display:grid;grid-template-columns:110px 1fr;gap:18px;padding:0 0 22px 20px;position:relative;border-left:2px solid rgba(45,212,191,.25);margin-left:6px}
+.tl-item:last-child{border-left-color:transparent;padding-bottom:4px}
+.tl-item::before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(45,212,191,.14)}
+.tl-item.big::before{background:var(--emerald);box-shadow:0 0 0 5px rgba(16,185,129,.18)}
+.tl-yr{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--teal);padding-top:2px}
+.tl-item.big .tl-yr{color:var(--emerald)}
+.tl-t{font-size:16.5px;color:var(--ink);font-weight:600;line-height:1.3;margin-bottom:5px}
+.tl-d{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.tl-d code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#b8f0e8}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:22px 0}
+.quiz .q{font-size:16.5px;color:var(--ink);font-weight:500;margin-bottom:14px}
+.quiz .q code{font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#b8f0e8}
+.quiz .opt{display:block;width:100%;text-align:left;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:7px;padding:12px 16px;margin-bottom:9px;color:var(--ink-dim);font-size:15px;cursor:pointer;transition:all .15s;font-family:'Inter Tight',sans-serif}
+.quiz .opt:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.quiz .opt.correct{border-color:var(--emerald);background:rgba(16,185,129,.12);color:var(--ink)}
+.quiz .opt.wrong{border-color:var(--rose);background:rgba(244,63,94,.1)}
+.quiz .explain{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6;margin-top:10px;padding-top:12px;border-top:1px solid var(--card-border);display:none}
+.quiz .explain.show{display:block}.quiz .explain strong{color:var(--ink)}
+
+/* smell checklist */
+.smells{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}
+.smell{display:flex;gap:12px;background:rgba(244,63,94,.05);border:1px solid rgba(244,63,94,.22);border-radius:7px;padding:13px 16px}
+.smell .sm-x{color:var(--rose);font:700 13px 'JetBrains Mono',monospace;flex:0 0 auto}
+.smell .sm-b{font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+.smell .sm-b b{display:block;color:var(--ink);font-weight:600;font-size:14.5px;margin-bottom:2px}
+.smells.good .smell{background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.22)}
+.smells.good .smell .sm-x{color:var(--emerald)}
+
+/* ===== NEW: agent trace (Thought / Action / Observation) ===== */
+.trace{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:18px 0;overflow:hidden}
+.trace.bad{border-color:rgba(244,63,94,.3)}
+.trace .tr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 15px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.trace .tr-t{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.trace .tr-badge{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.tr-badge.ok{color:var(--emerald);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3)}
+.tr-badge.fail{color:var(--rose);background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.32)}
+.tr-line{display:grid;grid-template-columns:106px 1fr;gap:12px;padding:9px 15px;border-bottom:1px solid rgba(255,255,255,.045)}
+.tr-line:last-child{border-bottom:none}
+.tr-k{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.11em;text-transform:uppercase;padding-top:4px}
+.tr-v{font-family:'JetBrains Mono',monospace;font-size:12.7px;color:#cfd3e0;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.k-th{color:var(--violet)}.k-ac{color:var(--sky)}.k-ob{color:var(--amber)}.k-an{color:var(--emerald)}.k-er{color:var(--rose)}.k-sk{color:var(--teal)}
+.tr-line.dim .tr-v{color:var(--ink-faint)}
+.tr-line.err{background:rgba(244,63,94,.05)}
+.tr-line.fin{background:rgba(16,185,129,.05)}
+
+/* ===== NEW: use-case grid ===== */
+.ucs{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin:18px 0 10px}
+.uc{background:rgba(255,255,255,.028);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:7px;padding:15px 17px}
+.uc .uc-n{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.uc .uc-t{font-size:15.5px;color:var(--ink);font-weight:600;margin-bottom:5px;line-height:1.3}
+.uc .uc-d{font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.58}
+.uc .uc-w{font-size:13px;color:var(--ink-faint);font-weight:300;line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px dashed var(--card-border)}
+.uc .uc-w b{color:var(--emerald);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;margin-right:6px}
+
+/* ===== NEW: verdict / when-to-use banner ===== */
+.verdictbar{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:22px 0}
+.vb{border-radius:8px;padding:15px 17px;border:1px solid}
+.vb .vb-t{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px}
+.vb .vb-d{font-size:14px;font-weight:300;line-height:1.58;color:var(--ink-dim)}
+.vb.use{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.vb.use .vb-t{color:var(--emerald)}
+.vb.skip{background:rgba(244,63,94,.06);border-color:rgba(244,63,94,.28)}.vb.skip .vb-t{color:var(--rose)}
+.vb.cost{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.28)}.vb.cost .vb-t{color:var(--amber)}
+
+/* ===== NEW: pattern legend strip ===== */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+.lg{flex:1;min-width:170px;background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:8px;padding:14px 16px;border-top:3px solid var(--ink-faint)}
+.lg.cot{border-top-color:var(--sky)}.lg.tot{border-top-color:var(--amber)}
+.lg.got{border-top-color:var(--violet)}.lg.react{border-top-color:var(--emerald)}.lg.sk{border-top-color:var(--teal)}
+.lg .lg-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;color:var(--ink)}
+.lg .lg-d{font-size:13.5px;color:var(--ink-dim);font-weight:300;line-height:1.5}
+
+.foot{padding:50px 0 80px;text-align:center;border-top:1px solid var(--card-border);color:var(--ink-faint);font-size:14px}
+
+/* bottom slide pager */
+.pager{display:flex;justify-content:space-between;gap:12px;padding:26px 0 70px}
+.pager button{flex:1;max-width:340px;text-align:left;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;padding:16px 20px;cursor:pointer;transition:all .18s;font-family:'Inter Tight',sans-serif}
+.pager button:hover{background:rgba(255,255,255,.05);border-color:var(--accent);transform:translateY(-2px)}
+.pager button.rt{text-align:right}
+.pager .pg-l{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.pager .pg-t{font-family:'Fraunces',serif;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.pager button:disabled{opacity:.25;pointer-events:none}
+
+@media(max-width:900px){
+  .stats,.vocab-grid,.code-cards,.duo,.pair,.smells,.ucs,.verdictbar{grid-template-columns:1fr}
+  .stage-header,.body-wrap{grid-template-columns:1fr}
+  .dropmenu{min-width:280px}
+  .nav-prevnext{display:none}
+  .cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}
+  .exn{flex-wrap:wrap;gap:0 10px}
+  .exn .exn-t{flex:1 1 auto}
+  .exn .exn-s{flex:1 0 100%;margin-top:2px}
+  .tl-item{grid-template-columns:1fr;gap:4px}
+  .tr-line{grid-template-columns:1fr;gap:3px}
+  .pager{flex-direction:column}.pager button{max-width:none}
+  .p-sub{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== NEW: scenario box — situation / goal / why it is hard ===== */
+.scen{background:rgba(14,165,233,.055);border:1px solid rgba(14,165,233,.26);border-radius:8px;padding:16px 18px;margin:14px 0 2px}
+.scen .sc-row{display:grid;grid-template-columns:118px 1fr;gap:14px;margin-bottom:10px}
+.scen .sc-row:last-child{margin-bottom:0}
+.scen .sc-k{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--sky);padding-top:4px}
+.scen .sc-v{font-size:15.5px;color:var(--ink-dim);font-weight:300;line-height:1.62}
+.scen .sc-v strong{color:var(--ink);font-weight:600}
+.scen .sc-v code{font-family:'JetBrains Mono',monospace;font-size:13px;color:#b8f0e8}
+
+/* ===== NEW: section summary ===== */
+.sumbox{background:rgba(45,212,191,.055);border:1px solid rgba(45,212,191,.28);border-radius:10px;padding:22px 24px;margin:28px 0}
+.sumbox .sb-t{font-family:'Fraunces',serif;font-weight:800;font-size:21px;letter-spacing:-.02em;color:var(--ink);margin-bottom:6px}
+.sumbox .sb-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:14px}
+.sumbox ol{margin:0;padding-left:22px;list-style:decimal}
+.sumbox li{font-size:15.5px;color:var(--ink-dim);font-weight:300;margin-bottom:9px;line-height:1.62;padding-left:4px}
+.sumbox li::before{content:none}
+.sumbox li:last-child{margin-bottom:0}
+.sumbox li strong{color:var(--ink);font-weight:600}
+.sumbox code{font-family:'JetBrains Mono',monospace;font-size:13px;color:#b8f0e8}
+
+/* ===== NEW: plain-words diagram caption under an svg ===== */
+.readas{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.62;margin:14px 0 0;padding-top:14px;border-top:1px dashed var(--card-border)}
+.readas strong{color:var(--ink);font-weight:600}
+
+/* ===== NEW: three-step "how it works" ===== */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.how-c{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-top:3px solid var(--accent);border-radius:8px;padding:17px 19px}
+.how-c .h-n{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+.how-c .h-t{font-size:16px;color:var(--ink);font-weight:600;margin-bottom:6px;line-height:1.3}
+.how-c .h-d{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.58}
+@media(max-width:900px){.how{grid-template-columns:1fr}}
+</style></head>
+<body style="--accent:var(--teal)">
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="home-link" href="index.html" title="Back to all decks">← Home</a>
+    <a class="brand" href="#" onclick="go(0);return false;">Structured <em>prompting</em></a>
+    <div class="dropdown" id="chDrop">
+      <button class="dropbtn" id="chDropBtn">Slides <span class="chev">▾</span></button>
+      <div class="dropmenu" id="dropMenu"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-prevnext">
+      <button id="btnPrev" onclick="go(cur-1)">← Prev</button>
+      <button id="btnNext" onclick="go(cur+1)">Next →</button>
+    </div>
+  </div>
+  <div class="rail"><div class="rail-fill" id="railFill"></div></div>
+</nav>
+
+<!-- ================= SLIDE 0 · TITLE ================= -->
+<section class="slide active" data-title="Session overview">
+<div class="hero"><div class="container">
+  <div class="stage-num">Generative &amp; Agentic AI Development · Prompt Engineering &amp; Autonomous Reasoning</div>
+  <h1 class="display">Structured<br><em>Prompting</em></h1>
+  <p class="sub">An AI model answers before it thinks. This session shows four ways to slow it down and make it think properly, plus the file format that teams now use to store their procedures. Every idea comes with four worked examples from coding, code review and research — the situation first, then the wrong prompt, then the right one.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">5</div><div class="label">Techniques</div></div>
+    <div class="stat"><div class="num">20</div><div class="label">Worked examples</div></div>
+    <div class="stat"><div class="num">30+</div><div class="label">Where to use them</div></div>
+    <div class="stat"><div class="num">1</div><div class="label">Rule: start simple</div></div>
+  </div>
+</div></div>
+<div class="container">
+  <div class="prose" style="padding-bottom:20px">
+
+    <h3>The five techniques, in one line each</h3>
+    <div class="legend">
+      <div class="lg cot"><div class="lg-t">Chain of Thought</div><div class="lg-d">Make the model show its working before it gives the answer.</div></div>
+      <div class="lg tot"><div class="lg-t">Tree of Thought</div><div class="lg-d">Make it try three options, score them, and keep the best one.</div></div>
+      <div class="lg got"><div class="lg-t">Graph of Thought</div><div class="lg-d">Make it combine several pieces of work into one result.</div></div>
+      <div class="lg react"><div class="lg-t">ReAct</div><div class="lg-d">Let it look things up instead of guessing.</div></div>
+      <div class="lg sk"><div class="lg-t">SKILL.md</div><div class="lg-d">Keep your procedures in files the agent opens when it needs them.</div></div>
+    </div>
+
+    <h3>How every example in this deck is laid out</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">First</div><div class="h-t">The situation</div><div class="h-d">A real job. "You have 200 files and you want to know which ones changed." Nothing abstract.</div></div>
+      <div class="how-c"><div class="h-n">Then</div><div class="h-t">What we want</div><div class="h-d">Exactly what a good answer looks like, so you can tell whether the model got it right.</div></div>
+      <div class="how-c"><div class="h-n">Then</div><div class="h-t">Two prompts</div><div class="h-d">The wrong approach on the left in red. The right approach on the right in green. Same job, both times.</div></div>
+    </div>
+
+    <div class="code-cards">
+      <div class="code-card" onclick="go(1)"><span class="cc-ico">01</span><div><div class="cc-t">Why models get things wrong</div><div class="cc-s">The problem all five techniques fix</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(2)"><span class="cc-ico">02</span><div><div class="cc-t">Chain of Thought — what it is</div><div class="cc-s">Overview + examples 1 and 2</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(3)"><span class="cc-ico">03</span><div><div class="cc-t">Chain of Thought — more examples</div><div class="cc-s">Examples 3 and 4 + summary</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(4)"><span class="cc-ico">04</span><div><div class="cc-t">Tree of Thought — what it is</div><div class="cc-s">Overview + examples 1 and 2</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(5)"><span class="cc-ico">05</span><div><div class="cc-t">Tree of Thought — more examples</div><div class="cc-s">Examples 3 and 4 + summary</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(6)"><span class="cc-ico">06</span><div><div class="cc-t">Graph of Thought — what it is</div><div class="cc-s">Overview + examples 1 and 2</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(7)"><span class="cc-ico">07</span><div><div class="cc-t">Graph of Thought — more examples</div><div class="cc-s">Examples 3 and 4 + summary</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(8)"><span class="cc-ico">08</span><div><div class="cc-t">ReAct — what it is</div><div class="cc-s">Overview + examples 1 and 2</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(9)"><span class="cc-ico">09</span><div><div class="cc-t">ReAct — more examples</div><div class="cc-s">Examples 3 and 4 + summary</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(10)"><span class="cc-ico">10</span><div><div class="cc-t">SKILL.md — what it is</div><div class="cc-s">Overview + examples 1 and 2</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(11)"><span class="cc-ico">11</span><div><div class="cc-t">SKILL.md — more examples</div><div class="cc-s">Examples 3 and 4 + summary</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(12)"><span class="cc-ico">12</span><div><div class="cc-t">All five compared</div><div class="cc-s">Cost, speed, and using them together</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(13)"><span class="cc-ico">13</span><div><div class="cc-t">Which one should I use?</div><div class="cc-s">The final summary</div></div><span class="cc-go">Open</span></div>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">One thing to keep in mind</span>
+      <p>These five are not competing with each other. You will end up using two or three of them together in the same program. The last two slides show exactly how.</p>
+    </div>
+
+  </div>
+  <div class="pager">
+    <button disabled><div class="pg-l">← Previous</div><div class="pg-t">Start of deck</div></button>
+    <button class="rt" onclick="go(1)"><div class="pg-l">Next slide →</div><div class="pg-t">Why models get things wrong</div></button>
+  </div>
+</div>
+</section>
+
+<!-- ================= SLIDE 1 · THE PROBLEM ================= -->
+<section class="slide" data-title="Why models get things wrong">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">01</div>
+    <div>
+      <h2 class="stage-title">Why Models Get Things Wrong</h2>
+      <p class="stage-kicker">Before the five techniques, one fact about how a model writes an answer. Once you understand this fact, all five techniques become obvious.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The model writes one word at a time, and it never goes back</h3>
+    <p>Ask a model a question and it starts writing immediately. The very first word it writes is already part of the answer. It has not worked anything out yet. It has written the word that usually comes next — and now the rest of the answer has to agree with that word.</p>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Your question</div><span class="arrow">→</span>
+        <div class="node ro">First word<small>already guessing</small></div><span class="arrow">→</span>
+        <div class="node ro">Rest of the answer<small>has to agree</small></div><span class="arrow">→</span>
+        <div class="node">Sounds confident<small>may be wrong</small></div>
+      </div>
+      <div class="dg-cap">No rough paper · no going back · no way to check a fact</div>
+    </div>
+
+    <p>Think about how <em>you</em> would answer a hard question. You would use rough paper. You would try one idea, see it was going nowhere, and try another. You would look something up. <strong>Those three habits are the four techniques in this deck.</strong></p>
+
+    <h3>The four things that go wrong</h3>
+
+    <div class="exn"><span class="exn-n">PROBLEM 1</span><span class="exn-t">It skips the working</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You are reviewing a pull request. It changes <strong>4 files</strong>. Each file has <strong>3 functions</strong>, and each function needs <strong>2 tests</strong>. Two of the tests already exist.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The number of new tests to write. The correct answer is <strong>22</strong>.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>How many new tests do we need?
+Give me just the number.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">24</div></div>
+        <div class="p-why">Wrong, and it looks very sure of itself. There was nowhere in the answer to write "4 × 3 = 12" or "12 × 2 = 24" or "24 − 2 = 22", so the model never wrote those numbers — and never used them.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Work it out in this order, one line each:
+1. total functions
+2. tests needed in total
+3. subtract the tests we already have
+
+Then write the final number on its own
+line, starting with ANSWER:</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">1. 4 × 3 = 12 functions
+2. 12 × 2 = 24 tests
+3. 24 − 2 = 22
+
+ANSWER: 22</div></div>
+        <div class="p-why">Same model, same question. We just gave it <strong>space to write the middle numbers</strong>. Each line can now use the line above it.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>The words the model writes <em>are</em> its rough paper. <strong>No room in the answer for the working means there was no working.</strong> This is fixed by Chain of Thought.</div></div>
+
+    <div class="exn"><span class="exn-n">PROBLEM 2</span><span class="exn-t">It sticks with its first idea</span></div>
+    <p>Ask "how should we store user sessions?" and you will get one answer. It will be the first idea that came to mind. The model never compared it against anything, because by the time it had written three words it was already committed. Asking it to "think step by step" does not help here — it just walks further down the same road.</p>
+    <p><strong>Fixed by Tree of Thought:</strong> make it produce three different options, score each one, then pick.</p>
+
+    <div class="exn"><span class="exn-n">PROBLEM 3</span><span class="exn-t">It cannot combine several pieces of work</span></div>
+    <p>You ask it to read six research papers and write one summary. If you paste all six in at once, the middle ones get ignored. If you feed them one at a time, the last one dominates. What you actually want is a summary of each paper, then those summaries combined carefully — keeping every finding, and keeping the places where two papers disagree.</p>
+    <p><strong>Fixed by Graph of Thought:</strong> do the pieces separately, then merge them with clear rules.</p>
+
+    <div class="exn"><span class="exn-n">PROBLEM 4</span><span class="exn-t">It makes up facts it cannot know</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A test called <code>test_checkout_totals</code> is failing in your project. You ask the model why.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The real reason, based on the real error message.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Why is test_checkout_totals failing?
+Think step by step.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Step 1: The test checks the cart total.
+Step 2: Totals usually break when tax
+is applied twice.
+Step 3: So the tax is likely being
+added in both add_item and get_total.
+
+Fix the double tax calculation.</div></div>
+        <div class="p-why">Every step is neat. Every step is <strong>invented</strong>. The model has never seen your code or your error message. Step-by-step thinking on top of made-up facts gives you tidy nonsense, which is worse than "I don't know" because it looks checked.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>You can use these tools:
+  run_test(name)
+  read_file(path)
+
+Rules:
+· Run the test first. Read the real error.
+· Never say anything about the code that
+  you have not read.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Ran test_checkout_totals
+Error: TypeError: unsupported operand
+  type(s) for +: 'int' and 'NoneType'
+  at cart.py line 41
+
+Read cart.py lines 30-50
+Line 41 adds item.discount, which is
+None when no discount is set.
+
+Fix: use (item.discount or 0)</div></div>
+        <div class="p-why">Shorter, less clever, and it is the only version that is actually true. <strong>Every sentence points at something the model really saw.</strong></div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Better thinking cannot create a fact the model never had. If the answer lives in your files or your database, <strong>the model has to go and look</strong>. This is fixed by ReAct.</div></div>
+
+    <h3>The four problems, and what fixes each</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>The problem</th><th>What is missing</th><th>The fix</th><th>Roughly how expensive</th></tr>
+      <tr><td>Skips the working, gets the number wrong</td><td>Space to write the middle steps</td><td><span class="yes">Chain of Thought</span></td><td>2–4× one normal call</td></tr>
+      <tr><td>Sticks with its first idea</td><td>Several options, and a way to score them</td><td><span class="yes">Tree of Thought</span></td><td>About 15–40×</td></tr>
+      <tr><td>Cannot combine several pieces of work</td><td>A merge step with clear rules</td><td><span class="yes">Graph of Thought</span></td><td>About 30–100×</td></tr>
+      <tr><td>Makes up facts</td><td>The ability to look things up</td><td><span class="yes">ReAct</span></td><td>Depends — you must set a limit</td></tr>
+      <tr><td>Forgets how your team does things</td><td>Your procedure, written down</td><td><span class="yes">SKILL.md</span></td><td>Almost nothing</td></tr>
+    </table>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">The whole session in four lines</div>
+      <ol>
+        <li>A model writes left to right and cannot go back, so it commits to an answer before it has worked anything out.</li>
+        <li><strong>Chain of Thought</strong> gives it space to write the working. <strong>Tree of Thought</strong> gives it options to compare.</li>
+        <li><strong>Graph of Thought</strong> lets it combine several results. <strong>ReAct</strong> lets it look things up instead of guessing.</li>
+        <li><strong>SKILL.md</strong> is where you keep the procedure so the agent follows it the same way every time.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You ask a model when your company's contract with a supplier ends. It gives a confident date. It is wrong. What fixes this?</div>
+      <button class="opt" onclick="qa(this,0)">Ask it to think step by step</button>
+      <button class="opt" onclick="qa(this,0)">Ask it three times and take the most common answer</button>
+      <button class="opt" onclick="qa(this,1)">Give it a tool that reads the real contract</button>
+      <div class="explain"><strong>The model has never seen your contract.</strong> More thinking just gives you a longer invented answer, and asking three times gives you three inventions. The only fix is letting it read the real thing.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(0)"><div class="pg-l">← Previous</div><div class="pg-t">Session overview</div></button>
+    <button class="rt" onclick="go(2)"><div class="pg-l">Next slide →</div><div class="pg-t">Chain of Thought — what it is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 2 · COT PART 1 ================= -->
+<section class="slide" data-title="Chain of Thought — what it is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">02</div>
+    <div>
+      <h2 class="stage-title">Chain Of Thought — Show The Working</h2>
+      <p class="stage-kicker">The simplest of the five, and the one you will use most. One idea: make the model write the middle steps before it writes the answer.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What problem does it solve?</h3>
+    <p>The model has no rough paper. Everything it "knows" while answering is the text it has already written. So if the answer needs three steps and you only asked for the final number, those three steps never happened.</p>
+    <p>Chain of Thought fixes this by making the steps <strong>part of the answer</strong>. Step 2 can then read step 1. Step 3 can read step 2. That is the whole idea.</p>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Question</div><span class="arrow">→</span>
+        <div class="node sky">Step 1</div><span class="arrow">→</span>
+        <div class="node sky">Step 2</div><span class="arrow">→</span>
+        <div class="node sky">Step 3</div><span class="arrow">→</span>
+        <div class="node em">Answer</div>
+      </div>
+      <div class="dg-cap">One straight line · one model call · the answer comes last</div>
+      <p class="readas"><strong>Read it like this:</strong> the model writes step 1, then reads its own step 1 to write step 2, and so on. The answer is written last, when all three steps are already on the page in front of it.</p>
+    </div>
+
+    <h3>How to use it — three ways, from cheapest to most expensive</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">Way 1</div><div class="h-t">Just ask for steps</div><div class="h-d">Add <code class="inl">Think step by step.</code> to the end of your prompt. Free, takes two seconds, and often enough.</div></div>
+      <div class="how-c"><div class="h-n">Way 2</div><div class="h-t">Name the steps yourself</div><div class="h-d">Write out steps 1 to 5 in the prompt. Same cost, much more reliable, and you can check the model did all five.</div></div>
+      <div class="how-c"><div class="h-n">Way 3</div><div class="h-t">Ask five times and vote</div><div class="h-d">Run the same prompt 5 times, take the most common answer. Five times the cost, and the best accuracy you can buy cheaply.</div></div>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">Finding a bug in a small function</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A teammate wrote a function that should return the last 3 items of a list. It works on long lists. It crashes on short ones.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The model to find the bug and say <strong>which input breaks it</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The bug only shows up for one specific input. Reading the code and "feeling" that it is fine is not enough — you have to actually run it in your head.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Is there a bug in this function?
+
+def last_three(items):
+    return items[len(items)-3:]</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">This function looks correct. It uses
+len(items)-3 as the starting index to
+slice the last three elements, which is
+a standard Python pattern.</div></div>
+        <div class="p-why">The model gave an opinion, not a check. It never tried a single input. <strong>There is a real bug:</strong> when the list has 2 items, <code class="inl">len(items)-3</code> is <code class="inl">-1</code>, so it returns only the last item instead of both.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Check this function by hand.
+
+def last_three(items):
+    return items[len(items)-3:]
+
+For each of these inputs, write the
+value of len(items)-3, then what the
+slice returns, then whether it is
+correct:
+  [1,2,3,4,5]
+  [1,2,3]
+  [1,2]
+  []
+
+Then say BUG or NO BUG on the last line.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">[1,2,3,4,5] → 2 → [3,4,5] → correct
+[1,2,3]     → 0 → [1,2,3] → correct
+[1,2]       → -1 → [2]    → WRONG,
+              should be [1,2]
+[]          → -3 → []     → correct
+
+BUG</div></div>
+        <div class="p-why">We did not ask it to be cleverer. We gave it <strong>four inputs and a table to fill in</strong>. The bug appears in row three because the model had to write down the number <code class="inl">-1</code>.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Do not ask "is this correct?". Ask the model to <strong>run specific inputs and write down what happens</strong>. Opinions are cheap; a filled-in table is checkable.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">Putting the answer in the wrong place</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You are building a tool that reads code review comments and labels each one <code>blocking</code> or <code>minor</code>. It returns JSON so your app can use it.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The right label. The comment is: <em>"This works, but I would rename the variable."</em> That is <strong>minor</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">Nothing at all looks wrong with the first prompt. This is the most common Chain-of-Thought mistake in real code.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Return JSON:
+{
+  "label": "blocking" or "minor",
+  "reason": "..."
+}</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">{
+  "label": "blocking",
+  "reason": "The reviewer is asking for
+   a change before merge."
+}</div></div>
+        <div class="p-why">JSON keys come out <strong>in the order you wrote them</strong>. So <code class="inl">label</code> is decided first, with no thinking behind it. Then <code class="inl">reason</code> is written to justify a decision that has already been made. The reason field is doing nothing.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Return JSON with the keys in exactly
+this order:
+{
+  "quote": "the words that decide it",
+  "reason": "...",
+  "label": "blocking" or "minor"
+}</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">{
+  "quote": "This works, but",
+  "reason": "The reviewer says the code
+   works. A rename is a preference,
+   not a defect.",
+  "label": "minor"
+}</div></div>
+        <div class="p-why">Exactly the same three fields. We only <strong>moved the label to the bottom</strong>. Now the quote and the reason are already written when the label is chosen, so they actually affect it.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div><strong>Always put the answer last.</strong> In a prompt, in a JSON schema, in a report — anywhere. If the conclusion comes out before the reasoning, the reasoning is just an excuse written afterwards.</div></div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(1)"><div class="pg-l">← Previous</div><div class="pg-t">Why models get things wrong</div></button>
+    <button class="rt" onclick="go(3)"><div class="pg-l">Next slide →</div><div class="pg-t">Chain of Thought — more examples</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 3 · COT PART 2 ================= -->
+<section class="slide" data-title="Chain of Thought — more examples">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">03</div>
+    <div>
+      <h2 class="stage-title">Chain Of Thought — Two More Examples</h2>
+      <p class="stage-kicker">One from research, one that shows how to buy extra accuracy when the answer really matters. Then where to use this, and a summary.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">Checking whether a paper supports your claim</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You are writing a report. You want to say <em>"remote teams ship faster"</em> and cite a study. You have the study's abstract in front of you.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">An honest yes or no. The study actually measured <strong>hybrid</strong> teams, not remote ones, and it measured <strong>satisfaction</strong>, not speed. So the honest answer is <strong>no</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The model wants to be helpful. If you ask "does this support my claim?", it will find a way to say yes.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Does this study support the claim
+that remote teams ship faster?
+
+[abstract pasted here]</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Yes, this study provides support for
+the claim. It found positive outcomes
+for teams working outside a traditional
+office, which is consistent with the
+idea that remote teams perform well.</div></div>
+        <div class="p-why">"Consistent with the idea that" is the model being polite. You put the answer in the question, so it agreed with you. If you cite this in your report, a reviewer will check the study and you will look careless.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Answer these in order. Quote the
+abstract for each one.
+
+1. Who exactly did they study?
+2. What exactly did they measure?
+3. What was the result, with numbers?
+4. My claim is "remote teams ship
+   faster". Does 1 match "remote"?
+   Does 2 match "ship faster"?
+5. Only now: SUPPORTS / DOES NOT
+   SUPPORT / PARTLY. One line why.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">1. "142 hybrid teams (2-3 office days)"
+2. "self-reported job satisfaction"
+3. "+11% satisfaction vs fully office"
+4. Hybrid is not remote. Satisfaction
+   is not shipping speed.
+5. DOES NOT SUPPORT — wrong population
+   and wrong outcome measure.</div></div>
+        <div class="p-why">Steps 1 to 3 are just facts copied from the page. Step 4 compares them to your claim. Only step 5 gives a verdict — and by then the honest answer is the only one left.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Never put your desired answer inside the question. <strong>Make the model write down the facts first, then compare, then judge.</strong></div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">Asking five times and taking the most common answer</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A database query in a pull request looks wrong. If it is wrong, the monthly report will double-count revenue. Nobody on the team is sure.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A yes or no, <strong>plus some idea of how confident we should be</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The model always sounds confident. Asking it "how sure are you?" gives a number that means nothing.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Does this query double-count?
+Also tell me how confident you are
+out of 10.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">No, the query does not double-count.
+Confidence: 9/10</div></div>
+        <div class="p-why">That 9 is not measuring anything. Models say 8 or 9 for almost everything, whether they are right or wrong. <strong>You have learned nothing.</strong></div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code># same prompt, run 5 times,
+# temperature 0.7 so the runs differ
+answers = []
+for i in range(5):
+    out = ask(prompt, temperature=0.7)
+    answers.append(out.split("ANSWER:")[-1])
+
+winner, votes = most_common(answers)
+# votes tells you how sure to be
+if votes &lt; 4:
+    send_to_human(winner, votes)</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">run 1 → double-counts
+run 2 → double-counts
+run 3 → fine
+run 4 → double-counts
+run 5 → double-counts
+
+winner: double-counts (4 of 5)
+→ good enough to act on</div></div>
+        <div class="p-why">The <strong>vote count is the confidence</strong>, and this one is real. 5 out of 5 means the question was easy. 3 out of 5 means send it to a human. This works because a wrong answer can be reached many different ways, but the right one usually only one way.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Temperature must be above 0 or all five runs are identical and the vote means nothing. <strong>Keep the vote count — most people throw it away, and it is the most useful part.</strong></div></div>
+
+    <h3>Where to use Chain of Thought</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Use case 1</div><div class="uc-t">Reviewing code for bugs</div><div class="uc-d">Give it three or four specific inputs and make it trace what the function returns for each. Far better than "does this look right?".</div></div>
+      <div class="uc"><div class="uc-n">Use case 2</div><div class="uc-t">Working out anything with numbers</div><div class="uc-d">Cost estimates, how many API calls a loop makes, storage sizes, invoice checks, marks and grades. One line per calculation, total at the end.</div></div>
+      <div class="uc"><div class="uc-n">Use case 3</div><div class="uc-t">Applying rules that are written down</div><div class="uc-d">Refund policy, leave entitlement, whether a PR meets the merge checklist. Go through the rules in order and say which one decided it.</div></div>
+      <div class="uc"><div class="uc-n">Use case 4</div><div class="uc-t">Reading an error message</div><div class="uc-d">Which line threw it, what value was wrong, which caller passed that value, what to change. Each step feeds the next.</div></div>
+      <div class="uc"><div class="uc-n">Use case 5</div><div class="uc-t">Checking a source in research</div><div class="uc-d">What was studied, what was measured, what was found, does that match my claim. Facts first, verdict last.</div></div>
+      <div class="uc"><div class="uc-n">Use case 6</div><div class="uc-t">Marking work against a rubric</div><div class="uc-d">Score each criterion with a quote as evidence, then add up. The student can then argue with one criterion instead of the whole grade.</div></div>
+    </div>
+
+    <h3>When not to use it</h3>
+    <div class="smells">
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>Simple lookups</b>"What port does Postgres use?" Steps add cost and time and change nothing.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>Creative writing</b>Planning a poem step by step gives you a correct, boring poem.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>Anything that must be fast</b>Autocomplete, live typing. Three times the words on every keystroke gets expensive.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>When the model has no facts</b>It will fill the gaps with invention, and the steps make the invention look verified.</div></div>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary — Chain of Thought</div>
+      <div class="sb-s">Four things to take away</div>
+      <ol>
+        <li><strong>What it is:</strong> make the model write the middle steps before the answer, so each step can use the one above it.</li>
+        <li><strong>The one rule:</strong> the answer always comes last. In prompts, in JSON, everywhere.</li>
+        <li><strong>Name the steps yourself</strong> instead of just saying "think step by step". Then you can check it did all of them.</li>
+        <li><strong>When it really matters,</strong> run the prompt 5 times and take the most common answer. Keep the vote count as your confidence.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your labelling tool returns <code>{"label": ..., "reason": ...}</code> and gets 71% right. You move one line and it gets 84% right. What did you move?</div>
+      <button class="opt" onclick="qa(this,1)">You put <code>reason</code> above <code>label</code></button>
+      <button class="opt" onclick="qa(this,0)">You raised the temperature</button>
+      <button class="opt" onclick="qa(this,0)">You added "you are an expert" to the prompt</button>
+      <div class="explain">With <code>label</code> first, the model picks a label and then writes an excuse for it. Move <code>reason</code> above and the thinking is on the page before the label is chosen. <strong>Same fields, one line moved.</strong></div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(2)"><div class="pg-l">← Previous</div><div class="pg-t">Chain of Thought — what it is</div></button>
+    <button class="rt" onclick="go(4)"><div class="pg-l">Next slide →</div><div class="pg-t">Tree of Thought — what it is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 4 · TOT PART 1 ================= -->
+<section class="slide" data-title="Tree of Thought — what it is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">04</div>
+    <div>
+      <h2 class="stage-title">Tree Of Thought — Try Three, Keep The Best</h2>
+      <p class="stage-kicker">Chain of Thought walks down one road. If that road is wrong, you just get a very well-explained wrong answer. Tree of Thought walks down three roads and compares them.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What problem does it solve?</h3>
+    <p>Ask a model "how should we store user sessions?" and it starts typing an answer straight away. Whatever idea came out first is now the answer. It never compared that idea against anything, because there was nothing to compare it with.</p>
+    <p>Tree of Thought fixes this in three moves: <strong>make three different options, give each one a score, throw away the bad ones, and look more closely at the good ones.</strong></p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 900 362" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A question splits into three options. One is rejected. The two survivors are checked further, and the best one is chosen.">
+        <defs>
+          <style>
+            .tl2{font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:600;fill:#f4f1ea}
+            .ts2{font-family:'JetBrains Mono',monospace;font-size:10.5px;fill:#aba7b9}
+            .tx2{font-family:'JetBrains Mono',monospace;font-size:10.5px;fill:#f43f5e}
+            .tg2{font-family:'JetBrains Mono',monospace;font-size:10.5px;fill:#10b981}
+            .e2{stroke:#4a4759;stroke-width:1.7;fill:none}
+            .e2.dead{stroke:#f43f5e;stroke-dasharray:4 4;opacity:.6}
+            .e2.win{stroke:#10b981;stroke-width:2.2}
+          </style>
+        </defs>
+        <path class="e2 dead" d="M450 54 L450 78 L140 78 L140 96"/>
+        <path class="e2" d="M450 54 L450 96"/>
+        <path class="e2" d="M450 54 L450 78 L760 78 L760 96"/>
+        <path class="e2" d="M450 158 L450 196"/>
+        <path class="e2" d="M760 158 L760 196"/>
+        <path class="e2 win" d="M760 254 L760 298"/>
+
+        <rect x="250" y="10" width="400" height="44" rx="7" fill="rgba(45,212,191,.16)" stroke="#2dd4bf"/>
+        <text class="tl2" x="450" y="30" text-anchor="middle">Where should we store user sessions?</text>
+        <text class="ts2" x="450" y="45" text-anchor="middle">the question we asked</text>
+
+        <rect x="15" y="96" width="250" height="62" rx="7" fill="rgba(244,63,94,.08)" stroke="#f43f5e" stroke-dasharray="5 4" opacity=".75"/>
+        <text class="tl2" x="140" y="119" text-anchor="middle" opacity=".7">Option A · in server memory</text>
+        <text class="tx2" x="140" y="136" text-anchor="middle">score 0.3 — REJECTED</text>
+        <text class="tx2" x="140" y="150" text-anchor="middle">breaks with 2+ servers</text>
+
+        <rect x="325" y="96" width="250" height="62" rx="7" fill="rgba(45,212,191,.12)" stroke="#2dd4bf"/>
+        <text class="tl2" x="450" y="119" text-anchor="middle">Option B · in the database</text>
+        <text class="ts2" x="450" y="136" text-anchor="middle">score 0.6 — keep looking</text>
+        <text class="ts2" x="450" y="150" text-anchor="middle">works, but a query per request</text>
+
+        <rect x="635" y="96" width="250" height="62" rx="7" fill="rgba(45,212,191,.12)" stroke="#2dd4bf"/>
+        <text class="tl2" x="760" y="119" text-anchor="middle">Option C · in a signed cookie</text>
+        <text class="ts2" x="760" y="136" text-anchor="middle">score 0.8 — keep looking</text>
+        <text class="ts2" x="760" y="150" text-anchor="middle">no database call at all</text>
+
+        <rect x="325" y="196" width="250" height="58" rx="7" fill="rgba(255,255,255,.04)" stroke="#3d3a4d"/>
+        <text class="tl2" x="450" y="219" text-anchor="middle">Add a cache in front?</text>
+        <text class="ts2" x="450" y="238" text-anchor="middle">score 0.7 — better, more moving parts</text>
+
+        <rect x="635" y="196" width="250" height="58" rx="7" fill="rgba(16,185,129,.14)" stroke="#10b981"/>
+        <text class="tl2" x="760" y="219" text-anchor="middle">How do we log someone out?</text>
+        <text class="tg2" x="760" y="238" text-anchor="middle">score 0.9 — keep a short deny-list</text>
+
+        <rect x="610" y="298" width="300" height="50" rx="7" fill="rgba(16,185,129,.2)" stroke="#10b981" stroke-width="2"/>
+        <text class="tl2" x="760" y="320" text-anchor="middle">CHOSEN · signed cookie + deny-list</text>
+        <text class="tg2" x="760" y="337" text-anchor="middle">and we can say why we rejected A and B</text>
+      </svg>
+      <p class="readas"><strong>Read it like this:</strong> the question at the top splits into three different ideas. Each idea gets a score. Option A scores badly, so we stop working on it — that is called <em>pruning</em>. The other two get one more question each, and get scored again. The highest score wins. Notice that we also end up with a written reason for rejecting A and B, which is often the most useful part.</p>
+    </div>
+
+    <h3>The three things you have to write yourself</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">Part 1</div><div class="h-t">A prompt that makes options</div><div class="h-d">"Give me 3 <em>different</em> approaches." You must say different, or you get the same idea worded three ways.</div></div>
+      <div class="how-c"><div class="h-n">Part 2</div><div class="h-t">A prompt that scores one option</div><div class="h-d">A separate call, one option at a time. It must not know what the other options were.</div></div>
+      <div class="how-c"><div class="h-n">Part 3</div><div class="h-t">A limit</div><div class="h-d">Stop after 3 levels, or 40 calls, or 60 seconds. Without a limit this runs until someone notices the bill.</div></div>
+    </div>
+
+    <div class="callout co-cost"><span class="co-tag">Do the maths before you build this</span>
+      <p>3 options at each of 3 levels, keeping the best 2 each time, is about <strong>30 model calls for one answer</strong>. That is fine for "which database should we use". It is not fine for "label this support ticket".</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">Choosing between three designs</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Your team is adding a feature that emails a user when their order ships. You need to decide how to send those emails.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A decision, <strong>plus the reason the other options were rejected</strong> — because that is what your tech lead will ask for.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">There is no single right answer. Three sensible engineers would pick three different things, and the right one depends on your team.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>How should we send the shipping
+confirmation email?</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Use a background job queue. When the
+order status changes to "shipped", push
+a job onto the queue and have a worker
+send the email through your email
+provider. This keeps the web request
+fast and gives you retries.</div></div>
+        <div class="p-why">A perfectly reasonable answer, and you have <strong>no idea whether it is the best one</strong>. Nothing was compared. If your team has never run a queue, this may be the worst choice available.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code># call 1 — make the options
+"Give me 3 genuinely different ways to
+ send this email. Different approach,
+ not different wording. Argue for each
+ one equally. Do not pick a favourite."
+
+# calls 2, 3, 4 — score them one by one
+"Score this ONE option from 0 to 1 on:
+  reliability: 1 = the email always
+    arrives even if the provider is down
+    0 = one failure loses the email
+  effort: 1 = ships this week with what
+    we already run
+    0 = we must add new infrastructure
+ Give the number and one line of why."
+
+# call 5 — your code picks the winner
+best = max(options, key=score)</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">A send it inside the web request
+    reliability 0.2  effort 1.0
+B background job queue
+    reliability 0.9  effort 0.4
+    (we do not run a queue today)
+C write a row to an "outbox" table,
+  a cron job sends it every minute
+    reliability 0.8  effort 0.8
+
+CHOSEN: C
+Rejected A: one provider outage
+  silently loses the email.
+Rejected B: new infrastructure.</div></div>
+        <div class="p-why">Option C never appeared in the first version, and it is probably the right answer for a small team. <strong>It only exists because we asked for three different approaches.</strong></div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Scoring needs <strong>anchors</strong> — you must say what 0 and 1 actually mean. Without them the model gives everything 0.7 and the scores are useless.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">Asking for options and a winner in the same message</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Same job as example 1, but you try to save time by doing it in one call instead of five.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A fair comparison of three options.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The model writes left to right. Once it has written option 1 and called it good, options 2 and 3 are written knowing they are meant to lose.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Give me 3 options and tell me
+which one is best.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">1. Background job queue (recommended)
+2. Send it in the web request
+3. A third-party automation tool
+
+Option 1 is best because it is the
+industry standard approach.</div></div>
+        <div class="p-why">Options 2 and 3 were written to lose. They are weak on purpose. And "industry standard" is not a reason — it is a way of not giving one. <strong>One call cannot both invent options and judge them fairly.</strong></div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code># call 1 — options only
+"Give me 3 different options.
+ Argue for each one equally strongly.
+ Do NOT say which is best."
+
+# calls 2-4 — a fresh, empty
+# conversation for each option
+"Here is one option. Score it against
+ this rubric. You are not comparing it
+ to anything else."
+
+# then your code picks the highest score</code></pre>
+        <div class="p-why">The scorer never sees the other options, so it cannot be swayed by the order they were written in. <strong>Keep the option-maker and the judge apart.</strong></div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>If the same message both invents an option and rates it, the rating is worthless. It costs three extra calls to do it properly. Do the three extra calls.</div></div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(3)"><div class="pg-l">← Previous</div><div class="pg-t">Chain of Thought — more examples</div></button>
+    <button class="rt" onclick="go(5)"><div class="pg-l">Next slide →</div><div class="pg-t">Tree of Thought — more examples</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 5 · TOT PART 2 ================= -->
+<section class="slide" data-title="Tree of Thought — more examples">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">05</div>
+    <div>
+      <h2 class="stage-title">Tree Of Thought — Two More Examples</h2>
+      <p class="stage-kicker">One where the computer does the scoring for you, one where the options only look different. Then where to use it, and a summary.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">Letting the tests decide which fix is right</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">One test is failing: <code>test_discount_on_empty_cart</code>. There are several ways to fix it. Some of them will break other tests.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A fix that makes the failing test pass <strong>and keeps all 214 other tests passing</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">A fix can look completely sensible and still break something three files away. Reading it is not enough.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Give me 3 possible fixes, then score
+each one from 0 to 10 on how likely
+it is to work.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Fix 1: guard against empty cart — 8/10
+Fix 2: default the discount to 0  — 8/10
+Fix 3: return early in get_total — 7/10</div></div>
+        <div class="p-why">Three numbers that are all basically the same, produced by a model that has not run anything. <strong>You still have to test all three yourself</strong>, so the scoring step added nothing but cost.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code># 1 - ask for 3 different fixes
+fixes = ask("3 different fixes for this
+             failure. Different approach,
+             not different formatting.")
+
+# 2 - the SCORE is the test run.
+#     no model opinion involved.
+for f in fixes:
+    apply(f)
+    result = run_all_tests()
+    f.score = result.passed
+    revert(f)
+
+# 3 - keep only fixes with a full pass
+best = [f for f in fixes
+        if f.score == 215]</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Fix 1  215/215 passed  ✓
+Fix 2  213/215 passed  ✗
+       (broke 2 bulk-order tests)
+Fix 3  215/215 passed  ✓
+
+2 fixes work. Show both to the human
+with the diff.</div></div>
+        <div class="p-why">No opinions anywhere. The test suite gave an exact score for each option, and it found that fix 2 quietly breaks two other tests — <strong>something no amount of reading would have caught.</strong></div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>If you can <strong>actually run</strong> the options — tests, a compiler, a schema check, a query against real data — do that instead of asking a model to guess. This is the best version of Tree of Thought there is.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">Options that are only reworded</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You are starting a research project on why users abandon your signup form. You want several angles to investigate, not just one.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">Three approaches that would <strong>find genuinely different things</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">"Give me 3 options" almost always returns one idea written three ways. The tree then has three branches that all lead to the same place.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Give me 3 ways to research why users
+abandon our signup form.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">1. Survey users who dropped out
+2. Send a questionnaire to people who
+   did not complete signup
+3. Ask abandoned users for feedback</div></div>
+        <div class="p-why">These are the same idea three times. You have three branches with a <strong>real branching factor of one</strong>, and you are paying three times to explore one road.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Give me 3 research approaches, each
+using a DIFFERENT source of evidence:
+ 1. something users SAY  (interviews,
+    surveys)
+ 2. something users DO   (analytics,
+    session recordings)
+ 3. something the SYSTEM records
+    (error logs, timing data)
+
+Two approaches using the same source
+is not allowed.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">1. SAY — interview 8 users who
+   dropped at the password step
+2. DO — funnel analysis: which field
+   is the last one they touch
+3. SYSTEM — count validation errors
+   per field in the last 30 days
+
+(3 found that 41% of drop-offs follow
+a password rule error the user never
+sees. None of the other two would
+have found that.)</div></div>
+        <div class="p-why">You have to <strong>name the thing that must differ</strong>. Here it is the source of evidence. In example 1 it was the technical approach. Difference never happens on its own.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Say what makes the options different — a different source, a different technology, a different assumption. Otherwise you are paying for three copies of one answer.</div></div>
+
+    <h3>Where to use Tree of Thought</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Use case 1</div><div class="uc-t">Design and architecture decisions</div><div class="uc-d">Which database, which queue, monolith or services, how to store sessions. Expensive to change later, so 30 calls is cheap.</div></div>
+      <div class="uc"><div class="uc-n">Use case 2</div><div class="uc-t">Fixing a bug when the tests can judge</div><div class="uc-d">Generate several fixes, run the whole suite on each, keep the ones that pass everything. The score is free and exact.</div></div>
+      <div class="uc"><div class="uc-n">Use case 3</div><div class="uc-t">Writing test cases</div><div class="uc-d">Branch on <em>types</em> of failure — empty input, huge input, wrong type, no permission, two users at once — then write cases under each.</div></div>
+      <div class="uc"><div class="uc-n">Use case 4</div><div class="uc-t">Working out why something broke</div><div class="uc-d">List four possible causes — the deploy, a dependency, the data, capacity — and for each, what evidence would prove or kill it. Stops you fixating on the first idea.</div></div>
+      <div class="uc"><div class="uc-n">Use case 5</div><div class="uc-t">Planning a research project</div><div class="uc-d">Three approaches using different evidence, scored on how fast and how convincing each would be.</div></div>
+      <div class="uc"><div class="uc-n">Use case 6</div><div class="uc-t">Naming things, and writing copy</div><div class="uc-d">Branch on the angle — the problem, the outcome, the price, the comparison — not on the wording. Several good answers genuinely exist.</div></div>
+      <div class="uc"><div class="uc-n">Use case 7</div><div class="uc-t">Timetables and rosters</div><div class="uc-d">Each branch places one person or one class. The score is the number of rules broken, which a small function can count exactly.</div></div>
+    </div>
+
+    <h3>When not to use it</h3>
+    <div class="smells">
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>There is only one right answer</b>Pulling a date out of a document. Nothing to compare, so nothing to search.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You cannot say what a good answer looks like</b>If you cannot write the rubric, the scores will be noise. Stay on Chain of Thought.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>High volume or fast responses needed</b>30 calls per item does not survive contact with real traffic.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You have not tried the cheap version</b>Five runs and a vote costs a sixth as much. Try that first.</div></div>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary — Tree of Thought</div>
+      <div class="sb-s">Four things to take away</div>
+      <ol>
+        <li><strong>What it is:</strong> make three different options, score each one, drop the bad ones, look closer at the good ones.</li>
+        <li><strong>Keep the maker and the judge apart.</strong> One call makes options, separate calls score them one at a time.</li>
+        <li><strong>Use a real check when you have one</strong> — a test run, a compiler, a rule counter — instead of asking a model to rate things.</li>
+        <li><strong>Always set a limit</strong> on depth, calls and money, and keep the rejected options with their reasons. That list is half the value.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You built a tree to choose a caching strategy. Every option scores between 0.7 and 0.8, and a different one wins every time you run it. What is wrong?</div>
+      <button class="opt" onclick="qa(this,1)">The scoring prompt never says what 0 and 1 mean, so the scores are meaningless</button>
+      <button class="opt" onclick="qa(this,0)">You need more options — try 8 instead of 3</button>
+      <button class="opt" onclick="qa(this,0)">You need a bigger model</button>
+      <div class="explain">If you just say "rate this out of 10", a model gives 7 or 8 to anything that sounds sensible. Your search is then sorting random noise, which is why the winner keeps changing. <strong>Say what 0 means and what 1 means on each thing you are scoring.</strong></div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(4)"><div class="pg-l">← Previous</div><div class="pg-t">Tree of Thought — what it is</div></button>
+    <button class="rt" onclick="go(6)"><div class="pg-l">Next slide →</div><div class="pg-t">Graph of Thought — what it is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 6 · GOT PART 1 ================= -->
+<section class="slide" data-title="Graph of Thought — what it is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">06</div>
+    <div>
+      <h2 class="stage-title">Graph Of Thought — Combine The Pieces</h2>
+      <p class="stage-kicker">A tree makes you pick one winner. Sometimes you do not want a winner — you want all of it, joined together properly. That is the job Graph of Thought does.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What problem does it solve?</h3>
+    <p>You have four research papers and you need one summary. There are three obvious ways to do it, and all three are bad:</p>
+    <ul>
+      <li><strong>Paste all four in at once.</strong> The model pays attention to the first and the last. The two in the middle get thin treatment.</li>
+      <li><strong>Feed them one after another.</strong> Paper 1 gets squashed four times and disappears. Paper 4 gets squashed once and dominates.</li>
+      <li><strong>Use a tree and pick the best summary.</strong> Nonsense — you wanted all four, not the best one.</li>
+    </ul>
+    <p>What you actually want is: summarise each paper on its own, then <strong>join the summaries together in pairs</strong>, so every paper goes through the same number of steps and gets the same weight. That is all Graph of Thought is.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 900 388" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Four papers each get notes. The notes are joined in pairs, then joined again into one set, then written up as a draft which is checked and improved up to three times.">
+        <defs>
+          <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#6d6a80"/>
+          </marker>
+          <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#2dd4bf"/>
+          </marker>
+          <style>
+            .gl{font-family:'Inter Tight',sans-serif;font-size:13px;font-weight:600;fill:#f4f1ea}
+            .gs{font-family:'JetBrains Mono',monospace;font-size:10px;fill:#aba7b9}
+            .gt{font-family:'JetBrains Mono',monospace;font-size:10px;fill:#2dd4bf}
+            .g1{stroke:#4a4759;stroke-width:1.7;fill:none;marker-end:url(#a1)}
+            .g2{stroke:#2dd4bf;stroke-width:1.9;fill:none;marker-end:url(#a2)}
+          </style>
+        </defs>
+
+        <path class="g1" d="M110 64 L110 90 L225 90 L225 114"/>
+        <path class="g1" d="M340 64 L340 90 L225 90 L225 114"/>
+        <path class="g1" d="M570 64 L570 90 L685 90 L685 114"/>
+        <path class="g1" d="M800 64 L800 90 L685 90 L685 114"/>
+        <path class="g1" d="M225 170 L225 196 L455 196 L455 220"/>
+        <path class="g1" d="M685 170 L685 196 L455 196 L455 220"/>
+        <path class="g1" d="M455 276 L455 292 L295 292 L295 302"/>
+        <path class="g2" d="M412 328 L484 328"/>
+        <path class="g2" d="M486 344 C 440 378, 348 378, 300 358"/>
+
+        <rect x="10" y="12" width="200" height="52" rx="7" fill="rgba(255,255,255,.04)" stroke="#3d3a4d"/>
+        <text class="gl" x="110" y="34" text-anchor="middle">Notes from paper 1</text>
+        <text class="gs" x="110" y="51" text-anchor="middle">read on its own</text>
+        <rect x="240" y="12" width="200" height="52" rx="7" fill="rgba(255,255,255,.04)" stroke="#3d3a4d"/>
+        <text class="gl" x="340" y="34" text-anchor="middle">Notes from paper 2</text>
+        <text class="gs" x="340" y="51" text-anchor="middle">read on its own</text>
+        <rect x="470" y="12" width="200" height="52" rx="7" fill="rgba(255,255,255,.04)" stroke="#3d3a4d"/>
+        <text class="gl" x="570" y="34" text-anchor="middle">Notes from paper 3</text>
+        <text class="gs" x="570" y="51" text-anchor="middle">read on its own</text>
+        <rect x="700" y="12" width="200" height="52" rx="7" fill="rgba(255,255,255,.04)" stroke="#3d3a4d"/>
+        <text class="gl" x="800" y="34" text-anchor="middle">Notes from paper 4</text>
+        <text class="gs" x="800" y="51" text-anchor="middle">read on its own</text>
+
+        <rect x="100" y="114" width="250" height="56" rx="7" fill="rgba(139,92,246,.13)" stroke="#8b5cf6"/>
+        <text class="gl" x="225" y="138" text-anchor="middle">Notes 1 + 2 joined</text>
+        <text class="gs" x="225" y="156" text-anchor="middle">keep every point, keep both sources</text>
+        <rect x="560" y="114" width="250" height="56" rx="7" fill="rgba(139,92,246,.13)" stroke="#8b5cf6"/>
+        <text class="gl" x="685" y="138" text-anchor="middle">Notes 3 + 4 joined</text>
+        <text class="gs" x="685" y="156" text-anchor="middle">keep every point, keep both sources</text>
+
+        <rect x="315" y="220" width="280" height="56" rx="7" fill="rgba(45,212,191,.14)" stroke="#2dd4bf"/>
+        <text class="gl" x="455" y="244" text-anchor="middle">All four sets joined</text>
+        <text class="gs" x="455" y="262" text-anchor="middle">every paper went through 2 joins</text>
+
+        <rect x="180" y="302" width="232" height="52" rx="7" fill="rgba(16,185,129,.15)" stroke="#10b981"/>
+        <text class="gl" x="296" y="325" text-anchor="middle">Draft the report</text>
+        <text class="gs" x="296" y="342" text-anchor="middle">from the joined notes</text>
+        <rect x="486" y="302" width="250" height="52" rx="7" fill="rgba(245,158,11,.13)" stroke="#f59e0b"/>
+        <text class="gl" x="611" y="325" text-anchor="middle">Check it, list what is missing</text>
+        <text class="gt" x="611" y="342" text-anchor="middle">repeat at most 3 times, then stop</text>
+      </svg>
+      <p class="readas"><strong>Read it like this, from the top.</strong> Each paper is read on its own, so no paper gets ignored. Then notes 1 and 2 are joined into one set, and notes 3 and 4 into another. Then those two sets are joined. Every paper has now been through exactly two joins, so all four carry equal weight — that is the whole reason for doing it in pairs. Finally the joined notes become a draft, which gets checked and improved a few times and then stops.</p>
+    </div>
+
+    <h3>The two moves a tree cannot do</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">Move 1</div><div class="h-t">Join</div><div class="h-d">Two results become one. A tree can only <em>choose</em> between two results — it can never combine them.</div></div>
+      <div class="how-c"><div class="h-n">Move 2</div><div class="h-t">Improve in place</div><div class="h-d">One result gets checked and rewritten, over and over, until it is good enough or you run out of tries.</div></div>
+      <div class="how-c"><div class="h-n">And</div><div class="h-t">This is code, not a prompt</div><div class="h-d">You write a small program. Each box in the picture is one model call. The arrows are just the order you call them in.</div></div>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">Joining two sets of notes without losing anything</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You are writing a report on how users feel about your new signup flow. You have notes from two sources. Source A is a survey: <strong>satisfaction score is 62 out of 100</strong>. Source B is your analytics: <strong>40% of users give up on step 3</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">Joined notes that still contain <strong>both numbers</strong>, and that flag the fact that these two findings point in opposite directions.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">This join will happen again at the next level, and the level after. Anything lost here is lost forever, and the losses pile up.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Combine these two summaries into one.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Users are broadly satisfied with the
+signup flow, although some report
+friction during the process.</div></div>
+        <div class="p-why">Both numbers are gone. The word "some" replaced "40%". And the most interesting thing in the whole report — <strong>that your survey and your analytics disagree</strong> — has been smoothed into a sentence that says nothing. Do this three times and there is nothing left.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Join these two lists of findings.
+Follow these rules exactly:
+
+· Keep every finding. Never drop one.
+· Never change a number.
+· Never use words like "some", "many"
+  or "broadly" to replace a number.
+· If two findings say the same thing,
+  keep one and list both sources.
+· If two findings disagree, keep BOTH,
+  mark "disagree": true, and write one
+  line saying what the disagreement is.
+
+Return a JSON list only.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">[
+ {"finding":"satisfaction 62/100",
+  "source":"A", "disagree":true,
+  "note":"hard to square with B's 40%
+          drop-off at step 3"},
+ {"finding":"40% give up at step 3",
+  "source":"B", "disagree":true}
+]</div></div>
+        <div class="p-why">Both numbers survived. Both sources are recorded. And the disagreement is now <strong>an item in the report</strong> instead of something that quietly vanished. This can be joined again five more times and still hold its shape.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Join <strong>lists of findings</strong>, not paragraphs. Every join over paragraphs throws away detail, and you are about to do it several more times. A list with a source on each item survives.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">When two sources give different numbers</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You are pulling together a quarterly summary. The finance sheet says revenue was <strong>up 12%</strong>. The analytics dashboard says it was <strong>down 3%</strong>. Both are for Q3.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The report to say clearly that <strong>the two systems disagree</strong>, so somebody goes and finds out why.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">A model asked to "reconcile" two numbers will find a middle-sounding phrase. That is the worst possible outcome — it hides a real problem.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Reconcile these two findings.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">Revenue grew moderately in Q3.</div></div>
+        <div class="p-why">"Moderately" is a number that appears in neither source. Nobody can defend it, nobody can check it, and the fact that <strong>two of your systems disagree about revenue</strong> — which somebody urgently needs to look at — has been deleted.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Compare these two findings using these
+rules, in this order:
+
+1. Different time periods? Keep both,
+   label each with its period.
+2. Same period, different number?
+   Mark it CONFLICT. Keep both numbers.
+   Name both sources. Do not average
+   them. Do not soften the wording.
+3. One source is more than 90 days old?
+   Keep both, mark the older one stale.
+
+Never invent an explanation for the
+difference.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">CONFLICT — Q3 revenue
+  finance sheet: +12%
+  analytics dashboard: −3%
+  Both cover Jul-Sep. Needs a human
+  to find out which is right.</div></div>
+        <div class="p-why">Now the report tells you something useful. <strong>A disagreement between two systems is a finding, not a formatting problem</strong> — and it is usually the most valuable line in the document.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Write the rules for what to do when sources disagree, and put them in order. Averaging two numbers you cannot explain gives you a figure that exists nowhere and that nobody can stand behind.</div></div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(5)"><div class="pg-l">← Previous</div><div class="pg-t">Tree of Thought — more examples</div></button>
+    <button class="rt" onclick="go(7)"><div class="pg-l">Next slide →</div><div class="pg-t">Graph of Thought — more examples</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 7 · GOT PART 2 ================= -->
+<section class="slide" data-title="Graph of Thought — more examples">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">07</div>
+    <div>
+      <h2 class="stage-title">Graph Of Thought — Two More Examples</h2>
+      <p class="stage-kicker">One from code review, one about the improve-it-again loop and how to stop it. Then where to use it, and a summary.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">Joining four separate code review passes</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A large pull request. You run four separate review passes so each one can concentrate: <strong>bugs</strong>, <strong>security</strong>, <strong>performance</strong>, <strong>style</strong>. Each pass returns its own list.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">One review for the author. Same issue found twice should appear once. Two passes that disagree should both be shown.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The bug pass and the performance pass often both flag line 88 — but for opposite reasons. "Add a lock here" and "this lock is why it is slow" must not be silently merged into one bland comment.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>Here are four review reports.
+Merge them into one clean review.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">The code is generally well written.
+There are some concerns around
+concurrency in the payment module and
+a few opportunities to improve
+performance. Consider reviewing the
+locking approach.</div></div>
+        <div class="p-why">Twenty-three specific findings became four vague sentences with <strong>no file names and no line numbers</strong>. The author cannot act on any of it. And the real conflict — two passes wanting the opposite thing on line 88 — is now the phrase "consider reviewing the locking approach".</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Join these four lists of findings.
+
+· A finding is the same as another only
+  if the file AND line match. Then keep
+  one, and list which passes found it.
+· If two findings are on the same line
+  but ask for OPPOSITE changes, keep
+  both and mark "needs_decision": true.
+· Never merge two findings into a new
+  sentence. Copy the original wording.
+· Keep every file:line. Never summarise.
+
+Output JSON, sorted by severity.</code></pre>
+        <div class="p-out"><div class="po-t">What comes back</div><div class="po-b">[
+ {"at":"payments.py:88",
+  "found_by":["bugs","performance"],
+  "needs_decision":true,
+  "a":"race condition — add a lock",
+  "b":"this lock blocks 40ms per
+       request — remove it"},
+ {"at":"auth.py:12",
+  "found_by":["security"],
+  "issue":"token compared with ==,
+           use compare_digest"}
+]</div></div>
+        <div class="p-why">Nineteen unique findings, four duplicates removed, and one line flagged as <strong>needing a human decision</strong> because two passes want opposite things. That flag is the single most useful output of the whole review.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Say exactly what "the same finding" means — here it is <code class="inl">file + line</code>. Without that rule the model merges things that only sound similar, and you lose real detail.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">The improve-it-again loop that never stops</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You have a draft report. You want the model to check it and improve it, the way you would revise your own work.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A better draft, and for the program to <strong>actually finish</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">If you ask a model "what could be better here?", it will always find something. There is no point at which it says "nothing, this is fine".</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>while True:
+    notes = ask("What could be improved
+                 about this draft?")
+    draft = ask("Rewrite it using
+                 these notes.")</code></pre>
+        <div class="p-out"><div class="po-t">What happens</div><div class="po-b">round 1  "it is too long"
+round 2  "now it is too short"
+round 3  "add some examples"
+round 4  "it is too long"
+round 5  "now it is too short"
+... forever</div></div>
+        <div class="p-why">Two problems. There is <strong>no way to stop</strong>, and the critic has no standard to judge against, so it just swings between two complaints. Forty minutes later it is still going and the draft is no better than round one.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code># the critic prompt has a standard
+# and a cap on how much it may say:
+CRITIC = """Score this draft 0-1 against
+the checklist. Then list ONLY problems
+that make it unusable. Maximum 3.
+If there are none, output NONE.
+Do not suggest style preferences."""
+
+best, best_score = draft, 0
+for i in range(3):                 # cap
+    c = ask(CRITIC, draft)
+    if c.score &gt;= 0.85: return draft   # good enough
+    if c.score &lt;= best_score: break    # not improving
+    best, best_score = draft, c.score
+    draft = ask("Fix only these:", c.problems)
+return best        # the best one, not the last one</code></pre>
+        <div class="p-out"><div class="po-t">What happens</div><div class="po-b">round 1  score 0.62 → 2 problems
+round 2  score 0.81 → 1 problem
+round 3  score 0.88 → good enough
+
+returns round 3's draft</div></div>
+        <div class="p-why">Four things were added: a <strong>checklist</strong> to score against, a <strong>good enough</strong> threshold, a <strong>hard cap</strong> of three rounds, and a <strong>stop if it is getting worse</strong>. And it returns the best draft it saw, not the last one — the last round is often worse than the one before.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Any loop where the model improves its own work needs all four: a score, a "good enough" line, a maximum number of tries, and a memory of the best version so far. Leave one out and it either never stops or hands you its worst attempt.</div></div>
+
+    <h3>Where to use Graph of Thought</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Use case 1</div><div class="uc-t">Summarising many documents</div><div class="uc-d">Ten papers, twenty interview transcripts, a folder of reports. Read each on its own, join in pairs, keep every finding and every source.</div></div>
+      <div class="uc"><div class="uc-n">Use case 2</div><div class="uc-t">Literature reviews</div><div class="uc-d">Pull method, result and limitation from each paper, then group by topic. The output is a table showing where papers agree and where they do not.</div></div>
+      <div class="uc"><div class="uc-n">Use case 3</div><div class="uc-t">Big code reviews</div><div class="uc-d">Separate passes for bugs, security, performance and style, then joined by file and line. Duplicates removed, disagreements flagged.</div></div>
+      <div class="uc"><div class="uc-n">Use case 4</div><div class="uc-t">Writing up what went wrong after an outage</div><div class="uc-d">Build a timeline from the logs, from the metrics, from the deploy history and from the chat. Join them. Where they disagree about timing, that disagreement is the clue.</div></div>
+      <div class="uc"><div class="uc-n">Use case 5</div><div class="uc-t">Collecting requirements from several teams</div><div class="uc-d">Sales, support, security and engineering all want different things. Join their lists and mark direct conflicts as decisions somebody has to make.</div></div>
+      <div class="uc"><div class="uc-n">Use case 6</div><div class="uc-t">Checking the same customer across systems</div><div class="uc-d">The CRM, the billing system and the database each hold a version. Join them with clear rules about which one wins, and output the differences as a to-do list.</div></div>
+      <div class="uc"><div class="uc-n">Use case 7</div><div class="uc-t">Writing a long document from an outline</div><div class="uc-d">Write each section separately at the same time, then join to make the terms and claims consistent. Beats writing twelve thousand words in one go.</div></div>
+    </div>
+
+    <h3>When not to use it</h3>
+    <div class="smells">
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You are picking one thing</b>Choosing one vendor? Joining five vendors gives you a sixth vendor that does not exist. Use a tree.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>Everything fits in one prompt</b>Two short documents do not need this. Paste them both in and ask once.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You cannot say what a correct join looks like</b>If you cannot write the rules, the model will guess, and guessing means summarising.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You have not checked the cost</b>Four hundred documents is roughly eight hundred model calls. Work out the bill before you press run.</div></div>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary — Graph of Thought</div>
+      <div class="sb-s">Four things to take away</div>
+      <ol>
+        <li><strong>What it is:</strong> do the pieces separately, then join them in pairs so every piece carries the same weight.</li>
+        <li><strong>Join lists, not paragraphs.</strong> Each item keeps its number and its source. Joining prose loses detail every single time.</li>
+        <li><strong>Write the rules for disagreement.</strong> When two sources conflict, keep both and mark it. Never average, never soften.</li>
+        <li><strong>Any improve-it-again loop needs four brakes:</strong> a score, a good-enough line, a maximum number of rounds, and keeping the best version seen.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You join ten documents and the final summary says almost nothing useful. What is the fix?</div>
+      <button class="opt" onclick="qa(this,1)">Join lists of findings with rules, instead of asking it to "combine these summaries"</button>
+      <button class="opt" onclick="qa(this,0)">Use a bigger model for the joining step</button>
+      <button class="opt" onclick="qa(this,0)">Join five documents at a time instead of two</button>
+      <div class="explain">Every time you ask a model to combine two paragraphs, it drops the specifics and softens anything that disagrees. Do that three levels deep and most of your detail is gone. <strong>A bigger model just does it more elegantly.</strong> Join structured items, each with its number and its source, and write down what to do when two of them clash.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(6)"><div class="pg-l">← Previous</div><div class="pg-t">Graph of Thought — what it is</div></button>
+    <button class="rt" onclick="go(8)"><div class="pg-l">Next slide →</div><div class="pg-t">ReAct — what it is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 8 · REACT PART 1 ================= -->
+<section class="slide" data-title="ReAct — what it is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">08</div>
+    <div>
+      <h2 class="stage-title">ReAct — Let It Look Things Up</h2>
+      <p class="stage-kicker">The first three techniques all think inside a closed room. ReAct opens a door. The name is short for <strong>Reason and Act</strong>: think about what you need, go and get it, read what actually came back, think again.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What problem does it solve?</h3>
+    <p>The model does not know your code, your database, today's date, or anything that happened after it was trained. If you ask a question that depends on any of those, it will make something up — and it will sound completely certain while doing it.</p>
+    <p>ReAct fixes this by giving the model a small set of things it can actually do — read a file, run a test, search the code, query a table — and then running a loop.</p>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node vi">Think<small>what do I need?</small></div><span class="arrow">→</span>
+        <div class="node sky">Act<small>use one tool</small></div><span class="arrow">→</span>
+        <div class="node am">Read the result<small>what really came back</small></div><span class="arrow">→</span>
+        <div class="node">Enough?<small>no → go round again</small></div><span class="arrow">→</span>
+        <div class="node em">Answer</div>
+      </div>
+      <div class="dg-cap">Keep going round until the question is answered — or until your limit is reached</div>
+      <p class="readas"><strong>Read it like this:</strong> the model writes one sentence about what it needs, then calls one tool. Your program runs the tool and pastes the real result back in. The model reads that result and decides what to do next. The middle box is the important one — without it the model just imagines what the tool would have said.</p>
+    </div>
+
+    <h3>What one round actually looks like</h3>
+    <div class="trace">
+      <div class="tr-head"><span class="tr-t">Question · "Is the function old_price_calc still used anywhere? Can I delete it?"</span><span class="tr-badge ok">3 steps · all real</span></div>
+      <div class="tr-line"><span class="tr-k k-th">Think</span><span class="tr-v">I cannot answer this from memory. I need to search the whole project for the name.</span></div>
+      <div class="tr-line"><span class="tr-k k-ac">Act</span><span class="tr-v">search_code("old_price_calc")</span></div>
+      <div class="tr-line"><span class="tr-k k-ob">Result</span><span class="tr-v">pricing.py:14 (the definition)
+reports/monthly.py:203
+tests/test_pricing.py:8</span></div>
+      <div class="tr-line"><span class="tr-k k-th">Think</span><span class="tr-v">It is used in monthly.py. I should look at that line to see if it is a real call or a comment.</span></div>
+      <div class="tr-line"><span class="tr-k k-ac">Act</span><span class="tr-v">read_file("reports/monthly.py", lines="198-208")</span></div>
+      <div class="tr-line"><span class="tr-k k-ob">Result</span><span class="tr-v">203:    total = old_price_calc(items, region)</span></div>
+      <div class="tr-line fin"><span class="tr-k k-an">Answer</span><span class="tr-v">No, do not delete it. It is still called at reports/monthly.py line 203. Update that caller first, then delete.</span></div>
+    </div>
+
+    <h3>The same question, done badly</h3>
+    <div class="trace bad">
+      <div class="tr-head"><span class="tr-t">No tools, or tools ignored</span><span class="tr-badge fail">made up · dangerous</span></div>
+      <div class="tr-line"><span class="tr-k k-th">Think</span><span class="tr-v">Functions with "old" in the name are usually left over from a refactor.</span></div>
+      <div class="tr-line err"><span class="tr-k k-ac">Act</span><span class="tr-v">find_usages("old_price_calc")</span></div>
+      <div class="tr-line err"><span class="tr-k k-er">Result</span><span class="tr-v">ERROR: there is no tool called find_usages</span></div>
+      <div class="tr-line dim"><span class="tr-k k-th">Think</span><span class="tr-v">The tool is not available, but the name suggests this is dead code.</span></div>
+      <div class="tr-line fin" style="background:rgba(244,63,94,.06)"><span class="tr-k k-er">Answer</span><span class="tr-v">Yes, it looks safe to delete.</span></div>
+    </div>
+    <div class="callout co-trap"><span class="co-tag">Three mistakes in five lines</span>
+      <p><strong>1.</strong> It invented a tool name that does not exist. <strong>2.</strong> It got an error back and carried on as if nothing happened. <strong>3.</strong> It answered anyway, from a guess, in exactly the same confident tone as the good version. From the outside, both answers look identical — <strong>which is why you must log and read the steps, not just the answer.</strong></p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">Making the model check instead of guess</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Same job as above — is <code>old_price_calc</code> safe to delete? You have given the model a <code>search_code</code> tool.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">It to use the tool. Every time. Not just when it feels unsure.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">Having a tool available is not the same as being told to use it. A model that <em>can</em> check will often answer from a guess instead, because guessing is faster and it does not know it is guessing.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>You are a helpful coding assistant.
+You have access to these tools.</code></pre>
+        <div class="p-why">"You have access to" is an offer, not an instruction. The model treats the tools as optional and answers from its own guess whenever the question sounds familiar — which is most of the time.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>Rules you must follow:
+
+· NEVER say anything about a file, a
+  function or a line number unless you
+  read it with a tool in this session.
+· If no tool can tell you something,
+  say "I could not check X" — do not
+  guess and do not estimate.
+· Your own knowledge is for choosing
+  which tool to use. It is not an
+  answer.</code></pre>
+        <div class="p-why">Written as a <strong>ban</strong>, not a suggestion. "Use the tools when helpful" gets ignored. "Never state a fact you did not read" does not.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Say what the model is not allowed to do. Positive encouragement is easy to skip past; a clear prohibition is not.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">Tool descriptions the model cannot choose between</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Your agent has two tools. One searches your code. One searches your documentation. The model keeps picking the wrong one and coming back with nothing.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">It to pick the right tool first time.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The <strong>only</strong> thing the model sees when choosing is the description you wrote. It cannot look inside the tool. If your two descriptions sound alike, it is guessing.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>{
+ "name": "search",
+ "description": "Search for things"
+}
+{
+ "name": "lookup",
+ "description": "Look up information"
+}</code></pre>
+        <div class="p-why">Nothing here tells them apart. The model picks one at random, gets nothing back, tries the other — <strong>and you tell your team "the AI is hallucinating"</strong> when really you wrote two descriptions that mean the same thing.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>{
+ "name": "search_code",
+ "description": "Search the project's
+  source files for a word or a function
+  name. Returns file paths and line
+  numbers, up to 50 matches.
+  <span class="hl">Use this for anything about how the
+  code works.</span>
+  <span class="bad-hl">Do NOT use it for questions about our
+  written guides — use search_docs.</span>
+  An empty result means the word is
+  genuinely not in the code. That is
+  an answer, not a failure — do not
+  run the search again."
+}</code></pre>
+        <div class="p-why">Three things every good description has: <strong>when to use it, when not to use it, and what an empty result means.</strong> That last line stops the agent from running the same search eight times.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Tool descriptions are prompts, and they are the ones nobody ever edits. <strong>When your agent picks the wrong tool, fix the description before you touch anything else.</strong></div></div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(7)"><div class="pg-l">← Previous</div><div class="pg-t">Graph of Thought — more examples</div></button>
+    <button class="rt" onclick="go(9)"><div class="pg-l">Next slide →</div><div class="pg-t">ReAct — more examples</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 9 · REACT PART 2 ================= -->
+<section class="slide" data-title="ReAct — more examples">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">09</div>
+    <div>
+      <h2 class="stage-title">ReAct — Two More Examples</h2>
+      <p class="stage-kicker">The two things that will actually break your agent in week two: an error that disappears, and a loop that never ends. Then where to use it, and a summary.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">An error that turns into a fact</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Your agent looks up a customer's orders. The database is slow today and the call times out.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The agent to say <strong>"I could not check"</strong> — not to decide the customer has no orders.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">There is a huge difference between <em>"the lookup failed"</em> and <em>"the lookup worked and found nothing"</em>. If your code hides that difference, the model cannot tell them apart either.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>try:
+    result = run_tool(name, args)
+except Exception:
+    result = ""</code></pre>
+        <div class="p-out"><div class="po-t">What the agent then says</div><div class="po-b">I checked and this customer has no
+orders on file.</div></div>
+        <div class="p-why">The model got an empty string and read it as "nothing found". <strong>A crash has quietly become a fact.</strong> This is the most common way an agent gives a confidently wrong answer, and nothing in your logs looks unusual.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>except TimeoutError:
+    result = ("ERROR: the database did
+      not answer within 5 seconds. Try
+      once more. If it fails again, tell
+      the user you could not check.")
+
+except NotFound:
+    result = ("EMPTY: the search worked
+      and there are no matching orders.
+      This is a real answer. Do not
+      search again.")</code></pre>
+        <div class="p-out"><div class="po-t">What the agent then says</div><div class="po-b">I tried twice but the order system did
+not respond. I could not check this
+customer's orders — please try again
+in a few minutes.</div></div>
+        <div class="p-why">Two different messages for two different situations, and each one says <strong>what to do next</strong>. Errors are information the model needs, not something to hide.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Never swallow an error. Pass it back to the model as plain text that explains what happened and what to try next. And always separate <strong>"it broke"</strong> from <strong>"it worked and the answer is nothing"</strong>.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">The agent that runs forever</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Your agent searches for an order by email. The email has a typo, so the search correctly returns nothing. The agent reads "nothing" as failure and tries again.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">It to stop after a couple of tries and say what it could and could not find.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">Nothing crashes. The agent looks busy. It is simply doing the same useless thing over and over, and it will keep doing it until something outside stops it.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>while True:
+    reply = ask(messages, tools=tools)
+    ...</code></pre>
+        <div class="p-out"><div class="po-t">What happens</div><div class="po-b">search_orders(email="a@b.com") → []
+search_orders(email="a@b.com") → []
+search_orders(email="a@b.com") → []
+... 1,400 times</div></div>
+        <div class="p-why">No limit on rounds, no limit on time, no limit on money, and nothing that notices the agent is repeating itself. This is the number one way student projects burn through an API budget overnight.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>seen = set()
+for step in range(8):                   # limit 1: rounds
+    if seconds_used() &gt; 60: break       # limit 2: time
+    if money_spent() &gt; 0.25: break      # limit 3: cost
+
+    call = ask(messages, tools=tools)
+
+    key = (call.name, str(call.args))   # limit 4: repeats
+    if key in seen:
+        result = ("ERROR: you already made this
+          exact call. Change the arguments, use
+          a different tool, or answer with what
+          you have and say what is missing.")
+    else:
+        seen.add(key)
+        result = run_tool(call)
+
+    log(step, call, result)             # always log
+
+return {"answer": ..., "found": facts,
+        "could_not_check": gaps}</code></pre>
+        <div class="p-why">Four limits and a log. <strong>"I found the customer but could not check their orders" is a useful answer.</strong> Silence after ninety seconds is not.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Every agent needs four brakes — rounds, time, money, and a check for repeated calls — plus a log of every step. Without the log, a wrong answer three weeks later is impossible to explain.</div></div>
+
+    <div class="callout co-note"><span class="co-tag">You have already seen this working</span>
+      <p>The <code class="inl">mood-app</code> project in this course has an eye button next to every chatbot answer. Click it and you get exactly the trace from this slide — what was sent, which tools ran, what came back. <strong>Open one for a question you asked yourself.</strong> It makes this slide concrete in about a minute.</p>
+    </div>
+
+    <h3>Where to use ReAct</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Use case 1</div><div class="uc-t">Fixing failing tests</div><div class="uc-d">Run the test, read the real error, read the file, make a change, run it again. The test suite tells the truth every single time, which makes this the best job an agent can do.</div></div>
+      <div class="uc"><div class="uc-n">Use case 2</div><div class="uc-t">Answering questions about your codebase</div><div class="uc-d">"Where is this used?" "What calls this API?" "Is this config still read anywhere?" The agent searches and reads instead of guessing from the name.</div></div>
+      <div class="uc"><div class="uc-n">Use case 3</div><div class="uc-t">Reviewing a pull request</div><div class="uc-d">Read the diff, then open the files around it to check whether the change breaks a caller. A diff on its own never has enough context.</div></div>
+      <div class="uc"><div class="uc-n">Use case 4</div><div class="uc-t">Working with a real database</div><div class="uc-d">Look at the schema, write a query, run it, notice the row count looks wrong, fix the join, run it again. A wrong join gives you a number, not an error — only running it catches that.</div></div>
+      <div class="uc"><div class="uc-n">Use case 5</div><div class="uc-t">Research across documents and the web</div><div class="uc-d">Search, read, spot a gap, search again with better words, check a claim against a second source. You cannot know the right search until you have read the first result.</div></div>
+      <div class="uc"><div class="uc-n">Use case 6</div><div class="uc-t">Customer support over live data</div><div class="uc-d">Order status, refund rules, delivery problems. Every answer depends on this specific account, and that lives in your database.</div></div>
+      <div class="uc"><div class="uc-n">Use case 7</div><div class="uc-t">Finding out why the build broke</div><div class="uc-d">Read the CI log, find the failing step, read the commit that started it, check whether it passes locally. Several sources, in whatever order the evidence suggests.</div></div>
+      <div class="uc"><div class="uc-n">Use case 8</div><div class="uc-t">Internal question answering</div><div class="uc-d">Let the agent decide whether to search your documents, judge whether the results actually answered the question, and search again with different words if they did not.</div></div>
+    </div>
+
+    <h3>When not to use it</h3>
+    <div class="smells">
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You already know the exact steps</b>Then write those steps as normal code and call the model only where real judgement is needed. Faster, cheaper, testable.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>The tools can change or delete things, unguarded</b>Reads are safe. Anything that sends, refunds or deletes needs a human to approve it first.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You have forty tools</b>Model accuracy drops sharply past about a dozen. Narrow the list before the agent starts.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>You are not logging the steps</b>Then you cannot debug it, and you will not know it is wrong until a user tells you.</div></div>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary — ReAct</div>
+      <div class="sb-s">Four things to take away</div>
+      <ol>
+        <li><strong>What it is:</strong> think, use one tool, read the real result, repeat. The middle step is what stops the model inventing things.</li>
+        <li><strong>Ban guessing in writing.</strong> "Never say anything you did not read with a tool" works; "use the tools when helpful" does not.</li>
+        <li><strong>Errors are information.</strong> Pass them back as text that says what happened and what to try next. Never turn a failure into an empty result.</li>
+        <li><strong>Four brakes and a log:</strong> rounds, time, money, repeated calls — and record every step so you can explain the answer later.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your agent is right 94% of the time in testing and 61% of the time in production. Same prompts, same tools. What is the most likely reason?</div>
+      <button class="opt" onclick="qa(this,1)">Real tools time out, return nothing, and return odd shapes — and your test data never did</button>
+      <button class="opt" onclick="qa(this,0)">Production is running a different model version</button>
+      <button class="opt" onclick="qa(this,0)">The prompt needs to be firmer about being accurate</button>
+      <div class="explain">Test data is always the happy path. Real tools are slow, hit rate limits, return empty lists and sometimes return a number as text. Each of those comes back to the model as a result, and if it has never been shown how to read them, it treats a failure as a fact. <strong>Test with a tool layer that deliberately times out and returns nothing.</strong></div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(8)"><div class="pg-l">← Previous</div><div class="pg-t">ReAct — what it is</div></button>
+    <button class="rt" onclick="go(10)"><div class="pg-l">Next slide →</div><div class="pg-t">SKILL.md — what it is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 10 · SKILLS PART 1 ================= -->
+<section class="slide" data-title="SKILL.md — what it is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">10</div>
+    <div>
+      <h2 class="stage-title">SKILL.md — Your Procedures In Files</h2>
+      <p class="stage-kicker">The four techniques so far decide <em>how</em> the model thinks. None of them tell it how <strong>your team</strong> reviews code, or writes release notes, or closes the month. That knowledge goes in files the agent opens only when it needs them.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What problem does it solve?</h3>
+    <p>Say your team has forty written procedures. Code review, pull request descriptions, release notes, the on-call runbook, the SQL naming rules, the migration checklist. Each one is one or two pages.</p>
+    <p>You could paste all forty into the system prompt. Here is what that costs:</p>
+
+    <div class="duo">
+      <div class="duo-col no">
+        <h5>All forty in the prompt</h5>
+        <div class="dsub">the obvious way</div>
+        <ul>
+          <li>About 60,000 words of instructions sent with <em>every</em> message — including "what time is standup?"</li>
+          <li>You pay for all of it on every single request</li>
+          <li>Thirty-nine irrelevant procedures competing for attention with the one that matters</li>
+          <li>Changing one line means editing a giant file and re-testing everything</li>
+        </ul>
+      </div>
+      <div class="duo-col ok">
+        <h5>Forty small files</h5>
+        <div class="dsub">the SKILL.md way</div>
+        <ul>
+          <li>Only the <strong>name and one-line description</strong> of each is loaded — about 25 words each, 1,000 in total</li>
+          <li>The full procedure is opened only when the description matches what you asked for</li>
+          <li>Extra reference files are read only at the step that needs them</li>
+          <li>Each file is small, reviewed on its own, and kept in git like any other code</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>How it works — three levels</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">Level 1 · always loaded</div><div class="h-t">The name and description</div><div class="h-d">About 25 words per skill. This is <strong>all</strong> the agent knows about a skill until it decides to use it. Like reading the contents page of a manual.</div></div>
+      <div class="how-c"><div class="h-n">Level 2 · loaded when needed</div><div class="h-t">The procedure itself</div><div class="h-d">The steps. A page or two. Loaded only when your request matches the description. Like opening to the right chapter.</div></div>
+      <div class="how-c"><div class="h-n">Level 3 · read at the step</div><div class="h-t">Extra files and scripts</div><div class="h-d">Checklists, style guides, scripts. Read only if step 4 actually says to read them. These can be huge and cost nothing until used.</div></div>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">A way to remember it</span>
+      <p>Think of a car repair manual. You do not read all 900 pages before touching the car. You look at the contents page, open the one chapter you need, and follow the link in step 4 only if step 4 comes up. <strong>That is exactly what a skill does.</strong></p>
+    </div>
+
+    <h3>What a skill looks like on disk</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">a folder, with one required file</span></div>
+      <pre><code>.claude/skills/
+└── code-review/
+    ├── SKILL.md              <span class="cmt"># the description + the steps</span>
+    ├── checklist.md          <span class="cmt"># level 3 - read only at step 3</span>
+    └── scripts/
+        └── changed_files.sh  <span class="cmt"># run, not read - costs nothing</span></code></pre>
+    </div>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">code-review/SKILL.md</span></div>
+      <pre><code><span class="cmt">---</span>
+<span class="yml">name:</span> code-review
+<span class="yml">description:</span> Review a pull request or a set of changes for bugs,
+  security problems and broken conventions. Use when asked to review
+  code, check a PR, look over a change, or check something before
+  merge. Not for writing new code.
+<span class="yml">allowed-tools:</span> Read, Grep, Bash(git diff:*)
+<span class="cmt">---</span>
+
+<span class="kw"># Code review</span>
+
+<span class="kw">## Step 1 - get the list of changed files</span>
+Run `scripts/changed_files.sh`.
+If it lists more than 40 files, stop and ask which part to review.
+Read only the files that changed. Never read the whole project.
+
+<span class="kw">## Step 2 - three passes, in this order</span>
+1. Bugs - off-by-one, missing null checks, unhandled errors.
+2. Security - check permissions on every new endpoint, look for
+   passwords or keys in the code, look for user input in queries.
+3. Conventions - read `checklist.md` now and apply it.
+
+<span class="kw">## Step 3 - check each finding before you report it</span>
+For every problem you found, write the exact input that triggers it.
+If you cannot write that input, DELETE the finding.
+Findings you cannot demonstrate are noise, and noise is why people
+stop reading reviews.
+
+<span class="kw">## Step 4 - output</span>
+A markdown table: file and line, how serious, one line describing it,
+the input that breaks it, and the suggested fix.
+Worst first. Maximum 10 rows.
+If you found nothing, write exactly "No blocking findings." and stop.
+
+<span class="kw">## Do not</span>
+- Do not comment on formatting. The formatter handles that.
+- Do not suggest renaming things unless the name is actually wrong.
+- Do not include praise or a summary paragraph.</code></pre>
+    </div>
+
+    <p>Now read that again as a prompt, not as a document. <strong>Everything from this deck is in it.</strong> The numbered steps are Chain of Thought. "Three passes, in this order" breaks the job into pieces. "Write the input or delete the finding" is a check before reporting. The <code class="inl">allowed-tools</code> line means this skill can read but never write. And <code class="inl">checklist.md</code> stays out of the file so the procedure is short enough to actually follow.</p>
+
+    <h3>How the agent decides to use it</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">At startup it reads only the descriptions</div><div class="sd">Forty names and forty one-line descriptions. That is all. Nothing else about any skill is loaded.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">You say something</div><div class="sd"><em>"Can you look over PR 412 before I merge it?"</em></div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">It matches your words against the descriptions</div><div class="sd">This is the only information it has to go on. <strong>This is why the description line matters more than anything else in the file.</strong></div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">The steps get loaded</div><div class="sd">Now the agent has the procedure and follows it in order, exactly like a chain of thought you had written into the prompt yourself.</div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="st">Extra files are opened at the step that names them</div><div class="sd">Step 3 says read <code class="inl">checklist.md</code>, so it reads it — at step 3, not before. Scripts are run rather than read, so a 4,000-line script costs you only its output.</div></div></div>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">A skill that never gets used</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">You wrote a code review skill two weeks ago. Nobody on the team can get it to trigger. They keep getting a generic review instead.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">It to fire when someone says any of the things people actually say: <em>"review this"</em>, <em>"check my PR"</em>, <em>"look over this diff"</em>, <em>"anything wrong before I merge?"</em></span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The steps you wrote are invisible until the skill fires. At the moment of choosing, the model has seen <strong>only the description line</strong>.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>---
+name: code-review
+description: A skill for reviewing code.
+---</code></pre>
+        <div class="p-why">Nothing in that sentence overlaps with what people type. No "pull request", no "PR", no "diff", no "before I merge". It reads like a label on a box, and the model has no reason to open the box.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>---
+name: code-review
+description: <span class="hl">Review a pull request or a
+  set of changes</span> for bugs, security
+  problems and broken conventions.
+  <span class="hl">Use when asked to review code, check a
+  PR, look over a diff, or check
+  something before merge.</span>
+  <span class="bad-hl">Not for writing new code or fixing
+  bugs.</span>
+---</code></pre>
+        <div class="p-why">Three parts: <strong>what it does, the words people will actually say, and what it is not for.</strong> The last part is what stops it firing on "write me a login function".</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Write the description for the model that has to choose, not for a human reading a list. Then test it: write five sentences your team would really say, and check all five trigger it.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">A skill that reads like an essay</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Your skill fires correctly, but every review it produces is different, and it keeps missing the security checks.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The same checks, in the same order, every time — so two reviews of the same PR look the same.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">Advice is not instructions. "Be thorough" cannot be followed and cannot be checked.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code># Code review
+
+Good code review is about being helpful
+as well as correct. Try to be thorough
+but also kind. Think about the wider
+design, and remember the author may
+know things you do not.</code></pre>
+        <div class="p-why">All of this is true and none of it can be done. There is no step to carry out, nothing to tick off, and no way to tell whether the skill was followed. It is a blog post, and the agent reads it before every review.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code># Code review
+
+## Step 1 - get the changed files
+Run `git diff main...HEAD --stat`.
+More than 40 files? Stop and ask.
+
+## Step 2 - bugs
+Check every loop boundary and every
+value that could be null.
+
+## Step 3 - security
+Permissions on each new endpoint.
+Any password or key in the code.
+Any user input going into a query.
+
+## Step 4 - report
+Max 10 findings, worst first.
+Nothing found? Write "No blocking
+findings." and stop.</code></pre>
+        <div class="p-why">Numbered, in order, and every step is something you can confirm happened. <strong>A skill is a procedure, not an explanation.</strong> If a line cannot be carried out, it does not belong in the file.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Write it the way you would write instructions for a new team member on their first day. Numbered steps. Concrete checks. A clear stopping point.</div></div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(9)"><div class="pg-l">← Previous</div><div class="pg-t">ReAct — more examples</div></button>
+    <button class="rt" onclick="go(11)"><div class="pg-l">Next slide →</div><div class="pg-t">SKILL.md — more examples</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 11 · SKILLS PART 2 ================= -->
+<section class="slide" data-title="SKILL.md — more examples">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">11</div>
+    <div>
+      <h2 class="stage-title">SKILL.md — Two More Examples</h2>
+      <p class="stage-kicker">One about keeping the file small, one about not asking the model to do a job a script can do. Then how skills relate to <code class="inl">AGENTS.md</code>, where to use them, and a summary.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">Putting everything in one file</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Your team has a 2,000-line style guide. Step 4 of your review skill needs it. So you pasted the whole thing into <code>SKILL.md</code>.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The style rules applied — <strong>without paying for 2,000 lines on every review</strong>, most of which will be about a language the PR does not even use.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">It feels safer to put everything in one place. But the whole point of level 3 is that depth is free <em>as long as it stays behind a pointer</em>.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code># SKILL.md - 2,800 lines
+
+## Step 4 - apply the style guide
+
+[the entire 2,000-line style guide,
+ pasted in, loaded in full every
+ single time this skill runs]</code></pre>
+        <div class="p-why">A Python-only pull request now loads all the TypeScript, CSS and SQL rules too. The steps that matter are buried in the middle, and the model has 2,000 lines of mostly irrelevant text to work through before it starts.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code># SKILL.md - about 60 lines
+
+## Step 4 - apply the style guide
+Read `references/style-guide.md` now.
+Read only the section for the language
+of the changed files:
+  Python     - section 3
+  TypeScript - section 5
+  SQL        - section 8
+Do not read the other sections.</code></pre>
+        <div class="p-why">The guide stays in the folder, as big as you like. The skill says <strong>when to open it and which part to read</strong>. A Python PR now loads one section instead of eight.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Keep the steps short. Put the long reference material in separate files and point at them from the step that needs them. <strong>A file the agent might read costs nothing until it reads it.</strong></div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">Asking the model to do a script's job</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Step 1 of your skill needs the ten largest files in the project, with their line counts.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The correct ten files, quickly, and <strong>the same ten every time</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">A model asked to count things will produce numbers that look right. You will not notice when they are not.</span></div>
+    </div>
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><span class="p-sig">✗</span><span class="p-lab">Wrong approach</span></div>
+        <pre class="p-prompt"><code>## Step 1
+Read every file in src/, count the
+lines in each one, and list the ten
+largest.</code></pre>
+        <div class="p-why">Slow, expensive, and the answer changes between runs. It also fills the agent's memory with source code it does not need, leaving less room for the actual review. And if it miscounts, nothing tells you.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><span class="p-sig">✓</span><span class="p-lab">Right approach</span></div>
+        <pre class="p-prompt"><code>## Step 1
+Run `scripts/largest.sh`.
+It prints the ten largest files with
+their line counts.
+Use its output. Do not read src/
+yourself.
+
+# scripts/largest.sh
+wc -l src/**/*.py | sort -rn | head -10</code></pre>
+        <div class="p-why">Exact, instant, free, and identical every time. <strong>Anything a script can do, a script should do.</strong> The model's job is judgement, not counting.</div>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Lesson</span><div>Before you write a step, ask: could five lines of shell do this? If yes, write the shell, and make the step say "run this script and use the output".</div></div>
+
+    <h3>Skills, AGENTS.md, and the rest of the family</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Kind of file</th><th>When it loads</th><th>Best for</th></tr>
+      <tr><td><code>SKILL.md</code></td><td>When the model decides your request matches its description</td><td>A procedure for one kind of job — review code, write release notes, run a migration</td></tr>
+      <tr><td><code>AGENTS.md</code><br><code>CLAUDE.md</code></td><td>Always, for this project</td><td>Things that are true for every task here — how to run the tests, the folder layout, what not to touch</td></tr>
+      <tr><td>Slash command</td><td>When you type it yourself</td><td>Something you want done on demand, with no guessing about what you meant</td></tr>
+      <tr><td>MCP server</td><td>Connected when the agent starts</td><td>Reaching a system — a database, an issue tracker. These are <em>tools</em>, not instructions</td></tr>
+    </table>
+    </div>
+    <div class="callout co-win"><span class="co-tag">One sentence to keep them straight</span>
+      <p><strong><code class="inl">AGENTS.md</code> is what is always true here. A skill is what to do when a certain kind of job comes in. An MCP server is what the agent can reach. A slash command is you saying "do this specific thing, now."</strong> Putting a procedure in <code class="inl">AGENTS.md</code> makes every task pay for it. Putting always-true project facts in a skill means they only load sometimes, which is worse.</p>
+    </div>
+
+    <h3>Six skills worth writing first</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Use case 1</div><div class="uc-t">code-review</div><div class="uc-d">Your team's checks, in your order, with your severity levels — and a rule that a finding must come with the input that breaks it. Read-only tools.</div></div>
+      <div class="uc"><div class="uc-n">Use case 2</div><div class="uc-t">write-tests</div><div class="uc-d">Which framework, where the test files live, what to name them, which cases are always required (empty, one item, many, error path).</div></div>
+      <div class="uc"><div class="uc-n">Use case 3</div><div class="uc-t">pr-description</div><div class="uc-d">Read the commits, group them by what a user would notice, drop the internal refactors, fill in your PR template. High frequency, low judgement — ideal.</div></div>
+      <div class="uc"><div class="uc-n">Use case 4</div><div class="uc-t">incident-runbook</div><div class="uc-d">The first fifteen minutes of an outage. Which dashboard, which query, which log, in what order, and when to wake someone up.</div></div>
+      <div class="uc"><div class="uc-n">Use case 5</div><div class="uc-t">research-summary</div><div class="uc-d">How your team reads a paper: what to pull out, how to cite it, how to flag when two sources disagree. This is the Graph of Thought slide, written down as a file.</div></div>
+      <div class="uc"><div class="uc-n">Use case 6</div><div class="uc-t">db-migration</div><div class="uc-d">Back up first, dry run on a copy, compare row counts, write the rollback plan before running anything, and stop hard if any check fails.</div></div>
+      <div class="uc"><div class="uc-n">Use case 7</div><div class="uc-t">sql-conventions</div><div class="uc-d">Your naming rules, which joins are known to double-count, and the three tables that are deprecated but still full of data. Knowledge that lives in two people's heads.</div></div>
+      <div class="uc"><div class="uc-n">Use case 8</div><div class="uc-t">project-setup</div><div class="uc-d">Point it at your <code>SETUP.md</code>: check the Python and Node versions, create the environment, install, run the checks, report what passed.</div></div>
+    </div>
+
+    <h3>What every good skill has</h3>
+    <div class="smells good">
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Numbered steps, in order</b>Not topics. Each one something you can do and confirm.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>A point where it stops and asks</b>"More than 40 files? Stop and ask which part."</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>A check before reporting</b>"No input that breaks it? Delete the finding."</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>An exact output shape</b>Including what to write when the answer is "nothing to report".</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>A "do not" list</b>The mistakes you have seen it make. This section grows over time.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Pointers to big files, not the files themselves</b>Named at the step that needs them, with which section to read.</div></div>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary — SKILL.md</div>
+      <div class="sb-s">Four things to take away</div>
+      <ol>
+        <li><strong>What it is:</strong> your procedure in a file. Only the one-line description is always loaded; the steps load when the job comes in.</li>
+        <li><strong>The description does the choosing.</strong> Put the words people actually say in it, and say what the skill is <em>not</em> for.</li>
+        <li><strong>The body is a procedure, not an essay.</strong> Numbered steps, a stopping point, a check, and an exact output shape.</li>
+        <li><strong>Keep it short and point at the rest.</strong> Big reference files and scripts sit beside it and cost nothing until a step opens them.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">You wrote a code review skill. Two weeks later nobody can get it to run. What do you fix first?</div>
+      <button class="opt" onclick="qa(this,1)">The description line — it must contain the words people actually type</button>
+      <button class="opt" onclick="qa(this,0)">The steps — add more detail so the model takes it seriously</button>
+      <button class="opt" onclick="qa(this,0)">Move the whole thing into the system prompt</button>
+      <div class="explain">The steps are invisible until the skill fires. When the model is choosing, it has seen exactly one line about your skill. If that line says "a skill for reviewing code" and your team says "sanity-check this diff for me", there is nothing to match on. <strong>Rewrite the description, then test it with five real sentences.</strong></div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(10)"><div class="pg-l">← Previous</div><div class="pg-t">SKILL.md — what it is</div></button>
+    <button class="rt" onclick="go(12)"><div class="pg-l">Next slide →</div><div class="pg-t">All five compared</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 12 · ALL FIVE COMPARED ================= -->
+<section class="slide" data-title="All five compared">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">12</div>
+    <div>
+      <h2 class="stage-title">All Five Compared</h2>
+      <p class="stage-kicker">One table to tell them apart, one real job that uses all five together, and the cost of each so you can choose with your eyes open.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Side by side</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th></th><th>Chain</th><th>Tree</th><th>Graph</th><th>ReAct</th><th>Skills</th></tr>
+      <tr><td>In one line</td><td>Show the working</td><td>Try three, keep the best</td><td>Combine the pieces</td><td>Look things up</td><td>Store the procedure</td></tr>
+      <tr><td>Model calls</td><td>1</td><td>About 30</td><td>20 to 100</td><td>No fixed number</td><td>0 extra</td></tr>
+      <tr><td>How long it takes</td><td><span class="yes">Seconds</span></td><td><span class="mid">Under a minute</span></td><td><span class="mid">A few minutes</span></td><td><span class="mid">Seconds to minutes</span></td><td><span class="yes">No extra time</span></td></tr>
+      <tr><td>Can you know the cost first?</td><td><span class="yes">Yes</span></td><td><span class="yes">Yes, if you set limits</span></td><td><span class="yes">Yes</span></td><td><span class="no">No — you must cap it</span></td><td><span class="yes">Yes</span></td></tr>
+      <tr><td>Can it get new facts?</td><td><span class="no">No</span></td><td><span class="no">No</span></td><td><span class="no">No</span></td><td><span class="yes">Yes</span></td><td>Through its tools</td></tr>
+      <tr><td>Can it combine results?</td><td><span class="no">No</span></td><td><span class="no">No — it picks one</span></td><td><span class="yes">Yes</span></td><td><span class="mid">Inside the loop</span></td><td>—</td></tr>
+      <tr><td>The usual mistake</td><td>Answer written before the reasoning</td><td>Every option scores 0.75</td><td>Vaguer at every join</td><td>Loops, or answers from memory</td><td>It never fires</td></tr>
+      <tr><td>How to fix that</td><td>Put the answer last</td><td>Say what 0 and 1 mean</td><td>Join lists, not paragraphs</td><td>Set limits, ban guessing</td><td>Rewrite the description</td></tr>
+    </table>
+    </div>
+
+    <h3>One job, all five together</h3>
+    <p>Your manager asks: <em>"Our checkout page has been getting slower for three months. Find out why and tell me what to do about it."</em></p>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">SKILL.md gives the procedure</div><div class="sd">Your request matches the <code class="inl">performance-investigation</code> skill. Its steps say which dashboards to check, which log queries to run, and that any claim about a slowdown must come with a number and a date.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">ReAct gathers the facts</div><div class="sd">Read the response-time chart. Read the deploy history for those three months. Query the slow-query log. Read the checkout code. Every number now comes from something the agent actually looked at. Capped at 30 steps.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">Graph of Thought puts the picture together</div><div class="sd">Findings from four sources joined in pairs. The deploy log says nothing changed on 14 June; the response-time chart says something clearly did. That disagreement is <strong>kept and flagged</strong>, and it turns out to be the clue — a config change, not a deploy.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">Tree of Thought works out what to do</div><div class="sd">Three genuinely different fixes: add an index, cache the result, or change the query. Each scored on how much it would help, how long it would take, and how easily it could be undone. Two are explored further, one is chosen — <strong>and all three are reported with their scores.</strong></div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="st">Chain of Thought does the sums</div><div class="sd">Inside the chosen fix: how many rows the index would cover, how much disk it needs, the expected drop in response time. One line per calculation, the total at the end.</div></div></div>
+      <div class="step"><div class="sn">6</div><div><div class="st">The improve loop finishes it</div><div class="sd">A critic checks the report against the skill's checklist. Maximum three rounds. It returns the best version it saw, not the last one.</div></div></div>
+    </div>
+    <div class="callout co-win"><span class="co-tag">The point of this example</span>
+      <p>Nobody picked "a technique" for this job. <strong>Each one does the single thing it is good at, at the moment that thing is needed.</strong> That is how real systems are built — not by choosing one technique and using it everywhere.</p>
+    </div>
+
+    <h3>What each one costs</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Approach</th><th>Calls</th><th>Time</th><th>Worth it when</th></tr>
+      <tr><td>Just ask</td><td>1</td><td>~2 sec</td><td>Always try this first, and write down how well it did.</td></tr>
+      <tr><td>Chain of Thought</td><td>1 (longer)</td><td>~6 sec</td><td>The answer needs more than two steps of working.</td></tr>
+      <tr><td>Ask 5 times and vote</td><td>5</td><td>~6 sec if run together</td><td>Accuracy matters and you want a real confidence number. <strong>Best value here.</strong></td></tr>
+      <tr><td>Tree of Thought</td><td>~30</td><td>~40 sec</td><td>Getting it wrong costs more than 30 calls, and you can score a partial answer.</td></tr>
+      <tr><td>Graph of Thought</td><td>20 to 100</td><td>1 to 5 min</td><td>Many sources all have to be represented, and disagreements matter.</td></tr>
+      <tr><td>ReAct agent</td><td>4 to 30</td><td>10 sec to 3 min</td><td>The answer lives in your files or your database.</td></tr>
+      <tr><td>All of them together</td><td>~90</td><td>~4 min</td><td>The output replaces a day or more of someone's work.</td></tr>
+    </table>
+    </div>
+
+    <div class="callout co-cost"><span class="co-tag">Two sums to do before you build anything</span>
+      <p><strong>1 · What does a wrong answer cost?</strong> A wrongly labelled support ticket costs a minute of someone's time. A wrong database choice costs a quarter. Spend in proportion.</p>
+      <p><strong>2 · What does the human version cost?</strong> Ninety model calls is nothing compared to two days of an analyst's time — and a waste compared to thirty seconds of asking a colleague. Most bad decisions in this area come from never doing this second sum.</p>
+    </div>
+
+    <h3>Three mistakes that apply to all five</h3>
+    <div class="smells">
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>Jumping to the most impressive technique</b>The most common mistake by far. One well-written single call solves more real problems than everything on this slide put together.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>Never measuring anything</b>If you cannot say "the simple version got 71% and this gets 84%", you are choosing by feel. Build a set of 20 test cases before you build anything else.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>No limits anywhere</b>Trees, improve loops and agents all run forever by default. Cap the rounds, the time and the money — and always return whatever you got.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>Thinking harder about a missing fact</b>None of these can invent information the model never had. If the answer is in a file, go and read the file.</div></div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(11)"><div class="pg-l">← Previous</div><div class="pg-t">SKILL.md — more examples</div></button>
+    <button class="rt" onclick="go(13)"><div class="pg-l">Next slide →</div><div class="pg-t">Which one should I use?</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 13 · CONCLUSION ================= -->
+<section class="slide" data-title="Which one should I use?">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">13</div>
+    <div>
+      <h2 class="stage-title">Which One Should I Use?</h2>
+      <p class="stage-kicker">Five questions, asked in this order. Then a table of real jobs, a checklist, and the five sentences worth remembering.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Ask these five, in this order</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">Does the answer depend on something the model cannot know?</div><div class="sd">Your code, your database, today's date, your company's rules. <strong>Yes → ReAct.</strong> Nothing else helps. Thinking harder about a fact you do not have just gives you a longer invention.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">Does the answer need more than two steps of working?</div><div class="sd">Sums, applying rules, tracing a bug. <strong>Yes → Chain of Thought.</strong> Write out the steps yourself and put the answer last. This costs almost nothing and helps the most.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">Could two good engineers disagree about the best answer?</div><div class="sd">Design decisions, planning, naming. <strong>Yes, and you can score an option → Tree of Thought.</strong> If you cannot write the scoring rules, do not build the tree — run the prompt five times and vote instead.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">Is the answer built out of many pieces that must all survive?</div><div class="sd">Ten documents, four review passes, several teams' requirements. <strong>Yes → Graph of Thought.</strong> Join lists with rules, and keep every disagreement.</div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="st">Will this same job come back next week?</div><div class="sd">And is it specific to how your team works? <strong>Yes → write it as a SKILL.md.</strong> Whatever mix of the four you ended up with, that is now a procedure, and procedures belong in files.</div></div></div>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">And one question before all five</span>
+      <p><strong>Have you tried just asking, properly, and written down how well it did?</strong> About half the problems people bring to Tree of Thought are solved by a prompt with named steps, a clear output format, and the answer moved to the end. You need that number anyway — it is what everything else gets compared against.</p>
+    </div>
+
+    <h3>Real jobs, and what to use</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>The job</th><th>Use</th><th>Why</th></tr>
+      <tr><td>Sort support tickets into 12 categories</td><td>Just ask</td><td>High volume, needs to be fast. Put the reasoning above the label and stop there.</td></tr>
+      <tr><td>Pull the date and total out of an invoice</td><td>Just ask</td><td>One right answer. If it must be reliable, ask 3 times and vote.</td></tr>
+      <tr><td>Check a function for bugs</td><td><span class="yes">Chain of Thought</span></td><td>Give it specific inputs and make it write what each one returns.</td></tr>
+      <tr><td>Work out if a discount calculation is right</td><td><span class="yes">Chain of Thought</span></td><td>One line per calculation, the total at the end, so a human can check each line.</td></tr>
+      <tr><td>Find out why a test is failing</td><td><span class="yes">ReAct</span></td><td>It has to read the real error and the real file. Guessing from the test name is not enough.</td></tr>
+      <tr><td>Check whether a function is still used</td><td><span class="yes">ReAct</span></td><td>Only a search of the actual project can answer this.</td></tr>
+      <tr><td>Write a database query against real data</td><td><span class="yes">ReAct</span></td><td>Run it and check the row count. A wrong join returns a number, not an error.</td></tr>
+      <tr><td>Choose how to store user sessions</td><td><span class="yes">Tree of Thought</span></td><td>Expensive to change later. The rejected options and the reasons are the real output.</td></tr>
+      <tr><td>Pick between three ways to fix a bug</td><td><span class="yes">Tree of Thought</span></td><td>Run the full test suite on each one. The tests do the scoring for you.</td></tr>
+      <tr><td>Write a full set of test cases</td><td><span class="yes">Tree of Thought</span></td><td>Branch on types of failure — empty, huge, wrong type, no permission — then write cases under each.</td></tr>
+      <tr><td>Summarise ten research papers</td><td><span class="yes">Graph of Thought</span></td><td>Each paper read on its own, then joined in pairs, so none of them gets ignored.</td></tr>
+      <tr><td>Combine four code review passes</td><td><span class="yes">Graph of Thought</span></td><td>Duplicates removed by file and line, and passes that disagree both get shown.</td></tr>
+      <tr><td>Write up what happened during an outage</td><td><span class="yes">Graph of Thought</span></td><td>Logs, metrics and chat disagree about timing, and that disagreement is usually the clue.</td></tr>
+      <tr><td>Review every PR the same way, forever</td><td><span class="yes">SKILL.md</span> + ReAct</td><td>Repeated, specific to your team, and not needed for most other jobs.</td></tr>
+      <tr><td>Explain what this project does</td><td><code>AGENTS.md</code></td><td>True for every task here, so it should always be loaded, not sometimes.</td></tr>
+      <tr><td>Write a poem</td><td>Just ask, temperature up</td><td>Planning a poem step by step gives you a correct, lifeless poem.</td></tr>
+    </table>
+    </div>
+
+    <h3>Checklist before you ship any of this</h3>
+    <div class="smells good">
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>You have a baseline number</b>You know what one plain, well-written call scores on 20 test cases.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>The answer always comes last</b>In every prompt and every JSON shape, the reasoning is written before the conclusion.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Every fact came from somewhere</b>Nothing in the output that the model did not read from a tool or from your input.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Limits on rounds, time and money</b>And a useful partial answer when a limit is hit.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Scores mean something</b>You said what 0 and 1 are, or the score comes from a test run or a real check.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Joins keep the detail</b>Lists with sources, rules for what happens when two items disagree.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Anything risky needs a human</b>Reading is free. Sending, deleting or refunding waits for approval.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Every step is logged</b>So that a wrong answer three weeks from now can still be explained.</div></div>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">The five sentences worth remembering</div>
+      <div class="sb-s">If you forget everything else</div>
+      <ol>
+        <li><strong>The words the model writes are its rough paper.</strong> No space for the working means there was no working — so always put the answer last.</li>
+        <li><strong>A tree is only as good as its scoring.</strong> Say what 0 and 1 mean, or better, use a real check like a test run.</li>
+        <li><strong>Join lists, never paragraphs.</strong> Every join over prose loses detail, and you are about to do it several more times.</li>
+        <li><strong>No amount of thinking creates a missing fact.</strong> If the answer is in a file or a database, the model has to go and read it.</li>
+        <li><strong>Start simple, measure, and only add complexity when the number tells you to.</strong> The usual failure is not a weak prompt — it is a clever system built on a baseline nobody ever measured.</li>
+      </ol>
+    </div>
+
+    <h3>If you want to read the original papers</h3>
+    <ul>
+      <li>Wei et al. — <em>Chain-of-Thought Prompting Elicits Reasoning in Large Language Models</em> (2022).</li>
+      <li>Kojima et al. — <em>Large Language Models are Zero-Shot Reasoners</em> (2022) — the "let's think step by step" paper.</li>
+      <li>Wang et al. — <em>Self-Consistency Improves Chain of Thought Reasoning</em> (2022) — the ask-five-times-and-vote paper.</li>
+      <li>Yao et al. — <em>ReAct: Synergizing Reasoning and Acting in Language Models</em> (2022).</li>
+      <li>Yao et al. — <em>Tree of Thoughts: Deliberate Problem Solving with Large Language Models</em> (2023).</li>
+      <li>Besta et al. — <em>Graph of Thoughts: Solving Elaborate Problems with Large Language Models</em> (2023).</li>
+      <li>Shinn et al. — <em>Reflexion</em> (2023) — the improve-it-again loop, done properly.</li>
+      <li>Anthropic — the Agent Skills documentation, for <code class="inl">SKILL.md</code>.</li>
+    </ul>
+
+    <div class="callout co-note"><span class="co-tag">DoubtBusters · every Thursday</span>
+      <p>Submit specific doubts through the DoubtBuster section of Campus Connect, then attend the Thursday session for your region. <strong>Specific questions get answered; whole-topic requests do not</strong> — "my scoring prompt gives 0.75 to everything and I don't know why" is answerable, "I don't understand agents" is a conversation for your Campus Coordinator.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(12)"><div class="pg-l">← Previous</div><div class="pg-t">All five compared</div></button>
+    <button class="rt" onclick="go(0)"><div class="pg-l">Back to →</div><div class="pg-t">Session overview</div></button>
+  </div>
+</div></div>
+</section>
+
+<div class="foot">Prompt Engineering &amp; Autonomous Reasoning · Generative &amp; Agentic AI Development · Boston Institute of Analytics</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+
+/* build dropdown */
+const menu=document.getElementById('dropMenu');
+menu.innerHTML='<div class="part">Session</div>'+slides.map((s,i)=>
+  `<a data-i="${i}" onclick="go(${i});return false;"><span class="dn">${i===0?'··':String(i).padStart(2,'0')}</span><span class="dt">${s.dataset.title}</span></a>`
+).join('');
+
+function go(i){
+  if(i<0||i>=slides.length)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  [...menu.querySelectorAll('a')].forEach(a=>a.classList.toggle('cur',+a.dataset.i===i));
+  document.getElementById('btnPrev').classList.toggle('disabled',i===0);
+  document.getElementById('btnNext').classList.toggle('disabled',i===slides.length-1);
+  document.getElementById('railFill').style.width=((i)/(slides.length-1)*100)+'%';
+  drop.classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* dropdown toggle */
+const drop=document.getElementById('chDrop');
+document.getElementById('chDropBtn').onclick=e=>{e.stopPropagation();drop.classList.toggle('open');};
+document.addEventListener('click',()=>drop.classList.remove('open'));
+
+/* keyboard */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+
+/* quiz */
+function qa(btn,correct){
+  const box=btn.closest('.quiz');
+  box.querySelectorAll('.opt').forEach(o=>o.disabled=true);
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    box.querySelectorAll('.opt').forEach(o=>{
+      if(o.getAttribute('onclick').includes(',1)'))o.classList.add('correct');
+    });
+  }
+  box.querySelector('.explain').classList.add('show');
+}
+
+go(0);
+</script>
+
+</body></html>

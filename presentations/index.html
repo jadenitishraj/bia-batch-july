@@ -7,7 +7,7 @@
 <style>
 :root{
   --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
-  --sky:#0ea5e9;--violet:#8b5cf6;--emerald:#10b981;--amber:#f59e0b;--rose:#f43f5e;--indigo:#6366f1;
+  --sky:#0ea5e9;--violet:#8b5cf6;--emerald:#10b981;--amber:#f59e0b;--rose:#f43f5e;--indigo:#6366f1;--teal:#2dd4bf;--cyan:#22d3ee;
   --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -53,6 +53,12 @@ header .sub{font-size:clamp(17px,2.2vw,20px);max-width:660px;color:var(--ink-dim
 .deck.rose{border-top:3px solid var(--rose)}
 .deck.rose:hover{border-color:color-mix(in srgb,var(--rose) 45%,var(--card-border));border-top-color:var(--rose)}
 .deck.rose .go{color:var(--rose)}
+.deck.teal{border-top:3px solid var(--teal)}
+.deck.teal:hover{border-color:color-mix(in srgb,var(--teal) 45%,var(--card-border));border-top-color:var(--teal)}
+.deck.teal .go{color:var(--teal)}
+.deck.cyan{border-top:3px solid var(--cyan)}
+.deck.cyan:hover{border-color:color-mix(in srgb,var(--cyan) 45%,var(--card-border));border-top-color:var(--cyan)}
+.deck.cyan .go{color:var(--cyan)}
 .deck .num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:15px;color:var(--ink-faint);margin-bottom:14px}
 .deck h2{font-family:'Fraunces',serif;font-weight:800;font-size:26px;letter-spacing:-.025em;line-height:1.12;margin-bottom:10px}
 .deck p{font-size:15px;color:var(--ink-dim);font-weight:300;margin-bottom:18px}
@@ -98,7 +104,7 @@ footer{padding:60px 0 80px;margin-top:44px;border-top:1px solid var(--card-borde
   <header>
     <div class="kicker">Generative &amp; Agentic AI Development</div>
     <h1 class="display">Teaching<br><em>Decks</em></h1>
-    <p class="sub">Six sessions, built to be read straight through. Start on the left if you have never written code. Use the Slides menu at the top of each deck, or just press the arrow keys.</p>
+    <p class="sub">Nine decks across eight sessions, built to be read straight through. Start on the left if you have never written code. Use the Slides menu at the top of each deck, or just press the arrow keys.</p>
   </header>
 
   <div class="decks">
@@ -183,6 +189,48 @@ footer{padding:60px 0 80px;margin-top:44px;border-top:1px solid var(--card-borde
         <li>Zero-shot, one-shot and few-shot</li>
         <li>System messages, templates, versions</li>
         <li>Temperature, and debugging by trace</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck teal" href="structured-prompting.html">
+      <div class="num">Session six · 14 slides</div>
+      <h2>Structured Prompting — CoT, ToT, GoT &amp; ReAct</h2>
+      <p>A model answers before it thinks. Four ways to slow it down, plus the file format teams use to store their procedures. Twenty worked examples, all from coding, code review and research.</p>
+      <ul>
+        <li>Chain of Thought — show the working</li>
+        <li>Tree of Thought — try three, keep the best</li>
+        <li>Graph of Thought — combine the pieces</li>
+        <li>ReAct — look things up instead of guessing</li>
+        <li>SKILL.md — procedures the agent opens when needed</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck cyan" href="self-reflection-critique.html">
+      <div class="num">Session seven · 14 slides</div>
+      <h2>Self-Reflection &amp; Critique — Loops That Fix The First Answer</h2>
+      <p>A first answer can look complete and still be wrong. Four ways to review, rewrite and know when to stop, with twenty-nine full worked examples from writing, code, support and data.</p>
+      <ul>
+        <li>Self-Refine — one model, three jobs</li>
+        <li>Reflexion — turn a failure into a short lesson</li>
+        <li>Evaluator-Generator — a separate scorer as a quality gate</li>
+        <li>Principles-based review — one short rule book for everything</li>
+        <li>Stopping rules, and the six ways reviewing backfires</li>
+      </ul>
+      <span class="go">Open deck →</span>
+    </a>
+
+    <a class="deck emerald" href="self-reflection-critique-practical.html">
+      <div class="num">Session seven · the practical · 13 slides</div>
+      <h2>The Critic Loop, In Code</h2>
+      <p>The companion to session seven. The <code>self_reflection_critique</code> project one file at a time, with the real source on the slide — then you leave the deck and run it.</p>
+      <ul>
+        <li>The rubric and constitution that make critique possible</li>
+        <li>Pydantic schemas — the shape of a critique</li>
+        <li>Three prompts, three roles, kept apart</li>
+        <li>The loop, and the three ways it stops</li>
+        <li>A real run, including the score plateau</li>
       </ul>
       <span class="go">Open deck →</span>
     </a>

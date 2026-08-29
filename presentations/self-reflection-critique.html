@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Reflection &amp; Critique — Self-Refine, Reflexion, Evaluator-Generator &amp; Principles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--cyan:#22d3ee;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#22d3ee;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 12% 45%, rgba(34,211,238,.07), transparent 26%),radial-gradient(circle at 88% 28%, rgba(139,92,246,.07), transparent 26%);background-attachment:fixed;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* ===== top site nav ===== */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--cyan)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#cbf1fb;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:400px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--cyan);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:86vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(42px,7.6vw,88px);margin-bottom:28px;background:linear-gradient(135deg,var(--cyan),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:48px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:64px 0 84px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:36px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:60px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:870px}
+
+/* body */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:940px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(34,211,238,.13);border:1px solid rgba(34,211,238,.24);border-radius:4px;padding:2px 6px;color:#b6ecf7}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.callout ul{margin:8px 0 0}
+.callout li{font-size:15px}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+
+/* ===== the DO / DON'T pair — the workhorse of this deck ===== */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0 8px}
+.pcard{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.bad{border-top:3px solid var(--rose)}
+.pcard.good{border-top:3px solid var(--emerald)}
+.p-head{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--card-border)}
+.p-sig{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px 'JetBrains Mono',monospace;flex:0 0 auto}
+.pcard.bad .p-sig{background:rgba(244,63,94,.16);border:1px solid rgba(244,63,94,.42);color:var(--rose)}
+.pcard.good .p-sig{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--emerald)}
+.p-lab{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.pcard.bad .p-lab{color:var(--rose)}
+.pcard.good .p-lab{color:var(--emerald)}
+.p-sub{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right;line-height:1.3}
+.p-prompt{margin:0;padding:15px 17px;background:rgba(255,255,255,.012);overflow-x:auto}
+.p-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.p-prompt .role{color:#8b8bb5;font-weight:700}
+.p-prompt .hl{color:#8fe0b4}
+.p-prompt .bad-hl{color:#ff9aab}
+.p-out{border-top:1px dashed var(--card-border);padding:12px 17px 14px;margin-top:auto}
+.p-out .po-t{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:7px}
+.p-out .po-b{font-size:13.6px;color:var(--ink-dim);font-weight:300;line-height:1.6;font-family:'JetBrains Mono',monospace;white-space:pre-wrap}
+.pcard.bad .p-out{background:rgba(244,63,94,.045)}
+.pcard.good .p-out{background:rgba(16,185,129,.04)}
+.p-why{padding:12px 17px 14px;border-top:1px solid var(--card-border);font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.p-why strong{color:var(--ink);font-weight:600}
+
+/* the one-line "what changed" strip under a pair */
+.fix{display:flex;gap:11px;align-items:flex-start;background:rgba(34,211,238,.06);border:1px solid rgba(34,211,238,.26);border-radius:7px;padding:12px 15px;margin:0 0 26px;font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.fix .fx-t{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);flex:0 0 auto;padding-top:3px}
+.fix strong{color:var(--ink);font-weight:600}
+
+/* compact example number heading */
+.exn{display:flex;align-items:baseline;gap:12px;margin:34px 0 6px}
+.exn .exn-n{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#042833;background:color-mix(in srgb,var(--accent) 62%,transparent);border:1px solid color-mix(in srgb,var(--accent) 72%,transparent);border-radius:4px;padding:3px 8px;flex:0 0 auto}
+.exn .exn-t{font-family:'Fraunces',serif;font-weight:800;font-size:21px;letter-spacing:-.02em;color:var(--ink)}
+.exn .exn-s{font-size:14px;color:var(--ink-faint);font-weight:300}
+
+/* vocab */
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#b6ecf7;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* concept cards */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--cyan);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--emerald)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--cyan);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--emerald)}
+
+/* code block */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:18px 0;overflow:hidden}
+.codeblock .cb-head{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.codeblock .cb-title{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.codeblock pre{margin:0;padding:16px 18px;overflow-x:auto}
+.codeblock code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:#cfd3e0;white-space:pre}
+.cmt{color:#6a6a85}.kw{color:#a5b4fc}.str{color:#7fd4a0}.flg{color:#7cc5f0}.yml{color:#f0c988}
+
+/* table */
+.cmp{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px}
+.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--card-border);vertical-align:top}
+.cmp th{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.cmp td{color:var(--ink-dim);font-weight:300}
+.cmp td:first-child{color:var(--ink);font-weight:500}
+.cmp tr:hover td{background:rgba(255,255,255,.02)}
+.yes{color:var(--emerald);font-weight:600}.no{color:var(--rose);font-weight:600}.mid{color:var(--amber);font-weight:600}
+.cmp code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#b6ecf7}
+.tblwrap{overflow-x:auto;margin:20px 0}
+.tblwrap .cmp{margin:0;min-width:720px}
+
+/* diagram */
+.diagram{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:26px 22px;margin:22px 0}
+.diagram .dg-cap{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);text-align:center;margin-top:16px}
+.diagram svg{display:block;width:100%;height:auto;max-width:860px;margin:0 auto}
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.node{background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;padding:11px 15px;font:600 13px 'Inter Tight',sans-serif;color:var(--ink);text-align:center;min-width:96px}
+.node small{display:block;font-weight:300;font-size:11.5px;color:var(--ink-faint);margin-top:2px}
+.node.sky{background:rgba(14,165,233,.13);border-color:rgba(14,165,233,.34)}
+.node.em{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
+.node.am{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.node.ro{background:rgba(244,63,94,.13);border-color:rgba(244,63,94,.36)}
+.node.vi{background:rgba(139,92,246,.13);border-color:rgba(139,92,246,.34)}
+.arrow{color:var(--ink-faint);font-size:18px}
+.box-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.mbox{flex:1;min-width:150px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.mbox .mb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.mbox .mb-d{font-size:13px;color:var(--ink-dim);font-weight:300}
+
+/* anatomy chips */
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin:18px 0 6px}
+.chip{background:rgba(255,255,255,.03);border:1px solid var(--card-border);border-radius:20px;padding:8px 15px;font:500 13.5px 'Inter Tight',sans-serif;color:var(--ink-dim);transition:all .18s}
+.chip.on{background:color-mix(in srgb,var(--accent) 16%,transparent);border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--ink)}
+.chip .cn{font:700 10px 'JetBrains Mono',monospace;color:var(--ink-faint);margin-right:7px}
+
+/* two-column compare */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}
+.duo-col{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-radius:9px;padding:20px}
+.duo-col.a{border-top:3px solid var(--cyan)}
+.duo-col.b{border-top:3px solid var(--amber)}
+.duo-col.ok{border-top:3px solid var(--emerald)}
+.duo-col.no{border-top:3px solid var(--rose)}
+.duo-col h5{font-family:'Fraunces',serif;font-weight:800;font-size:19px;letter-spacing:-.02em;margin-bottom:4px;color:var(--ink)}
+.duo-col .dsub{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:14px}
+.duo-col ul{margin:0}
+.duo-col li{font-size:14.5px;margin-bottom:8px}
+.duo-col.no li::before{content:"✗";color:var(--rose)}
+.duo-col.ok li::before{content:"✓";color:var(--emerald)}
+
+/* step list */
+.steps{counter-reset:st;margin:20px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--card-border)}
+.step:last-child{border-bottom:none}
+.step .sn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#042833;background:color-mix(in srgb,var(--accent) 58%,transparent);border:1px solid color-mix(in srgb,var(--accent) 70%,transparent);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.step .st{font-size:16.5px;color:var(--ink);font-weight:600;margin-bottom:6px}
+.step .sd{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.step .codeblock{margin:12px 0 0}
+.step .pair{margin:14px 0 0}
+
+/* version ladder */
+.tl{margin:22px 0}
+.tl-item{display:grid;grid-template-columns:110px 1fr;gap:18px;padding:0 0 22px 20px;position:relative;border-left:2px solid rgba(34,211,238,.25);margin-left:6px}
+.tl-item:last-child{border-left-color:transparent;padding-bottom:4px}
+.tl-item::before{content:"";position:absolute;left:-6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.14)}
+.tl-item.big::before{background:var(--emerald);box-shadow:0 0 0 5px rgba(16,185,129,.18)}
+.tl-yr{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:var(--cyan);padding-top:2px}
+.tl-item.big .tl-yr{color:var(--emerald)}
+.tl-t{font-size:16.5px;color:var(--ink);font-weight:600;line-height:1.3;margin-bottom:5px}
+.tl-d{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.tl-d code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#b6ecf7}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:22px 0}
+.quiz .q{font-size:16.5px;color:var(--ink);font-weight:500;margin-bottom:14px}
+.quiz .q code{font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#b6ecf7}
+.quiz .opt{display:block;width:100%;text-align:left;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:7px;padding:12px 16px;margin-bottom:9px;color:var(--ink-dim);font-size:15px;cursor:pointer;transition:all .15s;font-family:'Inter Tight',sans-serif}
+.quiz .opt:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.quiz .opt.correct{border-color:var(--emerald);background:rgba(16,185,129,.12);color:var(--ink)}
+.quiz .opt.wrong{border-color:var(--rose);background:rgba(244,63,94,.1)}
+.quiz .explain{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6;margin-top:10px;padding-top:12px;border-top:1px solid var(--card-border);display:none}
+.quiz .explain.show{display:block}.quiz .explain strong{color:var(--ink)}
+
+/* smell checklist */
+.smells{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}
+.smell{display:flex;gap:12px;background:rgba(244,63,94,.05);border:1px solid rgba(244,63,94,.22);border-radius:7px;padding:13px 16px}
+.smell .sm-x{color:var(--rose);font:700 13px 'JetBrains Mono',monospace;flex:0 0 auto}
+.smell .sm-b{font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+.smell .sm-b b{display:block;color:var(--ink);font-weight:600;font-size:14.5px;margin-bottom:2px}
+.smells.good .smell{background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.22)}
+.smells.good .smell .sm-x{color:var(--emerald)}
+
+/* ===== NEW: agent trace (Thought / Action / Observation) ===== */
+.trace{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:18px 0;overflow:hidden}
+.trace.bad{border-color:rgba(244,63,94,.3)}
+.trace .tr-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 15px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.trace .tr-t{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.trace .tr-badge{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px}
+.tr-badge.ok{color:var(--emerald);background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3)}
+.tr-badge.fail{color:var(--rose);background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.32)}
+.tr-line{display:grid;grid-template-columns:106px 1fr;gap:12px;padding:9px 15px;border-bottom:1px solid rgba(255,255,255,.045)}
+.tr-line:last-child{border-bottom:none}
+.tr-k{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.11em;text-transform:uppercase;padding-top:4px}
+.tr-v{font-family:'JetBrains Mono',monospace;font-size:12.7px;color:#cfd3e0;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.k-th{color:var(--violet)}.k-ac{color:var(--sky)}.k-ob{color:var(--amber)}.k-an{color:var(--emerald)}.k-er{color:var(--rose)}.k-sk{color:var(--cyan)}
+.tr-line.dim .tr-v{color:var(--ink-faint)}
+.tr-line.err{background:rgba(244,63,94,.05)}
+.tr-line.fin{background:rgba(16,185,129,.05)}
+
+/* ===== NEW: use-case grid ===== */
+.ucs{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin:18px 0 10px}
+.uc{background:rgba(255,255,255,.028);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:7px;padding:15px 17px}
+.uc .uc-n{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.uc .uc-t{font-size:15.5px;color:var(--ink);font-weight:600;margin-bottom:5px;line-height:1.3}
+.uc .uc-d{font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.58}
+.uc .uc-w{font-size:13px;color:var(--ink-faint);font-weight:300;line-height:1.5;margin-top:8px;padding-top:8px;border-top:1px dashed var(--card-border)}
+.uc .uc-w b{color:var(--emerald);font-weight:700;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;margin-right:6px}
+
+/* ===== NEW: verdict / when-to-use banner ===== */
+.verdictbar{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin:22px 0}
+.vb{border-radius:8px;padding:15px 17px;border:1px solid}
+.vb .vb-t{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px}
+.vb .vb-d{font-size:14px;font-weight:300;line-height:1.58;color:var(--ink-dim)}
+.vb.use{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.vb.use .vb-t{color:var(--emerald)}
+.vb.skip{background:rgba(244,63,94,.06);border-color:rgba(244,63,94,.28)}.vb.skip .vb-t{color:var(--rose)}
+.vb.cost{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.28)}.vb.cost .vb-t{color:var(--amber)}
+
+/* ===== NEW: pattern legend strip ===== */
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0}
+.lg{flex:1;min-width:170px;background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:8px;padding:14px 16px;border-top:3px solid var(--ink-faint)}
+.lg.cot{border-top-color:var(--sky)}.lg.tot{border-top-color:var(--amber)}
+.lg.got{border-top-color:var(--violet)}.lg.react{border-top-color:var(--emerald)}.lg.sk{border-top-color:var(--cyan)}
+.lg .lg-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;color:var(--ink)}
+.lg .lg-d{font-size:13.5px;color:var(--ink-dim);font-weight:300;line-height:1.5}
+
+.foot{padding:50px 0 80px;text-align:center;border-top:1px solid var(--card-border);color:var(--ink-faint);font-size:14px}
+
+/* bottom slide pager */
+.pager{display:flex;justify-content:space-between;gap:12px;padding:26px 0 70px}
+.pager button{flex:1;max-width:340px;text-align:left;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;padding:16px 20px;cursor:pointer;transition:all .18s;font-family:'Inter Tight',sans-serif}
+.pager button:hover{background:rgba(255,255,255,.05);border-color:var(--accent);transform:translateY(-2px)}
+.pager button.rt{text-align:right}
+.pager .pg-l{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.pager .pg-t{font-family:'Fraunces',serif;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.pager button:disabled{opacity:.25;pointer-events:none}
+
+@media(max-width:900px){
+  .stats,.vocab-grid,.code-cards,.duo,.pair,.smells,.ucs,.verdictbar{grid-template-columns:1fr}
+  .stage-header,.body-wrap{grid-template-columns:1fr}
+  .dropmenu{min-width:280px}
+  .nav-prevnext{display:none}
+  .cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}
+  .exn{flex-wrap:wrap;gap:0 10px}
+  .exn .exn-t{flex:1 1 auto}
+  .exn .exn-s{flex:1 0 100%;margin-top:2px}
+  .tl-item{grid-template-columns:1fr;gap:4px}
+  .tr-line{grid-template-columns:1fr;gap:3px}
+  .pager{flex-direction:column}.pager button{max-width:none}
+  .p-sub{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== NEW: scenario box — situation / goal / why it is hard ===== */
+.scen{background:rgba(14,165,233,.055);border:1px solid rgba(14,165,233,.26);border-radius:8px;padding:16px 18px;margin:14px 0 2px}
+.scen .sc-row{display:grid;grid-template-columns:118px 1fr;gap:14px;margin-bottom:10px}
+.scen .sc-row:last-child{margin-bottom:0}
+.scen .sc-k{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--sky);padding-top:4px}
+.scen .sc-v{font-size:15.5px;color:var(--ink-dim);font-weight:300;line-height:1.62}
+.scen .sc-v strong{color:var(--ink);font-weight:600}
+.scen .sc-v code{font-family:'JetBrains Mono',monospace;font-size:13px;color:#b6ecf7}
+
+/* ===== NEW: section summary ===== */
+.sumbox{background:rgba(34,211,238,.055);border:1px solid rgba(34,211,238,.28);border-radius:10px;padding:22px 24px;margin:28px 0}
+.sumbox .sb-t{font-family:'Fraunces',serif;font-weight:800;font-size:21px;letter-spacing:-.02em;color:var(--ink);margin-bottom:6px}
+.sumbox .sb-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px}
+.sumbox ol{margin:0;padding-left:22px;list-style:decimal}
+.sumbox li{font-size:15.5px;color:var(--ink-dim);font-weight:300;margin-bottom:9px;line-height:1.62;padding-left:4px}
+.sumbox li::before{content:none}
+.sumbox li:last-child{margin-bottom:0}
+.sumbox li strong{color:var(--ink);font-weight:600}
+.sumbox code{font-family:'JetBrains Mono',monospace;font-size:13px;color:#b6ecf7}
+
+/* ===== NEW: plain-words diagram caption under an svg ===== */
+.readas{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.62;margin:14px 0 0;padding-top:14px;border-top:1px dashed var(--card-border)}
+.readas strong{color:var(--ink);font-weight:600}
+
+/* ===== NEW: three-step "how it works" ===== */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.how-c{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-top:3px solid var(--accent);border-radius:8px;padding:17px 19px}
+.how-c .h-n{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:7px}
+.how-c .h-t{font-size:16px;color:var(--ink);font-weight:600;margin-bottom:6px;line-height:1.3}
+.how-c .h-d{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.58}
+@media(max-width:900px){.how{grid-template-columns:1fr}}
+
+/* ===== worked example: a sequence of real artifacts, no verdicts ===== */
+.wex{margin:18px 0 8px;border:1px solid var(--card-border);border-radius:9px;background:rgba(13,13,20,.62);overflow:hidden}
+.wx{border-bottom:1px solid var(--card-border)}
+.wx:last-child{border-bottom:none}
+.wx-h{display:flex;align-items:center;gap:11px;padding:11px 16px;background:rgba(255,255,255,.018)}
+.wx-n{font:700 10px 'JetBrains Mono',monospace;width:21px;height:21px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:#042833;background:color-mix(in srgb,var(--accent) 58%,transparent);border:1px solid color-mix(in srgb,var(--accent) 70%,transparent)}
+.wx-t{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.13em;text-transform:uppercase;color:var(--ink)}
+.wx-s{margin-left:auto;font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);text-align:right;line-height:1.3}
+.wx-b{margin:0;padding:14px 17px;overflow-x:auto}
+.wx-b code{font-family:'JetBrains Mono',monospace;font-size:12.7px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.wx-b .role{color:#8b8bb5;font-weight:700}
+.wx-b .hl{color:#8fe0b4}
+.wx-p{padding:13px 17px;font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.65}
+.wx-p strong{color:var(--ink);font-weight:600}
+.wx.q .wx-b{background:rgba(255,255,255,.012)}
+@media(max-width:900px){.wx-s{display:none}}
+
+/* ===== iteration score strip ===== */
+.iters{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin:20px 0}
+.it{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-top:3px solid var(--ink-faint);border-radius:8px;padding:15px 16px}
+.it.fail{border-top-color:var(--rose)}
+.it.warn{border-top-color:var(--amber)}
+.it.pass{border-top-color:var(--emerald)}
+.it .it-n{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.it .it-sc{font-family:'Fraunces',serif;font-weight:800;font-size:30px;letter-spacing:-.03em;line-height:1;margin-bottom:8px}
+.it.fail .it-sc{color:var(--rose)}.it.warn .it-sc{color:var(--amber)}.it.pass .it-sc{color:var(--emerald)}
+.it .it-sc small{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:400;color:var(--ink-faint);letter-spacing:0}
+.it .it-d{font-size:13.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+@media(max-width:900px){.iters{grid-template-columns:1fr 1fr}}
+
+/* ===== rubric rows ===== */
+.rub{margin:18px 0}
+.rubr{display:grid;grid-template-columns:1fr 76px;gap:14px;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:7px;padding:12px 15px;margin-bottom:8px}
+.rubr .rb-t{font-size:15px;color:var(--ink);font-weight:600;margin-bottom:3px}
+.rubr .rb-d{font-size:13.5px;color:var(--ink-dim);font-weight:300;line-height:1.5}
+.rubr .rb-s{font:700 12.5px 'JetBrains Mono',monospace;text-align:center;border-radius:5px;padding:7px 0;border:1px solid;color:var(--ink-dim);background:rgba(255,255,255,.03);border-color:var(--card-border)}
+
+/* ===== issue list with severity ===== */
+.isslist{margin:16px 0}
+.iss{display:grid;grid-template-columns:88px 1fr;gap:13px;background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:7px;padding:13px 15px;margin-bottom:8px}
+.iss .sev{font:700 9px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;text-align:center;border-radius:4px;padding:5px 0;height:fit-content;border:1px solid}
+.sev.blocking{color:var(--rose);background:rgba(244,63,94,.12);border-color:rgba(244,63,94,.34)}
+.sev.major{color:var(--amber);background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.sev.minor{color:var(--sky);background:rgba(14,165,233,.12);border-color:rgba(14,165,233,.3)}
+.iss .iss-b{font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.58}
+.iss .iss-b b{display:block;color:var(--ink);font-weight:600;font-size:14.5px;margin-bottom:3px}
+.iss .iss-fix{display:block;margin-top:7px;padding-top:7px;border-top:1px dashed var(--card-border);font-size:13.5px;color:var(--ink-dim)}
+.iss .iss-fix i{font-style:normal;font:700 9px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-right:7px}
+@media(max-width:900px){.iss{grid-template-columns:1fr}.iss .sev{width:96px}}
+
+/* ===== role strip ===== */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.role{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-radius:9px;padding:17px 19px;border-top:3px solid var(--ink-faint)}
+.role.gen{border-top-color:var(--sky)}.role.cri{border-top-color:var(--amber)}.role.ref{border-top-color:var(--emerald)}
+.role .r-n{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px}
+.role.gen .r-n{color:var(--sky)}.role.cri .r-n{color:var(--amber)}.role.ref .r-n{color:var(--emerald)}
+.role .r-t{font-size:16px;color:var(--ink);font-weight:600;margin-bottom:6px;line-height:1.3}
+.role .r-d{font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.58}
+.role .r-c{margin-top:9px;padding-top:9px;border-top:1px dashed var(--card-border);font:400 12px 'JetBrains Mono',monospace;color:var(--ink-faint);line-height:1.5}
+@media(max-width:900px){.roles{grid-template-columns:1fr}}
+</style></head>
+<body style="--accent:var(--cyan)">
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="home-link" href="index.html" title="Back to all decks">← Home</a>
+    <a class="brand" href="#" onclick="go(0);return false;">Self-reflection <em>&amp; critique</em></a>
+    <div class="dropdown" id="chDrop">
+      <button class="dropbtn" id="chDropBtn">Slides <span class="chev">▾</span></button>
+      <div class="dropmenu" id="dropMenu"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-prevnext">
+      <button id="btnPrev" onclick="go(cur-1)">← Prev</button>
+      <button id="btnNext" onclick="go(cur+1)">Next →</button>
+    </div>
+  </div>
+  <div class="rail"><div class="rail-fill" id="railFill"></div></div>
+</nav>
+
+<!-- ================= SLIDE 0 · TITLE ================= -->
+<section class="slide active" data-title="Session overview">
+<div class="hero"><div class="container">
+  <div class="stage-num">Generative &amp; Agentic AI Development · Prompt Engineering &amp; Autonomous Reasoning</div>
+  <h1 class="display">Self-Reflection<br><em>&amp; Critique</em></h1>
+  <p class="sub">A model's first answer can look complete and still be wrong. This session is about what happens <em>after</em> the first answer. How a model checks its own work, what a good review has to contain, four ways to run a fix-it loop, and when to stop. Every idea comes with a full worked example: the task, the draft, the review, and the new version.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">4</div><div class="label">Ways to review</div></div>
+    <div class="stat"><div class="num">29</div><div class="label">Worked examples</div></div>
+    <div class="stat"><div class="num">6</div><div class="label">Ways it goes wrong</div></div>
+    <div class="stat"><div class="num">1</div><div class="label">Rule: always stop</div></div>
+  </div>
+</div></div>
+<div class="container">
+  <div class="prose" style="padding-bottom:20px">
+
+    <h3>Where this fits</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">1 · Prompt<small>a clear task</small></div><span class="arrow">→</span>
+        <div class="node sky">2 · Reason<small>a step-by-step path</small></div><span class="arrow">→</span>
+        <div class="node sky">3 · Act<small>use a tool, write output</small></div><span class="arrow">→</span>
+        <div class="node am">4 · Review<small>find the gaps</small></div><span class="arrow">→</span>
+        <div class="node em">5 · Revise<small>fix them</small></div>
+      </div>
+      <div class="dg-cap">Prompt essentials · structured prompting · <b style="color:var(--accent)">this session</b></div>
+      <p class="readas"><strong>In plain words:</strong> the first session taught you how to <em>ask</em>. The last one taught you how to <em>think and act</em>. This one asks the next question: <strong>what do you do when the first answer is not good enough?</strong> The goal is to make the improvement step something you plan, not something that happens by luck.</p>
+    </div>
+
+    <h3>The four ways to review, one line each</h3>
+    <div class="legend">
+      <div class="lg cot"><div class="lg-t">Self-Refine</div><div class="lg-d">One model writes, reviews its own work, and rewrites.</div></div>
+      <div class="lg tot"><div class="lg-t">Reflexion</div><div class="lg-d">Turn a failure into one short lesson the next try reads first.</div></div>
+      <div class="lg react"><div class="lg-t">Evaluator-Generator</div><div class="lg-d">One model writes. A different one scores it against a list.</div></div>
+      <div class="lg got"><div class="lg-t">Principles-based</div><div class="lg-d">Check every output against the same short set of rules.</div></div>
+    </div>
+
+    <h3>What you should be able to do by the end</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">Skill 1</div><div class="h-t">Spot a weak output</div><div class="h-d">Find missing rules, made-up facts, vague words and broken formats — in your own work as well as the model's.</div></div>
+      <div class="how-c"><div class="h-n">Skill 2</div><div class="h-t">Write a review prompt</div><div class="h-d">Turn "make it better" into a list of checks and a set of clear instructions someone can follow.</div></div>
+      <div class="how-c"><div class="h-n">Skill 3</div><div class="h-t">Run a fix-it loop</div><div class="h-d">Pick the right one for the job, and know when none of them will help.</div></div>
+    </div>
+    <div class="how" style="margin-top:12px">
+      <div class="how-c"><div class="h-n">Skill 4</div><div class="h-t">Build a critic you reuse</div><div class="h-d">The same critic can later check travel plans, agent steps and reports.</div></div>
+      <div class="how-c"><div class="h-n">Skill 5</div><div class="h-t">Stop on purpose</div><div class="h-d">Score reached, tries used up, no more gain, or send it to a person. Every loop needs one of these.</div></div>
+      <div class="how-c"><div class="h-n">Skill 6</div><div class="h-t">See fake progress</div><div class="h-d">Notice when the score goes up but the output did not actually get better.</div></div>
+    </div>
+
+    <h3>How every example on these slides is laid out</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">First</div><div class="h-t">The task</div><div class="h-d">A real job with real rules. Nothing made up or abstract.</div></div>
+      <div class="how-c"><div class="h-n">Then</div><div class="h-t">The pieces</div><div class="h-d">The draft, the review prompt, what the review said, and the new version. All of it, in order.</div></div>
+      <div class="how-c"><div class="h-n">Last</div><div class="h-t">What to notice</div><div class="h-d">One line pointing at the part of the example that carries the idea.</div></div>
+    </div>
+
+    <div class="code-cards">
+      <div class="code-card" onclick="go(1)"><span class="cc-ico">01</span><div><div class="cc-t">An answer that looks done but is not</div><div class="cc-s">The opening case and the basic loop</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(2)"><span class="cc-ico">02</span><div><div class="cc-t">What a good review contains</div><div class="cc-s">Five parts, with four examples</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(3)"><span class="cc-ico">03</span><div><div class="cc-t">Self-Refine — what it is</div><div class="cc-s">One model, three jobs, two examples</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(4)"><span class="cc-ico">04</span><div><div class="cc-t">Self-Refine — more examples</div><div class="cc-s">Two more, and where it stops working</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(5)"><span class="cc-ico">05</span><div><div class="cc-t">Reflexion — what it is</div><div class="cc-s">Learning from a failed try</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(6)"><span class="cc-ico">06</span><div><div class="cc-t">Reflexion — the memory</div><div class="cc-s">What to keep and what to throw away</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(7)"><span class="cc-ico">07</span><div><div class="cc-t">Evaluator-Generator</div><div class="cc-s">A separate scorer, and JSON output</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(8)"><span class="cc-ico">08</span><div><div class="cc-t">How a loop stops</div><div class="cc-s">Four rules, with two examples</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(9)"><span class="cc-ico">09</span><div><div class="cc-t">Principles-based review</div><div class="cc-s">A short list of rules for everything</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(10)"><span class="cc-ico">10</span><div><div class="cc-t">AutoGen preview</div><div class="cc-s">The scorer as its own agent</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(11)"><span class="cc-ico">11</span><div><div class="cc-t">When reviewing makes it worse</div><div class="cc-s">Six failures, with real traces</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(12)"><span class="cc-ico">12</span><div><div class="cc-t">Which one to use</div><div class="cc-s">A table, the cost, and how they stack</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(13)"><span class="cc-ico">13</span><div><div class="cc-t">The Writing Critic Agent</div><div class="cc-s">The lab, the trace and the takeaways</div></div><span class="cc-go">Open</span></div>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">One thing to keep in mind</span>
+      <p>These four are not rivals. A real system usually runs a scoring list, a short rule book and a memory of past mistakes <strong>at the same time</strong>. Slide 12 shows how they fit together.</p>
+    </div>
+
+  </div>
+  <div class="pager">
+    <button disabled><div class="pg-l">← Previous</div><div class="pg-t">Start of deck</div></button>
+    <button class="rt" onclick="go(1)"><div class="pg-l">Next slide →</div><div class="pg-t">An answer that looks done but is not</div></button>
+  </div>
+</div>
+</section>
+
+<!-- ================= SLIDE 1 · THE PROBLEM ================= -->
+<section class="slide" data-title="An answer that looks done but is not">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">01</div>
+    <div>
+      <h2 class="stage-title">An Answer Can Look Done And Still Be Wrong</h2>
+      <p class="stage-kicker">One habit change comes before everything else on these slides. Stop asking "did I get an answer?" and start asking "does this answer do what the task asked for?"</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The opening case</h3>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The task</span><span class="sc-v">Write a short email inviting <strong>working professionals</strong> to a weekend GenAI workshop. The tone should sound believable and specific, <strong>not like an advert</strong>.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">Something a busy engineer would read to the end and then act on.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">Nothing crashes. The model returns <strong>a complete, well-written email that breaks every rule in the task</strong>.</span></div>
+    </div>
+
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">What the model wrote</span><span class="wx-s">first try, no review</span></div>
+        <pre class="wx-b"><code>Join our amazing AI workshop! Learn everything about GenAI and become an
+expert. This is a great chance to transform your career.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Reading it next to the task</span><span class="wx-s">four rules, four misses</span></div>
+        <pre class="wx-b"><code>Rule: working professionals   →  "everyone" — no job, no level named
+Rule: specific                →  "learn everything" tells you nothing
+Rule: not like an advert      →  "become an expert" in one weekend
+Rule: they must be able to act →  no date, no format, no link</code></pre></div>
+      <div class="wx"><div class="wx-p">None of these four needed any new information. Every one of them is visible by <strong>putting the task and the email side by side and reading down the list</strong>. That comparison is the whole job.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">The change</span><div>Reviewing starts when you stop asking <em>"did I get an answer?"</em> and start asking <strong>"does this answer do what the task asked for?"</strong></div></div>
+
+    <h3>Two words people mix up</h3>
+    <div class="vocab-grid">
+      <div class="vocab"><div class="vt">self-reflection</div><div class="vd">The model <strong>looks at its own output</strong> and says how well it matches the task, the rules and the quality checks. It answers: how good is this, and why do you say so?</div></div>
+      <div class="vocab"><div class="vt">critique</div><div class="vd">A list of <strong>exact problems</strong> plus <strong>what to change</strong>. It answers: which part is wrong, and what should replace it?</div></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">The thing you actually need</span>
+      <p>You do not need a confidence number. "I am 85% sure this is good" gives you nothing to do. You need <strong>what should change, and why</strong> — because that is the only thing a rewrite step can use.</p>
+    </div>
+
+    <h3>The basic loop</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Write<small>the first answer</small></div><span class="arrow">→</span>
+        <div class="node am">Review<small>find the gaps</small></div><span class="arrow">→</span>
+        <div class="node em">Rewrite<small>apply the changes</small></div><span class="arrow">→</span>
+        <div class="node vi">Compare<small>is it better?</small></div>
+      </div>
+      <div class="dg-cap">Then back to review, until a stopping rule fires</div>
+      <p class="readas"><strong>Stop when</strong> the output passes your checks, <strong>or</strong> you have used up your tries, <strong>or</strong> the changes have stopped helping. A loop without one of those three written down is not a loop. It is a bill that keeps growing.</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">A review with the task attached</span><span class="exn-s">the same email, reviewed properly</span></div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The review prompt</span></div>
+        <pre class="wx-b"><code><span class="role">Task:</span> invite working professionals to a weekend GenAI workshop.
+Tone: believable and specific, not like an advert.
+
+Check the draft against <span class="hl">each line of the task</span>.
+For every line it fails, write <span class="hl">one instruction saying what to change</span>.
+
+<span class="role">Draft:</span> "Join our amazing AI workshop! Learn everything about GenAI..."</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>1. Audience — "everyone" is not working professionals.
+   → Name the job roles in the first line.
+2. Specific — "learn everything" means nothing.
+   → List two things they will actually build.
+3. Not an advert — "become an expert" is a promise you cannot keep.
+   → Remove it. Say what level they will really reach.
+4. Missing — no date, no format, no next step.
+   → Add all three before the sign-off.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">The rewrite, using only those four lines</span></div>
+        <pre class="wx-b"><code>Twelve live Saturday sessions, starting 14 September.
+
+If you already write code and want to add GenAI to what you do, you will
+build a retrieval agent and put it online by the end of the course.
+
+You will not be an expert in two days. You will be able to ship one.
+
+Register for the 14 September batch: [link]</code></pre></div>
+      <div class="wx"><div class="wx-p">Same model, same draft. The only thing that changed is that <strong>the task was in the room</strong> and every problem had to end in an instruction.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>If you do not give the model something to measure against, it will compare the email to emails in general — and by that standard it is fine. <strong>The task is the measuring stick.</strong></div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">The same idea in code</span><span class="exn-s">this is not only a writing problem</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The task</span><span class="sc-v">Write a function that returns the average of a list of numbers. If the list is empty it must return <code>0.0</code>. It must not change the list it was given.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A review that checks <strong>those two rules by name</strong>.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The code to review</span></div>
+        <pre class="wx-b"><code>def average(nums):
+    nums.sort()
+    return sum(nums) / len(nums)</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The review prompt</span></div>
+        <pre class="wx-b"><code>The function must:
+  · return the average of a list of numbers
+  · <span class="hl">return 0.0 for an empty list</span>
+  · <span class="hl">not change the list it was given</span>
+
+For each line, say PASS or FAIL and name the input that breaks it.
+Then give the smallest patch that fixes every FAIL.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>1. average of a list — PASS
+2. empty list — FAIL.  average([]) raises ZeroDivisionError
+3. does not change the input — FAIL.  nums.sort() reorders the
+   caller's list in place, and the sort is never used
+
+Patch:
+    if not nums:
+        return 0.0
+    return sum(nums) / len(nums)</code></pre></div>
+      <div class="wx"><div class="wx-p">The review found the <strong>pointless sort</strong> only because rule 3 asked about changing the input. Naming a check does not just grade the code — it tells the model where to look.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Writing and code fail the same way. <strong>Anything you do not name in the checks, the model will not look at.</strong> A review with no checks talks about style, because style is always safe to comment on.</div></div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">Four lines to carry forward</div>
+      <ol>
+        <li>A well-written, confident, complete answer can still break every rule in the task. Good writing is what hides it.</li>
+        <li><strong>Self-reflection</strong> is looking at the output against the task. <strong>Critique</strong> is the list of problems plus what to change.</li>
+        <li>You never need a confidence number. You need <strong>what should change, and why</strong>.</li>
+        <li>The loop is <strong>write → review → rewrite → compare</strong>, and it needs a written reason to stop.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">A model checks its own summary and reports: "This is a strong, well-structured summary. Confidence: high." What is missing?</div>
+      <button class="opt" onclick="qa(this,0)">Nothing — high confidence means you can ship it</button>
+      <button class="opt" onclick="qa(this,1)">It names no problem and no change, so the rewrite step has nothing to do</button>
+      <button class="opt" onclick="qa(this,0)">It should have used a bigger context window</button>
+      <div class="explain"><strong>You cannot act on confidence.</strong> A review has to end in instructions the rewrite step can follow. "High confidence" and "looks good" are the same output: no problem named, nothing to change, and no way to tell whether the next version is any better.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(0)"><div class="pg-l">← Previous</div><div class="pg-t">Session overview</div></button>
+    <button class="rt" onclick="go(2)"><div class="pg-l">Next slide →</div><div class="pg-t">What a good review contains</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 2 · ANATOMY ================= -->
+<section class="slide" data-title="What a good review contains">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">02</div>
+    <div>
+      <h2 class="stage-title">What A Good Review Actually Contains</h2>
+      <p class="stage-kicker">Putting the word "critique" in a prompt does almost nothing. Five parts do the work. This is the checklist you will reuse on every slide after this one.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The five parts</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">The goal</div><div class="sd">What the output is meant to <em>do</em>, not what it is about. "Get a busy engineer to sign up" is a goal. "An email about the course" is a topic.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">The rules</div><div class="sd">Format, length, audience, tone, safety limits. These are the ones you can count. A model can count words. It cannot count charm.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">The checks</div><div class="sd">A short list of quality items, each one something two people would score the same way.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">The exact problems</div><div class="sd">What is missing, wrong, vague or risky — quoted from the draft, not described in general terms.</div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="st">What to change</div><div class="sd">Instructions the rewrite step can follow without deciding anything itself. People forget this part, and it is the one the loop actually runs on.</div></div></div>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">The main lesson of this session</span>
+      <p>The quality of a review depends on <strong>the list of checks</strong>, not on the words you use to ask for it. Swapping "review" for "critique" for "judge this harshly" changes almost nothing. Adding five named checks changes everything.</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">Reviewing a launch email</span><span class="exn-s">the real task from the lab</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The task</span><span class="sc-v">A launch email for working professionals thinking about a live weekend programme. <strong>140–180 words</strong>, warm but professional, must mention live classes, hands-on projects and career use, <strong>no salary promises</strong>, one clear next step.</span></div>
+      <div class="sc-row"><span class="sc-k">The draft</span><span class="sc-v">68 words, starting <em>"AI is changing the world and you should learn it as soon as possible…"</em></span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The review prompt</span></div>
+        <pre class="wx-b"><code>Score the draft 1-10 on each of these five:
+  <span class="hl">audience fit · specificity · rule following · evidence · next step</span>
+
+For every score below 8, give:
+  · the exact phrase that is at fault
+  · one line saying what to change
+
+Also count the words and check the 140-180 limit.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>audience fit  3  "you should learn it" talks down to a senior engineer
+                 → open by naming their job
+specificity   2  "all AI tools" covers nothing
+                 → name three tools that are actually taught
+rule following 4  68 words, the minimum is 140
+                 → expand with real detail, not filler
+evidence      3  "better opportunities" is a promise with nothing
+                 behind it → say what they build instead
+next step     4  "Join now" has no link, no date, nothing to click
+                 → give the batch date and the link</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">The rewrite</span></div>
+        <pre class="wx-b"><code>If you already ship code and want to add GenAI to what you do, this is
+twelve live Saturday sessions with people who build these systems daily.
+
+You will build three things and keep all of them: a retrieval agent over
+your own documents, a tool-calling assistant, and a small evaluation
+harness that tells you when a prompt change made things worse.
+
+We will not tell you what it does to your salary. We will tell you that
+you leave with three working projects and the habit of measuring them.
+
+Batch starts 14 September. Register here: [link]        (156 words)</code></pre></div>
+      <div class="wx"><div class="wx-p">Every line of the review is a problem, a location and a fix. <strong>That is the version a rewrite step can follow without thinking.</strong></div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Asking the model to "be harsh" gives you harsher adjectives. Asking for five named checks, a quoted phrase and one instruction each gives you a list of jobs.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">Reviewing a code review</span><span class="exn-s">the check adds something the output never had</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">An agent reviewed a pull request and left <strong>14 comments</strong>. Your team has time for the real ones only.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A review of the <strong>review itself</strong>: which comments are real bugs, which are taste, and which are simply not true.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The review prompt</span></div>
+        <pre class="wx-b"><code>Put every comment into one of these four groups:
+  <span class="hl">blocking</span>  the code does the wrong thing, or loses data
+  <span class="hl">major</span>     a real risk, but not urgent
+  <span class="hl">minor</span>     style or preference
+  <span class="hl">not true</span>  the claim is wrong
+
+For anything in "not true", quote the line that disproves it.
+Then sort blocking and major by how many users it affects.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>blocking  1   the retry loop has no limit, so one 500 response
+              becomes an endless retry
+major     2   the auth token is written to the log at line 88
+              the date filter has no upper bound
+not true  1   "unused import os" — os.environ is used at line 12
+minor    10   naming and f-strings
+
+Act on 3.  Ignore 10.  Delete 1.</code></pre></div>
+      <div class="wx"><div class="wx-p">Same 14 comments, but the review <strong>added a level of seriousness that the original output did not have</strong>. That is what makes it usable in a stand-up.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>A good check often adds something the first output ignored — <strong>how serious it is, what it costs, or who it affects</strong>. That is where most of the value of a review comes from.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">Reviewing a summary</span><span class="exn-s">counting first, judging second</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The task</span><span class="sc-v">Summarise a 9-page incident report in <strong>exactly 5 bullets</strong>, each under 20 words, for a director who was not on the call. <strong>No technical jargon.</strong></span></div>
+      <div class="sc-row"><span class="sc-k">The draft</span><span class="sc-v">7 bullets. Two are over 30 words. Three use the words "p99 latency", "circuit breaker" and "backpressure".</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The review prompt</span></div>
+        <pre class="wx-b"><code>Check in this order and report PASS or FAIL for each:
+  1. <span class="hl">is the bullet count exactly 5?</span>
+  2. <span class="hl">is every bullet under 20 words?</span> give the word count for each
+  3. <span class="hl">list every technical term</span> a director would not use in a sentence
+  4. only after those three, say whether the summary is accurate</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>1. FAIL — 7 bullets, need 5.
+   Merge 2 and 3 (both describe the rollback) and drop 6 (repeats 1).
+2. FAIL — bullet 2 is 34 words, bullet 5 is 31 words.
+3. FAIL — "p99 latency"    → "the slowest 1% of requests"
+          "circuit breaker" → "the automatic cut-off"
+          "backpressure"    → remove, not needed for this reader
+4. PASS — the cause and the fix are both correct.</code></pre></div>
+      <div class="wx"><div class="wx-p">The cheap checks that can be counted run <strong>before</strong> the expensive judgement call. Those are exactly the ones a model skips if you let it start with "is this a good summary?"</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Split your checks into ones you can <strong>count</strong> (bullets, words, fields, sections) and ones you have to <strong>judge</strong> (tone, accuracy, fit). Ask for the countable ones first. They are objective, they are cheap, and they are the ones that fail quietly.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">Reviewing a SQL query</span><span class="exn-s">when the checks have to come from the schema</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The question</span><span class="sc-v">"How many customers placed more than one order last month?" The agent wrote a query. It runs and returns <code>4,812</code>.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">To know whether <strong>4,812 is the right number</strong> before it goes into a board deck.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The query to review</span></div>
+        <pre class="wx-b"><code>SELECT COUNT(*) FROM orders
+WHERE created_at &gt;= '2026-07-01'
+GROUP BY customer_id
+HAVING COUNT(*) &gt; 1;</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The review prompt</span></div>
+        <pre class="wx-b"><code>Question: how many customers placed more than one order last month?
+
+Table: orders(id, customer_id, created_at, status)
+       status is one of 'paid', 'cancelled', 'refunded'
+
+Check four things: <span class="hl">the shape of the result</span>, <span class="hl">the date range</span>,
+<span class="hl">the status filter</span>, <span class="hl">how nulls are handled</span>.
+Then write the corrected query.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>shape   FAIL  this returns one row per customer.
+              the question asks for a single number.
+date    FAIL  there is no end date, so July onward also counts August.
+status  FAIL  cancelled and refunded orders are being counted as orders.
+nulls   OK    customer_id is not null in this table.
+
+SELECT COUNT(*) FROM (
+  SELECT customer_id FROM orders
+  WHERE created_at &gt;= '2026-07-01'
+    AND created_at &lt;  '2026-08-01'
+    AND status = 'paid'
+  GROUP BY customer_id
+  HAVING COUNT(*) &gt; 1
+) t;</code></pre></div>
+      <div class="wx"><div class="wx-p">Three real problems, none of them syntax. The checks came from <strong>the question and the table</strong>. Without both, a review of SQL can only comment on grammar.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>For anything factual, the review prompt has to carry <strong>the thing the output was supposed to match</strong> — the table, the task, the API docs, the ticket. A reviewer with nothing to compare against can only check whether the output makes sense on its own.</div></div>
+
+    <h3>The five parts, as a table</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Part</th><th>Too vague</th><th>Usable</th><th>Why it matters</th></tr>
+      <tr><td>Goal</td><td>"an email about the course"</td><td>"get a busy engineer to sign up"</td><td>Decides what counts as a problem</td></tr>
+      <tr><td>Rules</td><td>"keep it short"</td><td>"140–180 words, no salary claims"</td><td>You can count it, so it cannot be fudged</td></tr>
+      <tr><td>Checks</td><td>"is it good?"</td><td>five named items, 1–10 each</td><td>Two people would score it the same</td></tr>
+      <tr><td>Problems</td><td>"too generic"</td><td>"'all AI tools' — name three"</td><td>Points at the exact place</td></tr>
+      <tr><td>Changes</td><td>"make it better"</td><td>"open by naming their job title"</td><td>The rewrite step decides nothing</td></tr>
+    </table>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">Five parts and two habits</div>
+      <ol>
+        <li>A review needs <strong>goal, rules, checks, exact problems and what to change</strong>. Miss the last one and the loop has nothing to run.</li>
+        <li>Named checks beat strong adjectives. "Be harsh" gives you harsher words. Five checks give you jobs.</li>
+        <li>Ask for the <strong>countable checks before the judged ones</strong>. Those are the rules that fail quietly.</li>
+        <li>For factual work, put <strong>the source of truth in the review prompt</strong>. Otherwise you get comments about style.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your reviewer keeps saying "the draft is well written but could be more specific" for every draft, including the good ones. What is most likely wrong?</div>
+      <button class="opt" onclick="qa(this,0)">The temperature is too high</button>
+      <button class="opt" onclick="qa(this,0)">The model is too small for review work</button>
+      <button class="opt" onclick="qa(this,1)">"Specific enough" is not something you can observe, so any draft can be scored either way</button>
+      <div class="explain"><strong>Replace it with something two people would score the same way</strong> — "names at least three real deliverables", "every claim has a source", "no adjective without a number". If a check cannot fail a good draft and pass a bad one, it is decoration.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(1)"><div class="pg-l">← Previous</div><div class="pg-t">An answer that looks done but is not</div></button>
+    <button class="rt" onclick="go(3)"><div class="pg-l">Next slide →</div><div class="pg-t">Self-Refine — what it is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 3 · SELF-REFINE PART 1 ================= -->
+<section class="slide" data-title="Self-Refine — what it is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">03</div>
+    <div>
+      <h2 class="stage-title">Way 1 · Self-Refine — One Model, Three Jobs</h2>
+      <p class="stage-kicker">The same model writes the draft, reviews it, and rewrites it. You add nothing to the system except two more prompts. It is the cheapest of the four and the one you will reach for first.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The same model doing three different jobs</h3>
+    <div class="roles">
+      <div class="role gen"><div class="r-n">Job 1</div><div class="r-t">Write</div><div class="r-d">Produce the first answer from the task. Told clearly <em>not</em> to review itself in this step.</div><div class="r-c">temperature 0.4<br>"Produce the first draft only."</div></div>
+      <div class="role cri"><div class="r-n">Job 2</div><div class="r-t">Review</div><div class="r-d">Find problems against the checks and say what to change. Returns structured data, never a paragraph.</div><div class="r-c">temperature 0.0<br>"Return ONLY valid JSON."</div></div>
+      <div class="role ref"><div class="r-n">Job 3</div><div class="r-t">Rewrite</div><div class="r-d">Apply the instructions and return the new version with no extra comments.</div><div class="r-c">temperature 0.3<br>"Return only the revised draft."</div></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">Why this works at all</span>
+      <p>The same model can do three different jobs <strong>because the prompt and the required output change each time</strong>. It is not that the model has three personalities. It is that checking a finished text and writing one are different tasks, and a model asked to do them one at a time does each one better than a model asked to do both at once.</p>
+    </div>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Task</div><span class="arrow">→</span>
+        <div class="node sky">Draft 1</div><span class="arrow">→</span>
+        <div class="node am">Review</div><span class="arrow">→</span>
+        <div class="node em">Draft 2</div><span class="arrow">→</span>
+        <div class="node am">Review</div><span class="arrow">→</span>
+        <div class="node em">Draft 3</div>
+      </div>
+      <div class="dg-cap">Three calls per round · one model · no outside tools</div>
+      <p class="readas"><strong>In plain words:</strong> every arrow is a separate API call with a separate prompt. The review call never sees the rewrite instructions, and the rewrite call never sees the scoring instructions. <strong>Keeping the prompts apart is the whole trick.</strong></p>
+    </div>
+
+    <h3>Where this helps, and where it does not</h3>
+    <div class="duo">
+      <div class="duo-col ok">
+        <h5>Works well</h5><div class="dsub">you can describe "good" in words</div>
+        <ul>
+          <li><strong>Writing and editing</strong> — emails, docs, release notes</li>
+          <li><strong>Summaries with clear rules</strong> — length, reader, bullet count</li>
+          <li><strong>Tone and audience</strong> — removing hype, changing register</li>
+          <li><strong>Fixing formats</strong> — JSON shape, headings, missing fields</li>
+          <li><strong>Checklist reviews</strong> — "does it have all six sections?"</li>
+        </ul>
+      </div>
+      <div class="duo-col no">
+        <h5>Does not work on its own</h5><div class="dsub">the answer needs facts, not editing</div>
+        <ul>
+          <li><strong>Facts you cannot check</strong> — was the launch in March or May?</li>
+          <li><strong>Maths with a hidden mistake</strong> — the model repeats its own slip</li>
+          <li><strong>Unclear legal or medical decisions</strong></li>
+          <li><strong>Anything security related</strong> — needs an outside check</li>
+          <li><strong>Anything needing a tool</strong> — run the test, query the table</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout co-cost"><span class="co-tag">Worth memorising</span>
+      <p>Reviewing makes an answer <strong>match the rules you wrote down</strong>. It does <strong>not produce facts the model never had</strong>. If the thing that is wrong is a missing fact, no number of rounds will fix it. You need a tool, a document, or a person.</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">The launch email, three rounds</span><span class="exn-s">the real run from the lab</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The task</span><span class="sc-v">140–180 words, working professionals, warm but professional, mention live classes, projects and career use, <strong>no salary promises</strong>, one clear next step.</span></div>
+      <div class="sc-row"><span class="sc-k">Starting from</span><span class="sc-v">The deliberately weak draft in <code>data/weak_draft.txt</code> — 68 words of pure hype.</span></div>
+      <div class="sc-row"><span class="sc-k">Pass mark</span><span class="sc-v"><strong>8 out of 10</strong>, with a limit of 3 rounds.</span></div>
+    </div>
+
+    <div class="iters">
+      <div class="it fail"><div class="it-n">Round 1</div><div class="it-sc">3<small>/10</small></div><div class="it-d">Four major problems. "Skilled in all AI tools" and "better opportunities" have nothing behind them. 68 words, under the limit.</div></div>
+      <div class="it warn"><div class="it-n">Round 2</div><div class="it-sc">7<small>/10</small></div><div class="it-d">Tone and structure fixed. Still vague: "solid understanding", "transformative experience". The next step has no link.</div></div>
+      <div class="it warn"><div class="it-n">Round 3</div><div class="it-sc">7<small>/10</small></div><div class="it-d">Named TensorFlow and PyTorch, but did not say what students <em>build</em> with them. The score did not move.</div></div>
+      <div class="it"><div class="it-n">Stopped</div><div class="it-sc">out<small> of tries</small></div><div class="it-d">Never reached 8. The loop returned the best draft plus the full record instead of spending more.</div></div>
+    </div>
+
+    <p>Here is what the review returned in round 1, in full:</p>
+    <div class="isslist">
+      <div class="iss"><span class="sev major">major</span><div class="iss-b"><b>Audience fit</b>The tone is too excited and does not sound professional enough for busy working people.<span class="iss-fix"><i>Change</i>Use a professional tone that accepts the reader is short of time and hard to impress.</span></div></div>
+      <div class="iss"><span class="sev major">major</span><div class="iss-b"><b>Specificity</b>"Skilled in all AI tools" and "better opportunities" are vague and say nothing about the programme.<span class="iss-fix"><i>Change</i>Give real detail about the live classes and the hands-on projects.</span></div></div>
+      <div class="iss"><span class="sev minor">minor</span><div class="iss-b"><b>Rule following</b>The draft is 68 words and the minimum is 140.<span class="iss-fix"><i>Change</i>Expand to 140–180 words by adding real detail, not filler.</span></div></div>
+      <div class="iss"><span class="sev major">major</span><div class="iss-b"><b>Evidence</b>Claims about skills and opportunities with nothing behind them.<span class="iss-fix"><i>Change</i>Talk about the practical skills they will gain. Drop the promises about outcomes.</span></div></div>
+      <div class="iss"><span class="sev minor">minor</span><div class="iss-b"><b>Next step</b>"Join now to become future ready" is not something the reader can do.<span class="iss-fix"><i>Change</i>Give a real action — "Register for the 14 September batch" with a link.</span></div></div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">Read the flat part, not the jump</span>
+      <p>3 → 7 → 7 is the most useful thing in this run. Round one found the <strong>hype and the broken rules</strong>, which are cheap, visible, wording-level problems. Rounds two and three could not move the score, because what was left was <strong>information the model does not have</strong>: what students actually build in week three. The loop hit its limit exactly where the rule above says it would.</p>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Watch <em>where</em> the score stops moving. A flat score is the loop telling you <strong>the next problem is not about wording</strong>. It needs a fact, a source, or a person.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">Fixing a broken JSON output</span><span class="exn-s">the safest, most useful thing this pattern does</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">Your pipeline needs an object with <code>title</code>, <code>owner</code>, <code>due</code> (an ISO date) and <code>tags</code> (a list). The model returned something close, and the parser threw an error.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">Valid output <strong>without rewriting the whole thing</strong>. The content was fine.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">What came back</span></div>
+        <pre class="wx-b"><code>{
+  "title": "Migrate billing to v2",
+  "owner": "Priya",
+  "due": "next Friday",
+  "tags": "billing, migration"
+}</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The review prompt</span></div>
+        <pre class="wx-b"><code>Compare this object to the schema below.
+For each problem, list <span class="hl">the field, what was expected, and what was there</span>.
+
+  title: string   owner: string
+  due:   ISO date (YYYY-MM-DD)      tags: list of strings</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>due   expected an ISO date,   found "next Friday"
+tags  expected a list,        found a comma-separated string</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">4</span><span class="wx-t">The rewrite prompt, and the result</span></div>
+        <pre class="wx-b"><code>Fix ONLY the two fields listed above. <span class="hl">Do not change any other value.</span>
+
+{
+  "title": "Migrate billing to v2",
+  "owner": "Priya",
+  "due": "2026-09-04",
+  "tags": ["billing", "migration"]
+}</code></pre></div>
+      <div class="wx"><div class="wx-p">Two problems named, two problems fixed, <strong>and everything else is identical</strong>. If you leave out "do not change anything else", the rewrite step will quietly reword the title as well.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Fixing formats is the perfect job for this pattern, because the checks are <strong>fully known, fully countable and need no outside facts</strong>. Always add the "change nothing else" line.</div></div>
+
+    <div class="quiz">
+      <div class="q">Self-Refine takes your product description from 5/10 to 8/10 in one round. On the next task — "list the three highest-margin products from last quarter" — it stays at 4/10 for three rounds. Why?</div>
+      <button class="opt" onclick="qa(this,1)">The problem is a missing fact, and reviewing does not produce facts</button>
+      <button class="opt" onclick="qa(this,0)">The check list needs more items</button>
+      <button class="opt" onclick="qa(this,0)">The rewrite temperature is too low</button>
+      <div class="explain"><strong>The model has never seen your sales table.</strong> Every round rewrites the same guess more smoothly. The fix is not a better reviewer. It is a tool call that reads the real numbers, and only then a reviewer that checks the write-up against them.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(2)"><div class="pg-l">← Previous</div><div class="pg-t">What a good review contains</div></button>
+    <button class="rt" onclick="go(4)"><div class="pg-l">Next slide →</div><div class="pg-t">Self-Refine — more examples</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 4 · SELF-REFINE PART 2 ================= -->
+<section class="slide" data-title="Self-Refine — more examples">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">04</div>
+    <div>
+      <h2 class="stage-title">Self-Refine — Two More Examples, And The Limit</h2>
+      <p class="stage-kicker">Two more places this pattern earns its keep, then the two ways it quietly fails: it agrees with its own mistakes, and it edits a good answer until there is nothing left in it.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">A commit message nobody can use</span><span class="exn-s">small task, you do it fifty times a week</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">An agent commits code and writes the message. Six months later somebody runs <code>git log</code> in the middle of an incident.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A message that says <strong>what changed and why</strong>, in the format the team already uses.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">What the model wrote</span></div>
+        <pre class="wx-b"><code>fix bug</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The review prompt — the team's own format is the check list</span></div>
+        <pre class="wx-b"><code>Check the message against our commit format:
+  · line 1 is <span class="hl">&lt;type&gt;(&lt;scope&gt;): &lt;what changed&gt;</span>, 72 characters or fewer
+  · then a blank line
+  · then <span class="hl">why</span> the change was needed
+  · then <span class="hl">how</span> it was checked
+  · then the <span class="hl">issue number</span>, if there is one
+
+Say PASS or FAIL for each line, then rewrite the message.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>line 1  FAIL — no type, no scope, only 8 characters
+why     FAIL — not there
+how     FAIL — not there
+issue   FAIL — not there</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">4</span><span class="wx-t">The rewrite</span></div>
+        <pre class="wx-b"><code>fix(payments): guard null discount before the total is summed
+
+Orders with no discount sent None into the total, which raised a
+TypeError at cart.py:41 for about 2% of checkouts.
+
+Checked: test_checkout_totals passes again, plus a new case for
+discount=None.
+
+Refs #2417</code></pre></div>
+      <div class="wx"><div class="wx-p">Nothing here needed judgement. <strong>Five checkable lines turned an empty message into a useful one.</strong></div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>You almost always have a check list already: the style guide, the PR template, the definition of done, the brand voice doc. <strong>Paste that in instead of inventing checks.</strong></div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">Fixing the tone of a support reply</span><span class="exn-s">turning a feeling into something you can check</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A customer was charged twice. The agent wrote a reply that is correct and sounds cold.</span></div>
+      <div class="sc-row"><span class="sc-k">The draft</span><span class="sc-v"><em>"As per our terms, duplicate charges are typically resolved within 5-7 business days. Please note that we cannot expedite this process."</em></span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">"Make it warmer" only produces more adjectives. The real problems are <strong>structural</strong>: nobody says sorry, nobody owns it, and there is no real date.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The review prompt — tone broken into things that are there or not there</span></div>
+        <pre class="wx-b"><code>Check the reply contains these five, in this order:
+  1. <span class="hl">names the exact problem</span> that happened
+  2. <span class="hl">says who is handling it</span> — a person, not "the system"
+  3. <span class="hl">gives a real date</span>, not a range
+  4. <span class="hl">says what the customer has to do</span> — ideally nothing
+  5. <span class="hl">gives a way to reach a human</span>
+
+Never quote policy before item 1.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">What the review said</span></div>
+        <pre class="wx-b"><code>1 FAIL — opens with the policy
+2 FAIL — passive, nobody owns it
+3 FAIL — "5-7 business days" is a range, not a date
+4 FAIL — not stated
+5 FAIL — not there</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">The rewrite</span></div>
+        <pre class="wx-b"><code>You were charged twice for order #4471 — ₹8,000 more than you should
+have been. I have raised the refund myself. It will be back on your card
+by Tuesday 8 September.
+
+You do not need to do anything. If it has not arrived by then, reply to
+this email and I will chase it.</code></pre></div>
+      <div class="wx"><div class="wx-p">There is not a single adjective in the check list, and the result is warmer than any amount of "please be friendly". <strong>Tone is usually a structure problem in disguise.</strong></div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>When a check feels impossible to measure ("warm", "professional", "on brand"), <strong>break it into things that are either there or not there</strong>. Then a reviewer can actually fail a draft.</div></div>
+
+    <h3>Where this pattern stops working</h3>
+
+    <div class="exn"><span class="exn-n">LIMIT 1</span><span class="exn-t">It agrees with its own maths</span></div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The question and the answer</span></div>
+        <pre class="wx-b"><code>Q: 12 engineers each write 3 tests a day for 4 working days.
+   Two engineers are away for one day each. How many tests?
+
+Model: 138</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Asking it to check itself</span></div>
+        <pre class="wx-b"><code>Prompt:  Now check your own answer.
+
+Reply:   The calculation is correct. 12 × 3 × 4 = 144, minus 2 × 3 = 6
+         for the absences, giving 138. The reasoning is sound.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">Asking for a different route instead</span></div>
+        <pre class="wx-b"><code>Prompt:  Do <span class="hl">not</span> repeat your earlier working.
+         1. work it out again by a <span class="hl">different method</span>
+            (count engineer-days, not totals)
+         2. write both results
+         3. if they differ, say which one is wrong — do not average them
+
+Reply:   Method A (totals):       144 − 6 = 138
+         Method B (engineer-days): 10 × 4 = 40, plus 2 × 3 = 6,
+                                   so 46 days × 3 tests = 138
+         Both give 138.</code></pre></div>
+      <div class="wx"><div class="wx-p">The answer happens to be right. The point is that <strong>step 2 would have said exactly the same thing if it were wrong</strong>. A model re-reading its own working is not a check. Two different routes agreeing is weak evidence. Running the code is real evidence.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Never ask "is your answer correct?". Ask for <strong>a different way of getting there</strong>, or check it with something outside the model. Agreeing with yourself is the most common way these loops waste money.</div></div>
+
+    <div class="exn"><span class="exn-n">LIMIT 2</span><span class="exn-t">It edits a good answer into a bad one</span></div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">Round 1 — scored 9/10</span><span class="wx-s">short and useful</span></div>
+        <pre class="wx-b"><code>The deploy failed because the migration ran before the schema lock was
+released. Retry once the lock clears — usually about 30 seconds.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Round 3 — still scored 9/10</span><span class="wx-s">longer and useless</span></div>
+        <pre class="wx-b"><code>It appears that the deployment process may have encountered an issue
+related to the ordering of migration operations relative to schema
+locking mechanisms. It is generally advisable to consider retrying the
+operation once the relevant locks have been released, which typically
+occurs within a relatively short period of time.</code></pre></div>
+      <div class="wx"><div class="wx-p">Nothing in the check list said "do not get worse". A reviewer asked to find problems will <strong>always find problems</strong>, so a good draft gets hedged and padded until it says nothing wrong and nothing useful.</div></div>
+    </div>
+    <div class="callout co-trap"><span class="co-tag">Two things that prevent this</span>
+      <p><strong>Let the reviewer return an empty list.</strong> Say "if the draft passes, say so and stop" — otherwise it will invent something. And <strong>keep the best-scoring version, not the last one</strong>. "Most refined" is not a quality.</p>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">Self-Refine in five lines</div>
+      <ol>
+        <li>One model, three prompts: <strong>write, review, rewrite</strong> — and never two of those in the same call.</li>
+        <li>It is best at <strong>formats, rules and structure</strong>, where you already know what good looks like.</li>
+        <li>Your style guide or PR template is <strong>already a check list</strong>. Paste it in.</li>
+        <li>Things you cannot measure, like "warm", should be <strong>broken into items that are there or not there</strong>.</li>
+        <li>Two failures to design around: <strong>agreeing with itself</strong> and <strong>over-editing</strong>. Keep the best version, not the last.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your loop runs 3 rounds on every request. The scores go 6 → 8 → 8 → 7. Which draft should the system return?</div>
+      <button class="opt" onclick="qa(this,0)">The last one, because it has been through the most rounds</button>
+      <button class="opt" onclick="qa(this,1)">The round-2 draft, which scored highest — and the loop should have stopped there</button>
+      <button class="opt" onclick="qa(this,0)">A mix of rounds 2 and 3</button>
+      <div class="explain"><strong>Track the score, keep the best draft, and stop when a round does not beat the current best.</strong> The last round cost money and made the answer worse.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(3)"><div class="pg-l">← Previous</div><div class="pg-t">Self-Refine — what it is</div></button>
+    <button class="rt" onclick="go(5)"><div class="pg-l">Next slide →</div><div class="pg-t">Reflexion — what it is</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 5 · REFLEXION PART 1 ================= -->
+<section class="slide" data-title="Reflexion — what it is">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">05</div>
+    <div>
+      <h2 class="stage-title">Way 2 · Reflexion — Learning Without Retraining</h2>
+      <p class="stage-kicker">Self-Refine improves <em>this</em> answer. Reflexion improves the <em>next try</em>. The difference is one short written lesson that survives from one attempt to the next.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>A normal retry and a Reflexion retry</h3>
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>Normal retry</h5><div class="dsub">try → fail → ask again</div>
+        <ul>
+          <li>The second try starts from the same prompt as the first</li>
+          <li>The model has no idea what went wrong</li>
+          <li>Same mistake, different words, often three times</li>
+          <li>The cost goes up and the quality does not</li>
+        </ul>
+      </div>
+      <div class="duo-col b">
+        <h5>Reflexion</h5><div class="dsub">try → feedback → write a lesson → next try reads it</div>
+        <ul>
+          <li>The failure is turned into <strong>one sentence of advice</strong></li>
+          <li>That sentence goes at the top of the next prompt</li>
+          <li>The retry is now a <em>different</em> attempt, not a repeat</li>
+          <li>Nothing about the model changes — only its prompt</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">The key idea</span>
+      <p>The agent improves because of <strong>words, not training</strong>. No weights change. No fine-tuning job runs. The "learning" is a line of text that the next attempt reads first — which is why this works with any model you can call over an API.</p>
+    </div>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Try<small>write it or do it</small></div><span class="arrow">→</span>
+        <div class="node am">Feedback<small>a score, an error, a result</small></div><span class="arrow">→</span>
+        <div class="node vi">Write a lesson<small>one or two lines</small></div><span class="arrow">→</span>
+        <div class="node em">Store it<small>for the next try</small></div>
+      </div>
+      <div class="dg-cap">…and the next try reads the stored lessons first</div>
+      <p class="readas"><strong>In plain words:</strong> the feedback can come from anywhere — a failing test, an HTTP 400, a score, or a person saying "that's not what I meant". The lesson step turns that raw signal into <strong>advice for the next decision</strong>. A stored lesson is only worth keeping if it changes what the next attempt does.</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">An agent fixing a failing test</span><span class="exn-s">the feedback is a real error message</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">The agent has to make <code>test_discount_applies</code> pass. It can call <code>run_tests()</code> and <code>edit_file()</code>. It gets three attempts.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">Attempt 2 to be <strong>based on</strong> attempt 1, not a fresh guess.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">Attempt 1</span></div>
+        <pre class="wx-b"><code>Action:  add a None check inside apply_discount()
+Result:  test still fails
+         TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
+         at cart.py line 41</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The lesson prompt</span></div>
+        <pre class="wx-b"><code>After a failed attempt, write three short lines:
+  <span class="hl">what I tried</span>
+  <span class="hl">what the error actually said</span>
+  <span class="hl">what I will do differently</span>
+
+Maximum three lines. No code. Read all earlier lessons before trying again.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">The lesson it wrote</span></div>
+        <pre class="wx-b"><code>I patched the function that was called.
+The traceback points at cart.py:41, which is the caller.
+Next time, read the traceback line before editing anything.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">4</span><span class="wx-t">Attempt 2</span></div>
+        <pre class="wx-b"><code>Action:  read cart.py line 41 first.
+         The discount is added to the total before it is applied,
+         and it is None when no discount is set.
+         Reorder the two lines.
+Result:  test passes, and it passes for the right reason</code></pre></div>
+      <div class="wx"><div class="wx-p">The lesson was <strong>about the method, not about this bug</strong>. "Read the traceback line before editing" is useful on every future failure. Without it, the third attempt would have wrapped the call in a try/except and made the test green while the bug shipped.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>A good lesson names <strong>the wrong move</strong>, not just the wrong result. "The fix did not work" changes nothing. "I edited the callee when the traceback pointed at the caller" changes the next action.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">A data agent that keeps returning the wrong rows</span><span class="exn-s">writing a lesson at the right level</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">An agent answers business questions with SQL. A checker compares the result against the finance table and flags anything that does not add up.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">The agent to stop repeating the same <em>kind</em> of mistake on completely different questions.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The failure</span></div>
+        <pre class="wx-b"><code>Question: revenue for July
+Query:    WHERE created_at >= '2026-07-01'
+Checker:  total does not match finance. August rows are included.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">A lesson tied to this one question</span></div>
+        <pre class="wx-b"><code>"For the July revenue question I should have used 2026-07-01 to
+ 2026-08-01 instead of 2026-07-01 onwards."</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">The prompt that asks for a reusable lesson instead</span></div>
+        <pre class="wx-b"><code>Write ONE lesson you can reuse.
+  · write it as <span class="hl">a rule for future queries</span>
+  · do not mention table or column names from this question
+  · it must be something you can <span class="hl">check before running the query</span>
+  · maximum 20 words</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">4</span><span class="wx-t">The lesson it wrote, and what happened next</span></div>
+        <pre class="wx-b"><code>"Every date filter needs both a start and an end. An open range
+ quietly includes future months."
+
+Next run, a completely different question about active users:
+the agent checked this rule first and caught the same bug again.</code></pre></div>
+      <div class="wx"><div class="wx-p">Step 2 is true and useless next Tuesday. Step 4 is one sentence that applies to every query. After ten runs the agent has <strong>a small, hard-won style guide for your data</strong> that nobody had to write by hand.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Ask for the lesson at the <strong>right level</strong>: general enough to apply next time, specific enough to change an action. "Be more careful" is too general. "Use 2026-08-01" is too specific.</div></div>
+
+    <h3>Where the feedback comes from</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Source 1</div><div class="uc-t">A test suite or type checker</div><div class="uc-d">Objective, free, and you cannot argue with it. The strongest feedback you can get.</div><div class="uc-w"><b>Best for</b>writing code, refactors, migrations</div></div>
+      <div class="uc"><div class="uc-n">Source 2</div><div class="uc-t">A checker or a schema</div><div class="uc-d">Structure checks: required fields, allowed ranges, totals that have to match a known number.</div><div class="uc-w"><b>Best for</b>data agents, filling forms, pulling out structured data</div></div>
+      <div class="uc"><div class="uc-n">Source 3</div><div class="uc-t">A scoring model</div><div class="uc-d">Another model with a named check list. Softer than a test, but it works where nothing else can be measured.</div><div class="uc-w"><b>Best for</b>writing, summaries, plans, itineraries</div></div>
+      <div class="uc"><div class="uc-n">Source 4</div><div class="uc-t">A real person</div><div class="uc-d">"That's not what I meant." Slow and expensive, and by far the most useful feedback you will ever get.</div><div class="uc-w"><b>Best for</b>anything where the task itself was wrong</div></div>
+    </div>
+    <div class="callout co-win"><span class="co-tag">Design rule</span>
+      <p>Reflexion is only as good as its feedback. <strong>Prefer a signal from outside the model</strong> — a test run, a checker, an HTTP status. If the only feedback available is the model's own opinion, you are running Self-Refine with extra steps and extra cost.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">An agent fails a task three times. After each failure it writes: "I should try harder to be accurate and consider all the requirements." What is wrong?</div>
+      <button class="opt" onclick="qa(this,0)">Nothing — it is learning to be careful</button>
+      <button class="opt" onclick="qa(this,1)">The lesson does not change the next decision, so it is just extra tokens</button>
+      <button class="opt" onclick="qa(this,0)">The lessons should be longer and more detailed</button>
+      <div class="explain"><strong>Test every lesson with one question: what will the next attempt do differently?</strong> If the answer is "nothing in particular", the lesson is decoration. A useful one names a move — read the traceback first, put an end date on the range, count the words before writing.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(4)"><div class="pg-l">← Previous</div><div class="pg-t">Self-Refine — more examples</div></button>
+    <button class="rt" onclick="go(6)"><div class="pg-l">Next slide →</div><div class="pg-t">Reflexion — the memory</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 6 · REFLEXION PART 2 ================= -->
+<section class="slide" data-title="Reflexion — the memory">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">06</div>
+    <div>
+      <h2 class="stage-title">The Memory — What To Keep And What To Throw Away</h2>
+      <p class="stage-kicker">This is where Reflexion goes wrong in real systems. Keep too little and nothing carries over. Keep too much and every prompt starts with six thousand tokens of old regret.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>What belongs in the memory</h3>
+    <div class="how">
+      <div class="how-c"><div class="h-n">Keep</div><div class="h-t">Short and usable</div><div class="h-d">
+        <ul style="margin:8px 0 0">
+          <li>The lesson, one or two sentences</li>
+          <li>The reason it failed</li>
+          <li>The rule that was missed</li>
+          <li>A better plan for next time</li>
+          <li>Where the evidence came from, if any</li>
+        </ul></div></div>
+      <div class="how-c" style="border-top-color:var(--rose)"><div class="h-n" style="color:var(--rose)">Do not keep</div><div class="h-t">Bulk and noise</div><div class="h-d">
+        <ul style="margin:8px 0 0">
+          <li>The whole conversation</li>
+          <li>Long chains of reasoning</li>
+          <li>Claims nobody checked</li>
+          <li>General advice like "be careful"</li>
+          <li>Two lessons that contradict each other</li>
+        </ul></div></div>
+      <div class="how-c" style="border-top-color:var(--sky)"><div class="h-n" style="color:var(--sky)">Clean up</div><div class="h-t">Maintenance, not hoarding</div><div class="h-d">
+        <ul style="margin:8px 0 0">
+          <li>Keep the recent, useful lessons</li>
+          <li>Drop anything out of date</li>
+          <li>Merge repeated failures into one rule</li>
+          <li>Version the rules that are specific to your domain</li>
+        </ul></div></div>
+    </div>
+    <div class="callout co-cost"><span class="co-tag">The cost you do not see</span>
+      <p>The memory is <strong>added to every future call</strong>. Ten lessons at 40 tokens each is fine forever. Ten lessons at 400 tokens each is 4,000 extra tokens on every single request for the rest of the agent's life — and the model starts skimming them.</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">The same failure, written up two ways</span><span class="exn-s">you can apply this test today</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">What happened</span><span class="sc-v">The agent booked a meeting room at 14:00 without checking that one attendee in Berlin would be at 22:30 local time. The user rejected it.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">A 78-word lesson</span><span class="wx-s">costs tokens, changes nothing</span></div>
+        <pre class="wx-b"><code>"During this task I first considered the calendar availability of the
+primary attendee, and then I looked at the meeting room booking system,
+where I found room B4 available at 14:00. I selected it because it was
+the earliest option. In retrospect the user was unhappy with the choice
+and I should be more thoughtful in future about scheduling decisions and
+consider more factors before committing to a time slot."</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">A 21-word lesson</span><span class="wx-s">names a check with a threshold</span></div>
+        <pre class="wx-b"><code>"Before proposing a meeting time, convert it to every attendee's local
+time and reject anything outside 08:00-19:00 local."</code></pre></div>
+      <div class="wx"><div class="wx-p">The first one replays the conversation and ends in "be more thoughtful", which is not a move. Ten of those and the agent reads a diary before every task. The second one <strong>names a check to run before acting</strong>, so the next attempt either does it or visibly does not.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">The test</span><div>Read the lesson and ask: <strong>could I write code that checks whether the agent followed it?</strong> If yes, it is a rule. If no, it is a mood.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">When two lessons disagree</span><span class="exn-s">the failure nobody warns you about</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A support agent has been running for two weeks and has 30 stored lessons. Two of them contradict each other.</span></div>
+      <div class="sc-row"><span class="sc-k">Why it is hard</span><span class="sc-v">The model will pick one <strong>at random</strong>, or try to satisfy both and produce something that makes no sense.</span></div>
+    </div>
+    <div class="trace">
+      <div class="tr-head"><span class="tr-t">Memory store · week 2</span><span class="tr-badge fail">contradiction</span></div>
+      <div class="tr-line"><span class="tr-k k-th">Lesson 7</span><span class="tr-v">"Always offer a refund straight away when a customer reports a duplicate charge. It closes the ticket fastest."</span></div>
+      <div class="tr-line"><span class="tr-k k-th">Lesson 22</span><span class="tr-v">"Never promise a refund before the payments team confirms the duplicate. Three promised refunds turned out to be single charges."</span></div>
+      <div class="tr-line err"><span class="tr-k k-er">What the agent said</span><span class="tr-v">"I'll refund this right away, once our payments team has confirmed it, which I can promise will be processed immediately." — it makes no sense, and it still made a promise.</span></div>
+      <div class="tr-line fin"><span class="tr-k k-an">The fix</span><span class="tr-v">A clean-up step: when a new lesson contradicts an old one, the newer lesson with evidence behind it <strong>replaces</strong> the old one. Lesson 7 is deleted, not stacked underneath lesson 22.</span></div>
+    </div>
+    <div class="callout co-win"><span class="co-tag">Treat clean-up as a real job</span>
+      <p>Every so often, run a <strong>clean-up pass</strong>: remove duplicates, merge repeated failures into one rule, drop anything that has not been used in the last twenty tasks, and resolve contradictions in favour of the newer lesson with evidence. It is one extra call, and it is the difference between memory that builds up and memory that rots.</p>
+    </div>
+
+    <h3>ReAct and Reflexion solve different problems</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Pattern</th><th>The question it answers</th><th>What the memory is for</th><th>Best for</th></tr>
+      <tr><td>ReAct</td><td>What should I do <strong>next</strong>?</td><td>What it just saw guides the <em>current</em> path</td><td>Tasks that use tools, step by step</td></tr>
+      <tr><td>Reflexion</td><td>What did I <strong>learn</strong> from failing?</td><td>Lessons guide the <em>next</em> attempt</td><td>Retries, debugging, tuning</td></tr>
+    </table>
+    </div>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">ReAct<small>inside one attempt</small></div>
+        <span class="arrow">↻</span>
+        <div class="node">Think → Act → See the result</div>
+        <span class="arrow">⇢</span>
+        <div class="node ro">The attempt fails</div>
+        <span class="arrow">→</span>
+        <div class="node vi">Reflexion<small>between attempts</small></div>
+      </div>
+      <div class="dg-cap">ReAct handles this attempt. Reflexion improves the next one.</div>
+      <p class="readas"><strong>They stack.</strong> An agent debugging a service runs ReAct inside each attempt: read the log, form an idea, run a command, look at the result. When the whole attempt fails, Reflexion writes one lesson and the next attempt starts better informed. Neither one replaces the other.</p>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">Reflexion in five lines</div>
+      <ol>
+        <li>The agent improves through <strong>words in the next prompt</strong>, not through training.</li>
+        <li>A lesson must name a <strong>move</strong>, not a mood. Test it: could you check in code whether the agent followed it?</li>
+        <li>Keep lessons, reasons and missed rules. <strong>Never keep the whole conversation.</strong></li>
+        <li>Memory needs <strong>maintenance</strong>: remove duplicates, expire old entries, resolve contradictions towards the newer evidence.</li>
+        <li><strong>ReAct improves this attempt. Reflexion improves the next one.</strong> Real agents run both.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your agent's memory has grown to 40 entries over a month. It is slower and the quality has started dropping. What is the first thing to do?</div>
+      <button class="opt" onclick="qa(this,0)">Move to a model with a bigger context window</button>
+      <button class="opt" onclick="qa(this,1)">Clean up: merge duplicates, drop unused rules, resolve contradictions</button>
+      <button class="opt" onclick="qa(this,0)">Stop writing new lessons</button>
+      <div class="explain"><strong>More room does not fix low-value content.</strong> Forty entries almost certainly hold five real rules, twenty restatements of them, and a few that now contradict each other. Cleaning up restores the signal and cuts the latency. A bigger window just makes the mess affordable.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(5)"><div class="pg-l">← Previous</div><div class="pg-t">Reflexion — what it is</div></button>
+    <button class="rt" onclick="go(7)"><div class="pg-l">Next slide →</div><div class="pg-t">Evaluator-Generator</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 7 · EVALUATOR-GENERATOR ================= -->
+<section class="slide" data-title="Evaluator-Generator">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">07</div>
+    <div>
+      <h2 class="stage-title">Way 3 · Evaluator-Generator — Separate Who Scores</h2>
+      <p class="stage-kicker">The cleanest way to build an automatic quality gate. One model writes, a different one scores against a list, and a third applies the changes. Nobody marks their own homework.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Writing and scoring are different jobs</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Writer<small>produces the draft</small></div><span class="arrow">→</span>
+        <div class="node am">Scorer<small>scores against the list</small></div><span class="arrow">→</span>
+        <div class="node em">Rewriter<small>applies the changes</small></div><span class="arrow">→</span>
+        <div class="node vi">Accepted<small>reached the pass mark</small></div>
+      </div>
+      <div class="dg-cap">The scorer never rewrites the text. It returns a score and instructions.</div>
+      <p class="readas"><strong>The one rule that makes this work:</strong> the scorer returns a <em>judgement</em>, never a rewrite. The moment your scorer starts handing back improved text, you have lost the score, the record, and the ability to compare version 2 against version 1.</p>
+    </div>
+
+    <h3>A scorer needs a list, not a feeling</h3>
+    <p>A list turns taste into checks. These five cover most writing work, and the lab uses a version of exactly this list.</p>
+    <div class="rub">
+      <div class="rubr"><div><div class="rb-t">Clarity</div><div class="rb-d">Can you understand it on one read?</div></div><div class="rb-s">1–10</div></div>
+      <div class="rubr"><div><div class="rb-t">Specificity</div><div class="rb-d">Does it give real details — names, numbers, dates — instead of categories?</div></div><div class="rb-s">1–10</div></div>
+      <div class="rubr"><div><div class="rb-t">Faithfulness</div><div class="rb-d">Does it avoid claims with nothing behind them? Can every statement be traced to the task or a source?</div></div><div class="rb-s">1–10</div></div>
+      <div class="rubr"><div><div class="rb-t">Audience fit</div><div class="rb-d">Do the tone and vocabulary match the reader you named?</div></div><div class="rb-s">1–10</div></div>
+      <div class="rubr"><div><div class="rb-t">Format</div><div class="rb-d">Does it follow the required structure, length and required parts?</div></div><div class="rb-s">1–10</div></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">How to test a check</span>
+      <p>A good check is one <strong>two people would score about the same</strong>. If you and a colleague would give the same draft a 4 and a 9, it is not a check. It is a preference, and the loop will swing back and forth around it forever.</p>
+    </div>
+
+    <h3>Structured output is what makes this automatic</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">What the scorer returns · JSON</span></div>
+      <pre><code>{
+  <span class="yml">"score"</span>: 7,
+  <span class="yml">"passed"</span>: <span class="kw">false</span>,
+  <span class="yml">"issues"</span>: [
+    <span class="str">"Opening is generic"</span>,
+    <span class="str">"No concrete workshop outcome"</span>,
+    <span class="str">"CTA is weak"</span>
+  ],
+  <span class="yml">"revision_instructions"</span>: <span class="str">"Add audience, outcome, date, and a clear CTA."</span>
+}</code></pre>
+    </div>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Field 1</div><div class="uc-t"><code>passed</code></div><div class="uc-d">The loop reads this and decides whether to stop. A true/false value is clear in a way "the draft seems good" never is.</div></div>
+      <div class="uc"><div class="uc-n">Field 2</div><div class="uc-t"><code>score</code></div><div class="uc-d">Lets you set a pass mark <em>and</em> compare rounds — which is how you spot a flat score or a drop.</div></div>
+      <div class="uc"><div class="uc-n">Field 3</div><div class="uc-t"><code>issues</code></div><div class="uc-d">Your record of what was wrong. Three weeks later you can explain why version 4 was the one that shipped.</div></div>
+      <div class="uc"><div class="uc-n">Field 4</div><div class="uc-t"><code>revision_instructions</code></div><div class="uc-d">This is literally the rewrite step's prompt. If this field is vague, the whole loop is for show.</div></div>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">A score you can actually use</span><span class="exn-s">product update · scored three times</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The draft</span><span class="sc-v">A three-paragraph product update telling existing customers about a new export feature.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">A score we can <strong>set a pass mark against</strong> — one that means the same thing tomorrow.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">Asking for a number on its own</span></div>
+        <pre class="wx-b"><code>Prompt:  Rate this announcement out of 10.
+
+Run 1:   8/10 — a solid, well-written update that explains the feature.
+Run 2:   6/10
+Run 3:   9/10</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Asking for a score per check, with evidence</span></div>
+        <pre class="wx-b"><code>Score each of these 1-10 and quote the phrase that justifies the score:
+  clarity · specificity · faithfulness · audience fit · format
+
+<span class="hl">The overall score is the lowest one</span>, not the average.
+Return JSON.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">What came back</span></div>
+        <pre class="wx-b"><code>clarity       9  "export to CSV or JSON"
+specificity   8  names both formats
+faithfulness  9  no claim goes beyond the changelog
+audience fit  8  assumes the reader knows the API, correct for this list
+format        4  no version number and no link to the docs,
+                 both of which are required
+
+overall 4 — held back by format</code></pre></div>
+      <div class="wx"><div class="wx-p">Two things worth copying. <strong>Quoting the evidence for each score</strong> forces the model to look at the text instead of its impression. <strong>Taking the lowest score instead of the average</strong> stops one bad area being hidden by four good ones.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>A number with nothing behind it moves around between runs. You cannot set a pass mark on it, and comparing it to the next version tells you nothing.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">Output your code can read</span><span class="exn-s">why the loop needs JSON</span></div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">Asking for an opinion</span></div>
+        <pre class="wx-b"><code>Prompt:  Evaluate the draft and tell me what you think.
+
+Reply:   Overall this is fairly good, maybe around a 7 or so, though the
+         ending could be stronger. I'd probably say it passes, but you
+         might want to look at the opening too.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Asking for a fixed shape</span></div>
+        <pre class="wx-b"><code>Return ONLY valid JSON in this shape:
+{
+  "score": a whole number from 1 to 10,
+  "passed": true or false,
+  "issues": [ {"criterion", "severity", "explanation",
+               "revision_instruction"} ],
+  "reflection_memory": "one lesson for next time"
+}
+severity must be one of: minor, major, blocking</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">What came back</span></div>
+        <pre class="wx-b"><code>{"score": 7, "passed": false,
+ "issues": [
+   {"criterion": "Call to action",
+    "severity": "major",
+    "explanation": "There is no next step for the reader.",
+    "revision_instruction": "End with 'Enable exports in
+       Settings -> Data' and link the docs page."}],
+ "reflection_memory": "Product updates must give the exact settings
+   path, not a description of where to look."}</code></pre></div>
+      <div class="wx"><div class="wx-p">Every field has a user. <code>passed</code> drives the loop. <code>severity</code> decides what blocks. <code>revision_instruction</code> becomes the rewrite prompt. <code>reflection_memory</code> carries to the next task. With the first version, your code has to <strong>pull a number out of an opinion with a regex</strong>.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Ask for JSON, set <code>temperature=0</code>, and <strong>check it against a schema before you trust it</strong>. The lab uses Pydantic, so a badly formed review is a caught error instead of a loop that is quietly wrong.</div></div>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">schemas.py · the shape, enforced in code</span></div>
+      <pre><code><span class="kw">class</span> CritiqueIssue(BaseModel):
+    criterion: <span class="kw">str</span> = Field(..., min_length=<span class="flg">2</span>)
+    severity: Severity                <span class="cmt"># minor | major | blocking</span>
+    explanation: <span class="kw">str</span> = Field(..., min_length=<span class="flg">10</span>)
+    revision_instruction: <span class="kw">str</span> = Field(..., min_length=<span class="flg">10</span>)
+
+<span class="kw">class</span> CritiqueResult(BaseModel):
+    score: <span class="kw">int</span> = Field(..., ge=<span class="flg">1</span>, le=<span class="flg">10</span>)
+    passed: <span class="kw">bool</span>
+    issues: <span class="kw">list</span>[CritiqueIssue] = Field(default_factory=<span class="kw">list</span>)
+    reflection_memory: <span class="kw">str</span> = Field(..., min_length=<span class="flg">10</span>)
+
+    <span class="flg">@field_validator</span>(<span class="str">"issues"</span>)
+    <span class="kw">def</span> limit_issues(cls, issues):
+        <span class="cmt"># keep the rewrite step focused on the things that matter most</span>
+        <span class="kw">return</span> issues[:<span class="flg">5</span>]</code></pre>
+    </div>
+    <div class="callout co-win"><span class="co-tag">Two useful guards</span>
+      <p><code>min_length=10</code> on <code>revision_instruction</code> makes "fix it" fail the check. Capping <code>issues</code> at five stops the scorer dumping twenty small complaints that the rewrite step then tries to apply all at once. <strong>The schema is doing quality control on the review itself, in code, for free.</strong></p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your scorer returns <code>{"score": 9, "passed": true}</code> for a draft that is missing a required legal disclaimer. What is the design fix?</div>
+      <button class="opt" onclick="qa(this,0)">Raise the pass mark to 10</button>
+      <button class="opt" onclick="qa(this,1)">Make the disclaimer a hard check your code enforces, not one of the scored items</button>
+      <button class="opt" onclick="qa(this,0)">Add "be stricter" to the scorer's prompt</button>
+      <div class="explain"><strong>Some things are not scored. They are required.</strong> Anything with a legal, safety or contractual consequence belongs in a hard check the application runs. The lab does exactly this: <code>passed = score >= pass mark AND there is no blocking issue</code>. The model can recommend. The code decides.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(6)"><div class="pg-l">← Previous</div><div class="pg-t">Reflexion — the memory</div></button>
+    <button class="rt" onclick="go(8)"><div class="pg-l">Next slide →</div><div class="pg-t">How a loop stops</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 8 · STOPPING RULES ================= -->
+<section class="slide" data-title="How a loop stops">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">08</div>
+    <div>
+      <h2 class="stage-title">How A Loop Stops — Because Polishing Never Ends</h2>
+      <p class="stage-kicker">A model asked to find problems will always find problems. Without a written stopping rule, a review loop is not a feature. It is a bill that arrives every month.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Four rules, and you want all four</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">Pass mark reached</div><div class="sd">Accept when the <strong>score is at or above your target</strong> and all required parts are present. The most common rule, and the one people get wrong — see the blocking-issue example below.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">Out of tries</div><div class="sd">Stop after <strong>2 or 3 rounds</strong> to control cost and waiting time. Almost all of the gain happens in round one. Round four is where the over-editing lives.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">No longer improving</div><div class="sd">Stop if the <strong>score or the number of problems stops getting better</strong>. A flat score means what is left is not a wording problem.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">Send it to a person</div><div class="sd">Hand it over when the risk is high — a blocking issue survived two rounds, the topic is legal, medical or financial, or the scorer itself is unsure.</div></div></div>
+    </div>
+    <div class="callout co-cost"><span class="co-tag">Four things move together</span>
+      <p>Loops need limits because <strong>quality, cost, waiting time and risk</strong> all move at once. Three rounds on a 900-word draft is about <strong>seven model calls</strong> and three times the wait of a single answer. That is fine for a launch email. It is not fine for autocomplete.</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">The loop that never ends</span><span class="exn-s">the real run from the lab, again</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Setup</span><span class="sc-v">Pass mark 8, limit of 3 rounds. The launch email from slide 3.</span></div>
+      <div class="sc-row"><span class="sc-k">What happened</span><span class="sc-v">The scores went <strong>3 → 7 → 7</strong>. The draft never passed.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">A loop with only one exit</span></div>
+        <pre class="wx-b"><code>while not critique.passed:
+    critique = critique_draft(draft)
+    draft     = refine_draft(draft, critique)</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">What it does with this task</span></div>
+        <pre class="wx-b"><code>round 1  score 3
+round 2  score 7
+round 3  score 7
+round 4  score 7
+round 5  score 6
+round 6  score 7
+...still running, still charging</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">A loop with three exits and a best-so-far</span></div>
+        <pre class="wx-b"><code>best, best_score, prev = draft, 0, 0
+
+for i in range(1, MAX_ROUNDS + 1):          <span class="hl"># exit 2: out of tries</span>
+    c = critique_draft(draft)
+    if c.score &gt; best_score:
+        best, best_score = draft, c.score   <span class="hl"># remember the best</span>
+    if c.passed:
+        break                               <span class="hl"># exit 1: passed</span>
+    if c.score &lt;= prev:
+        break                               <span class="hl"># exit 3: no longer improving</span>
+    prev  = c.score
+    draft = refine_draft(draft, c)
+
+return best, trace                          <span class="hl"># the best one, not the last</span></code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">4</span><span class="wx-t">What that does with the same task</span></div>
+        <pre class="wx-b"><code>round 1  score 3
+round 2  score 7   improved
+round 3  score 7   no gain, stop
+
+returned: the round-3 draft, score 7, marked for a human to finish,
+          plus the full record of what was tried</code></pre></div>
+      <div class="wx"><div class="wx-p">Three exits, a best-so-far rule, and an honest "did not pass" instead of an expensive pretence that it did.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Not passing is a fine outcome. <strong>Return the best draft, the score and the reason it failed.</strong> A person can finish it in thirty seconds. Looping until the model agrees with you buys a worse answer at a higher price.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">A high score hiding a serious problem</span><span class="exn-s">why the model must not own the stopping rule</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A generated health FAQ scores 9/10 on clarity, specificity, tone and format — and contains one sentence giving a medicine dosage.</span></div>
+      <div class="sc-row"><span class="sc-k">We want</span><span class="sc-v">That one problem to <strong>outrank the score</strong>, always.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">What the scorer returned</span></div>
+        <pre class="wx-b"><code>{"score": 9,
+ "passed": true,
+ "issues": [
+   {"criterion": "Safety",
+    "severity": "blocking",
+    "explanation": "States a specific dosage."}]}</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Code that trusts the model's own verdict</span></div>
+        <pre class="wx-b"><code>critique = json.loads(response)
+if critique["passed"]:
+    publish(draft)          # published, with the dosage in it</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">Code that works it out itself — the rule used in the lab</span></div>
+        <pre class="wx-b"><code>critique = CritiqueResult.model_validate(parse_json_object(raw))
+
+<span class="hl"># the model can recommend; the application decides.</span>
+blocking = any(i.severity == "blocking" for i in critique.issues)
+critique.passed = critique.score &gt;= pass_score and not blocking
+
+# score 9 with a blocking issue  ->  passed = False
+#                                ->  sent to a human, never published</code></pre></div>
+      <div class="wx"><div class="wx-p">The model said <code>passed: true</code> <strong>while reporting a blocking issue in the same object</strong>. It weighed its own high score above its own warning. Two lines of Python cannot be talked out of it.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">The rule</span><div><strong>The model recommends. The application decides.</strong> Anything with a consequence — publishing, sending, spending, refunding — is a decision your code makes using the model's input, never a decision the model makes that your code carries out.</div></div>
+
+    <h3>Picking your limits</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Task</th><th>Rounds</th><th>Pass mark</th><th>Send to a person when</th></tr>
+      <tr><td>Fixing a format or schema</td><td>2</td><td>Valid or not — no score needed</td><td>Still invalid after 2</td></tr>
+      <tr><td>Marketing or internal copy</td><td>2–3</td><td>8/10, no blocking issue</td><td>The score goes flat below the mark</td></tr>
+      <tr><td>A code change with tests</td><td>3–5</td><td>The tests pass</td><td>The same test fails 3 times</td></tr>
+      <tr><td>A reply to a customer</td><td>1–2</td><td>All 5 structure checks</td><td>Refunds, legal, or a complaint</td></tr>
+      <tr><td>Anything legal, medical or financial</td><td>1</td><td class="no">Never accept automatically</td><td>Always</td></tr>
+    </table>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">How loops end</div>
+      <ol>
+        <li>Four rules: <strong>pass mark, round limit, no more gain, send to a person</strong>. Build all four, not your favourite one.</li>
+        <li><strong>Keep the best-scoring draft, not the last one</strong>, and return the record with it.</li>
+        <li>A flat score is information, not a failure. It means what is left needs <strong>a fact or a person</strong>.</li>
+        <li>Blocking issues beat scores, and <strong>your code works out <code>passed</code> itself</strong> instead of trusting the model's own answer.</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your loop allows 3 rounds with a pass mark of 8. A draft scores 8 on round 1. How many model calls did that request cost?</div>
+      <button class="opt" onclick="qa(this,1)">Two — one to write, one to score. It passed, so there is no rewrite and no second score</button>
+      <button class="opt" onclick="qa(this,0)">Seven — the loop always runs all three rounds</button>
+      <button class="opt" onclick="qa(this,0)">Four — write, score, rewrite, score</button>
+      <div class="explain"><strong>A pass check that fires early is your main cost control.</strong> Check <code>passed</code> straight after the score and before the rewrite call. A surprising number of implementations rewrite first and check afterwards, paying for a rewrite of an already-good draft on every single request.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(7)"><div class="pg-l">← Previous</div><div class="pg-t">Evaluator-Generator</div></button>
+    <button class="rt" onclick="go(9)"><div class="pg-l">Next slide →</div><div class="pg-t">Principles-based review</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 9 · PRINCIPLES ================= -->
+<section class="slide" data-title="Principles-based review">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">09</div>
+    <div>
+      <h2 class="stage-title">Way 4 · Principles-Based Review</h2>
+      <p class="stage-kicker">A check list changes with every task. A short rule book does not. Four or five rules applied to everything your system produces will catch the failures a task check list was never looking for.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Instead of "make it better", the reviewer asks: does this follow our rules?</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Rule 1</div><div class="uc-t">Be accurate</div><div class="uc-d">Do not invent facts, and do not sound certain about things you cannot know.</div><div class="uc-w"><b>Catches</b>made-up statistics, "studies show", invented dates</div></div>
+      <div class="uc"><div class="uc-n">Rule 2</div><div class="uc-t">Be useful</div><div class="uc-d">Answer the task directly and concretely.</div><div class="uc-w"><b>Catches</b>hedging, warm-up paragraphs, five options when one was asked for</div></div>
+      <div class="uc"><div class="uc-n">Rule 3</div><div class="uc-t">Be safe</div><div class="uc-d">No harmful, illegal, or privacy-breaking advice.</div><div class="uc-w"><b>Catches</b>leaked personal data, dosages, advice you are not licensed to give</div></div>
+      <div class="uc"><div class="uc-n">Rule 4</div><div class="uc-t">Keep the format</div><div class="uc-d">Respect the structure and limits that were asked for.</div><div class="uc-w"><b>Catches</b>the rule the writer forgot halfway through</div></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">Classroom size, not legal size</span>
+      <p>Use a <strong>short rule book as your review criteria</strong>, not a long policy document. Five lines the model can hold in mind and you can check beat thirty clauses it will skim. The lab's <code>data/constitution.md</code> is five bullets, on purpose.</p>
+    </div>
+
+    <h3>Rules and check lists do different jobs</h3>
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>Rules</h5><div class="dsub">stable · same for every task</div>
+        <ul>
+          <li>The same five apply to the email, the summary and the itinerary</li>
+          <li>Written once, versioned, reviewed by a person</li>
+          <li>Catch <strong>whole categories</strong> of failure — safety, honesty, privacy</li>
+          <li>Rarely change, and when they do everything downstream changes</li>
+        </ul>
+      </div>
+      <div class="duo-col b">
+        <h5>Check lists</h5><div class="dsub">specific to one task · thrown away after</div>
+        <ul>
+          <li>"140–180 words, mention live classes, one next step"</li>
+          <li>Written per task, often by the person asking</li>
+          <li>Catch <strong>task</strong> failures — wrong length, missing part</li>
+          <li>Change constantly, and they should</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fix"><span class="fx-t">Together</span><div>Rules plus a check list give you <strong>a steadier review than either alone</strong>. The check list knows what this task needed. The rule book knows what your organisation will never send.</div></div>
+
+    <h3>The prompt</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">Reviewer with a rule book</span></div>
+      <pre><code>You are a reviewer.
+Check the draft against the task and against these rules:
+  1. Be accurate.
+  2. Be specific.
+  3. Do not make claims you cannot support.
+  4. Match the reader.
+  5. Keep the format that was asked for.
+
+Return JSON: score, <span class="yml">rule_breaks</span>, issues, revision_instructions.</code></pre>
+    </div>
+    <p>Notice the extra field. <code class="inl">rule_breaks</code> is kept separate from <code class="inl">issues</code> on purpose. A broken rule is not a quality problem to be weighed against other quality problems. It is a gate. Keeping it in its own field is what lets your code block on it without reading prose.</p>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">The check list passes it, the rule book stops it</span><span class="exn-s">numbers that came from nowhere</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">The draft</span><span class="sc-v"><em>"Our graduates typically see a 40% salary increase within six months, and 9 out of 10 report better job satisfaction."</em></span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">Scored against the task check list only</span></div>
+        <pre class="wx-b"><code>specific     yes — real numbers, not vague words
+concrete     yes
+audience fit yes
+next step    yes
+
+score 9, passed: true
+"Excellent specificity — the draft uses concrete figures."</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The same draft, with the rule book added</span></div>
+        <pre class="wx-b"><code>score 9
+rule_breaks: [
+  {"rule": "Be accurate",
+   "quote": "40% salary increase",
+   "why": "no source anywhere in the task; stated as established fact"},
+  {"rule": "Be accurate",
+   "quote": "9 out of 10 report",
+   "why": "there is no survey behind this"}]
+passed: false — blocked</code></pre></div>
+      <div class="wx"><div class="wx-p">Two invented statistics, caught by <strong>one rule the check list never contained</strong>. This is exactly the kind of failure that reaches real customers, because made-up numbers <em>score high</em> on specificity.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>A check list asks <em>how well</em> the task was followed. A rule book asks <strong>whether this should be sent at all</strong>. You need both questions.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">A privacy leak inside a genuinely helpful reply</span><span class="exn-s">support</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A customer asks why their delivery is late. The agent can read the courier's system.</span></div>
+    </div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The draft reply</span></div>
+        <pre class="wx-b"><code>"Your parcel is with driver Ravi Kumar (+91 98xxx xxx21), currently at
+12 MG Road delivering to A. Sharma before you."</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Scored on helpfulness only</span></div>
+        <pre class="wx-b"><code>score 10 — "outstandingly specific and transparent; the customer
+knows exactly what is happening"</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">Checked against the safety rule</span></div>
+        <pre class="wx-b"><code>rule_breaks: [
+  {"rule": "Be safe", "quote": "driver Ravi Kumar (+91 ...)",
+   "why": "an employee's name and phone number"},
+  {"rule": "Be safe", "quote": "delivering to A. Sharma",
+   "why": "another customer's name and address"}]
+
+Rewrite: "Your parcel is two stops away and should reach you by 6:40pm."</code></pre></div>
+      <div class="wx"><div class="wx-p">The rewrite is <strong>just as useful to this customer</strong> and leaks nothing. Privacy failures are rarely malicious. They are helpfulness with no gate on it.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>The most dangerous outputs are often the ones that <strong>score highest on quality</strong>. Any system touching real data needs a privacy rule that runs separately from the quality score.</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 3</span><span class="exn-t">A rule book that is too long to work</span><span class="exn-s">what happens when you paste in the policy document</span></div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">Thirty-one clauses</span></div>
+        <pre class="wx-b"><code>Prompt:  Check the draft against our AI Content Standards v4.2
+         (attached: 2,100 words, 31 clauses, 6 sections, plus
+         definitions and appendices).
+
+Reply:   "The draft complies with the AI Content Standards."
+
+Reality: clauses 4, 11 and 26 are broken. The reply names none of them.</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">Five clauses, each answered separately</span></div>
+        <pre class="wx-b"><code>For <span class="hl">each of these five rules</span>, return PASS or FAIL <span class="hl">and quote the text</span>
+that justifies your answer. <span class="hl">No quote counts as FAIL.</span>
+  1. accurate   2. specific   3. no unsupported claims
+  4. matches the reader       5. keeps the format</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">3</span><span class="wx-t">What came back</span></div>
+        <pre class="wx-b"><code>1 accurate            FAIL  "guaranteed placement"
+2 specific            PASS  "12 live sessions, 4 projects"
+3 unsupported claims  FAIL  "industry-leading outcomes"
+4 matches the reader  PASS  "if you already ship code for a living"
+5 keeps the format    PASS  163 words, within 140-180</code></pre></div>
+      <div class="wx"><div class="wx-p">Five checks, five quotes, and <strong>every answer can be checked by a person</strong>. If you really need 31 clauses, run several passes of five. Do not paste a policy document into a prompt: a "complies" you cannot audit is worse than no check, because it creates confidence you have not earned.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div><strong>Keep the rules short enough to remember and to check.</strong> Asking for a quote per rule is the cheapest possible defence against a model that skims and says "looks fine".</div></div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 4</span><span class="exn-t">The same rule book on four different outputs</span><span class="exn-s">why this pattern pays for itself</span></div>
+    <p>The point of rules is that you reuse them. Here is the same five-line rule book applied to four completely different outputs, each with its own task check list on top:</p>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Output</th><th>Task check list (changes)</th><th>Rule book (does not)</th><th>What the rule book caught</th></tr>
+      <tr><td>Launch email</td><td>140–180 words, one next step</td><td>accurate · specific · no unsupported claims · reader · format</td><td>"guaranteed placement"</td></tr>
+      <tr><td>Travel itinerary</td><td>realistic budget, times that work</td><td>the same five</td><td>A museum listed as open on a day it closes</td></tr>
+      <tr><td>Incident summary</td><td>5 bullets, no jargon</td><td>the same five</td><td>"the issue is fully resolved" — it was worked around, not fixed</td></tr>
+      <tr><td>Code review comment</td><td>seriousness, smallest patch</td><td>the same five</td><td>"this always causes a leak" — said with certainty it does not have</td></tr>
+    </table>
+    </div>
+    <div class="callout co-win"><span class="co-tag">Where this goes next</span>
+      <p>This is what makes rules worth the effort: <strong>write them once and apply them to every system you build afterwards.</strong> The travel itinerary in the next project uses this exact rule book with a new check list on top.</p>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">Principles-based review in four lines</div>
+      <ol>
+        <li>A <strong>rule book is stable and applies everywhere</strong>. A check list is specific and thrown away. Run both.</li>
+        <li>Keep broken rules in <strong>their own field</strong>. A broken rule is a gate, not a score.</li>
+        <li>Made-up numbers and privacy leaks <strong>score high on quality lists</strong>. Only a rule catches them.</li>
+        <li>Five rules with <strong>a required quote for each answer</strong> beat thirty clauses and a "complies".</li>
+      </ol>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Where should "never state a medicine dosage" live — in the task check list or the rule book?</div>
+      <button class="opt" onclick="qa(this,1)">The rule book — it applies to every output, whatever the task was</button>
+      <button class="opt" onclick="qa(this,0)">The check list, but only for medical content</button>
+      <button class="opt" onclick="qa(this,0)">Neither — the model already refuses this on its own</button>
+      <div class="explain"><strong>Rules with consequences must not depend on someone remembering to add them to today's check list.</strong> The whole value of a rule book is that it applies when nobody was thinking about it — including on the marketing email that unexpectedly wandered into health claims.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(8)"><div class="pg-l">← Previous</div><div class="pg-t">How a loop stops</div></button>
+    <button class="rt" onclick="go(10)"><div class="pg-l">Next slide →</div><div class="pg-t">AutoGen preview</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 10 · AUTOGEN ================= -->
+<section class="slide" data-title="AutoGen preview">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">10</div>
+    <div>
+      <h2 class="stage-title">AutoGen Preview — The Scorer As Its Own Agent</h2>
+      <p class="stage-kicker">AutoGen appears here only as a <em>shape</em>: one agent writes, another scores, and a controller decides. The details come later. What matters now is how you design the scorer's role.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Three parts, one loop</h3>
+    <div class="roles">
+      <div class="role gen"><div class="r-n">Agent 1</div><div class="r-t">Writer agent</div><div class="r-d">Gets the task. Writes the draft. Never sees the check list, so it cannot write to the test.</div><div class="r-c">in: the task<br>out: a draft</div></div>
+      <div class="role cri"><div class="r-n">Agent 2</div><div class="r-t">Scorer agent</div><div class="r-d">Gets the task and the draft. Scores it against the check list and the rules. Returns JSON only.</div><div class="r-c">in: task, draft, check list<br>out: score, problems</div></div>
+      <div class="role ref"><div class="r-n">Not an agent</div><div class="r-t">Controller</div><div class="r-d">Ordinary code. Sends it back for another round or accepts it. <strong>Owns the stopping rule.</strong></div><div class="r-c">in: score, problems<br>out: retry / accept / hand over</div></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">The one design decision that matters</span>
+      <p>The controller is <strong>not</strong> an agent. It is a loop in Python with a pass mark and a counter. Every time somebody makes the controller a model, the system loses its guarantee that it will stop. A model that can be talked into going again, will be.</p>
+    </div>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Task</div><span class="arrow">→</span>
+        <div class="node sky">Writer agent</div><span class="arrow">→</span>
+        <div class="node am">Scorer agent</div><span class="arrow">→</span>
+        <div class="node vi">Controller<small>plain code</small></div>
+      </div>
+      <div class="box-row" style="margin-top:14px">
+        <div class="mbox"><div class="mb-t">passed</div><div class="mb-d">accept, and return the draft with its record</div></div>
+        <div class="mbox"><div class="mb-t">not passed, rounds left</div><div class="mb-d">send the problems back to the writer as a rewrite task</div></div>
+        <div class="mbox"><div class="mb-t">blocked or out of rounds</div><div class="mb-d">hand the best draft so far to a person</div></div>
+      </div>
+      <p class="readas"><strong>In plain words:</strong> the two agents never talk to each other directly. Everything goes through the controller, which is what lets you print exactly why round 2 happened.</p>
+    </div>
+
+    <h3>The same scorer, wrapped as an AutoGen agent</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">autogen_evaluator_preview.py · from the lab</span></div>
+      <pre><code><span class="kw">from</span> autogen_agentchat.agents <span class="kw">import</span> AssistantAgent
+<span class="kw">from</span> autogen_ext.models.openai <span class="kw">import</span> OpenAIChatCompletionClient
+
+model_client = OpenAIChatCompletionClient(
+    model=os.getenv(<span class="str">"AUTOGEN_MODEL"</span>, <span class="str">"gpt-4o-mini"</span>),
+    temperature=<span class="flg">0</span>,
+    response_format={<span class="str">"type"</span>: <span class="str">"json_object"</span>},   <span class="cmt"># the fixed shape, again</span>
+)
+
+evaluator = AssistantAgent(
+    name=<span class="str">"writing_critic"</span>,
+    model_client=model_client,
+    system_message=(
+        <span class="str">"You are an evaluator agent. Return only JSON with score, summary, "</span>
+        <span class="str">"issues, and revision_instructions. Be strict, practical, and concise."</span>
+    ),
+)
+
+task = <span class="str">f"Brief:\n{brief}\n\nRubric:\n{rubric}\n\nPrinciples:\n{constitution}\n\nDraft:\n{draft}"</span>
+result = <span class="kw">await</span> evaluator.run(task=task)   <span class="cmt"># costs one extra model call</span></code></pre>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 1</span><span class="exn-t">What actually changed by making it an agent</span><span class="exn-s">worth being honest about</span></div>
+    <div class="duo">
+      <div class="duo-col a">
+        <h5>A function call</h5><div class="dsub">what you already built</div>
+        <ul>
+          <li>One API call with a review prompt</li>
+          <li>You control the temperature, the retries and the parsing</li>
+          <li>Easy to test, because it is just a function</li>
+          <li>No framework to learn</li>
+        </ul>
+      </div>
+      <div class="duo-col b">
+        <h5>An AssistantAgent</h5><div class="dsub">what the framework adds</div>
+        <ul>
+          <li>A <strong>named role</strong> other agents can address</li>
+          <li>Conversation history handled for you</li>
+          <li>Fits into group chats and handovers later</li>
+          <li>Same prompt, same cost, same output</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout co-cost"><span class="co-tag">Say this out loud in class</span>
+      <p>For a single scorer, <strong>the agent wrapper gives you nothing today</strong>. It starts to pay off when there are four roles, handovers between them, and shared state. Bringing in a framework before you have that problem is how projects collect complexity they never use.</p>
+    </div>
+
+    <div class="exn"><span class="exn-n">EXAMPLE 2</span><span class="exn-t">What happens when the writer can see the check list</span><span class="exn-s">one experiment, two outputs</span></div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The writer is told how it will be scored</span></div>
+        <pre class="wx-b"><code>Prompt: Write the email. You will be scored on clarity, specificity,
+        faithfulness, audience fit and format.
+
+Result: "This email is written clearly and specifically for working
+        professionals. Specifically, our programme offers specific,
+        practical outcomes tailored to your audience..."
+
+Score:  9/10</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The writer is told only the task</span></div>
+        <pre class="wx-b"><code>Writer prompt: Write the email for this task. [task only]
+Scorer prompt: [check list and rules — never shown to the writer]
+
+Result: "Twelve live Saturday sessions. You will build a retrieval
+        agent and deploy it. If you already ship code and want to add
+        GenAI to what you do, this is for you.
+        Register for the 14 September batch."
+
+Score:  8/10</code></pre></div>
+      <div class="wx"><div class="wx-p">The first one is a <strong>lower-quality email with a higher score</strong>, because the writer sprinkled the scoring words through the text and the scorer rewarded seeing them. Keeping the roles apart is not bureaucracy. It is what stops the writer aiming at the number instead of the reader.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Give the writer <strong>the task and the rules</strong>. Give the scorer <strong>the check list</strong>. Pass back <strong>instructions</strong>, not the check list itself. That one boundary is most of the value of this pattern.</div></div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">What to take from the preview</div>
+      <ol>
+        <li>The shape is <strong>writer agent, scorer agent, controller</strong> — and the controller is ordinary code.</li>
+        <li>Wrapping the scorer as an agent changes <strong>its address, not its behaviour</strong>. Same prompt, same cost.</li>
+        <li>Keep the <strong>check list away from the writer</strong>, or it will write to the test.</li>
+        <li>The AutoGen details come later. <strong>How you design the scorer's role is what carries over.</strong></li>
+      </ol>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(9)"><div class="pg-l">← Previous</div><div class="pg-t">Principles-based review</div></button>
+    <button class="rt" onclick="go(11)"><div class="pg-l">Next slide →</div><div class="pg-t">When reviewing makes it worse</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 11 · FAILURES ================= -->
+<section class="slide" data-title="When reviewing makes it worse">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">11</div>
+    <div>
+      <h2 class="stage-title">When Reviewing Makes Things Worse</h2>
+      <p class="stage-kicker">Six ways a review loop makes an output worse, more expensive, or falsely trustworthy — what each one looks like in a real run, and what to do about it.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="smells">
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>It agrees with itself</b>The model confirms its own wrong answer, and you read that as a check.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>It over-edits</b>A good answer gets longer, flatter and vaguer with every round.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>It polishes a made-up fact</b>A false claim gets tidied and formatted instead of removed.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>It plays the check list</b>The output ticks the visible boxes and misses the point.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>The cost creeps up</b>Rounds multiply the wait and the spend, quietly, on every request.</div></div>
+      <div class="smell"><span class="sm-x">✗</span><div class="sm-b"><b>It creates false comfort</b>"Reviewed by AI" makes a human reviewer skim what they used to read properly.</div></div>
+    </div>
+
+    <div class="exn"><span class="exn-n">FAILURE 3</span><span class="exn-t">Polishing something that is not true</span><span class="exn-s">the most dangerous one on this list</span></div>
+    <div class="scen">
+      <div class="sc-row"><span class="sc-k">Situation</span><span class="sc-v">A research summary says: "The 2024 Chen et al. study found a 34% reduction in latency." <strong>No such study exists.</strong></span></div>
+      <div class="sc-row"><span class="sc-k">What the loop does</span><span class="sc-v">Three rounds of review, all of them focused on "make the citations more precise".</span></div>
+    </div>
+    <div class="trace">
+      <div class="tr-head"><span class="tr-t">A false claim getting stronger with every round</span><span class="tr-badge fail">worse each time</span></div>
+      <div class="tr-line"><span class="tr-k k-th">Round 1</span><span class="tr-v">"The 2024 Chen et al. study found a 34% reduction in latency."</span></div>
+      <div class="tr-line dim"><span class="tr-k k-ob">Review</span><span class="tr-v">"The citation has no venue or page reference. Add full attribution so it is more credible."</span></div>
+      <div class="tr-line"><span class="tr-k k-th">Round 2</span><span class="tr-v">"Chen et al. (NeurIPS 2024, pp. 1142–1156) report a 34% median latency reduction."</span></div>
+      <div class="tr-line dim"><span class="tr-k k-ob">Review</span><span class="tr-v">"Much better. Consider adding the sample size to make it more rigorous."</span></div>
+      <div class="tr-line err"><span class="tr-k k-er">Round 3</span><span class="tr-v">"Chen et al. (NeurIPS 2024, pp. 1142–1156, n=847) report a 34% median latency reduction (p &lt; 0.01)."</span></div>
+      <div class="tr-line err"><span class="tr-k k-er">Result</span><span class="tr-v">Every round made the invented study <strong>more detailed, better formatted and easier to believe</strong>. The reviewer was improving the shape of the citation, and the shape is exactly what a made-up fact is missing.</span></div>
+      <div class="tr-line fin"><span class="tr-k k-an">What to do</span><span class="tr-v">A rule that says <strong>every factual claim has to point at a source you supplied</strong>, plus a search tool. If the source is not in the input, the claim is deleted, not improved.</span></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Reviewing improves <em>presentation</em>, and presentation is the only weakness a made-up fact has. <strong>With no outside check, a review loop is a machine for making false things look true.</strong></div></div>
+
+    <div class="exn"><span class="exn-n">FAILURE 4</span><span class="exn-t">Playing the check list</span><span class="exn-s">the score moves, the quality does not</span></div>
+    <div class="wex">
+      <div class="wx"><div class="wx-h"><span class="wx-n">1</span><span class="wx-t">The check says "every claim must be cited"</span></div>
+        <pre class="wx-b"><code>"Cloud costs are rising [1]. Teams are adopting FinOps [2]. This trend
+will continue [3].
+
+[1] Industry reports
+[2] Various analyses
+[3] Market observations"
+
+score 10/10 — every claim carries a citation</code></pre></div>
+      <div class="wx"><div class="wx-h"><span class="wx-n">2</span><span class="wx-t">The check says "every claim must point at a sentence in the input"</span></div>
+        <pre class="wx-b"><code>For each claim:
+  · quote the exact input sentence that supports it
+  · if there is no such sentence, delete the claim
+
+"Cloud costs rose 18% year on year (source doc, section 2, table 1)."
+[the other two claims were removed — nothing in the input supports them]
+
+score 7/10 — shorter, and everything in it is true</code></pre></div>
+      <div class="wx"><div class="wx-p">Three citations and zero sources in the first one, because the check was counting square brackets. The second check needs <strong>a pointer into the input</strong>, which formatting cannot fake. The score went down and the document got better.</div></div>
+    </div>
+    <div class="fix"><span class="fx-t">What to notice</span><div>Every check you write will be optimised. Write each one so that <strong>the cheapest way to pass it is to actually do the work</strong> — require a quote, a pointer, or a number that has to match another number.</div></div>
+
+    <div class="exn"><span class="exn-n">FAILURE 5</span><span class="exn-t">Cost creep, with the numbers</span><span class="exn-s">the one your finance team notices</span></div>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Setup</th><th>Model calls per request</th><th>Wait</th><th>Relative cost</th></tr>
+      <tr><td>Plain answer</td><td>1</td><td>about 2s</td><td>1×</td></tr>
+      <tr><td>Self-Refine, 1 round</td><td>3 <span class="mid">(write, review, rewrite)</span></td><td>about 6s</td><td>about 3×</td></tr>
+      <tr><td>Self-Refine, 3 rounds</td><td>7</td><td>about 14s</td><td>about 7×</td></tr>
+      <tr><td>Evaluator-Generator, 3 rounds plus a final check</td><td>8</td><td>about 17s</td><td>about 8×</td></tr>
+      <tr><td>Reflexion with a growing memory, on day 30</td><td>7</td><td>about 15s</td><td class="no">about 11× — the memory rides on every call</td></tr>
+    </table>
+    </div>
+    <div class="callout co-cost"><span class="co-tag">Do this before you ship a loop</span>
+      <p>Measure the <strong>plain version first</strong>. What does one well-written single call score on 20 real inputs? Surprisingly often, a better prompt gets you most of the loop's gain at one times the cost. A loop is an optimisation, and you cannot optimise what you never measured.</p>
+    </div>
+
+    <h3>What to do about each one</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Failure</th><th>What it looks like</th><th>What to do</th></tr>
+      <tr><td>Agrees with itself</td><td>"The reasoning is sound" on a wrong answer</td><td>Ask for a different route, use a separate scorer, or run a real check</td></tr>
+      <tr><td>Over-edits</td><td>Round 3 is longer and vaguer than round 1</td><td>Let the reviewer pass with zero problems; keep the best-scoring draft</td></tr>
+      <tr><td>Polishes a made-up fact</td><td>The fake citation grows a page number</td><td>Require a source for every claim; delete anything unsupported</td></tr>
+      <tr><td>Plays the check list</td><td>The scoring words appear in the output</td><td>Hide the check list from the writer; require quotes and pointers</td></tr>
+      <tr><td>Cost creep</td><td>The wait triples after launch</td><td>Round limits, early exit on pass, memory clean-up</td></tr>
+      <tr><td>False comfort</td><td>People stop reading what the reviewer approved</td><td>Show the record and the failed checks, not just "approved"</td></tr>
+    </table>
+    </div>
+    <div class="callout co-win"><span class="co-tag">One sentence to remember</span>
+      <p>Four things do most of the work: <strong>written check lists, outside evidence when facts are involved, a separate scorer, and hard stopping rules.</strong></p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your loop raised the average score from 6.2 to 8.4 across 200 requests. Users say the quality feels the same. What is most likely going on?</div>
+      <button class="opt" onclick="qa(this,1)">The check list is being played — the score measures something users do not care about</button>
+      <button class="opt" onclick="qa(this,0)">Users are bad at noticing improvements</button>
+      <button class="opt" onclick="qa(this,0)">The loop needs more rounds before the gains show</button>
+      <div class="explain"><strong>A score that moves while nothing else does is a broken score, not a broken user.</strong> Check three things: can the writer see the check list, can any item be satisfied by formatting alone, and are the things users actually complain about (wrong facts, wrong length, no next step) even on the list?</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(10)"><div class="pg-l">← Previous</div><div class="pg-t">AutoGen preview</div></button>
+    <button class="rt" onclick="go(12)"><div class="pg-l">Next slide →</div><div class="pg-t">Which one to use</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 12 · CHOOSING ================= -->
+<section class="slide" data-title="Which one to use">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">12</div>
+    <div>
+      <h2 class="stage-title">Which One To Use, And How They Stack</h2>
+      <p class="stage-kicker">In a real system these are not alternatives. Here is the decision table, what each one costs, and the order to add them in.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The decision table</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>What you are doing</th><th>Use this</th><th>Why</th></tr>
+      <tr><td>Improving a draft</td><td><span class="yes">Self-Refine</span></td><td>You can describe "good" in words, and rewrites are cheap</td></tr>
+      <tr><td>An agent retrying after it failed</td><td><span class="yes">Reflexion</span></td><td>The last failure should guide the next attempt</td></tr>
+      <tr><td>A quality gate in a pipeline</td><td><span class="yes">Evaluator-Generator</span></td><td>You need separate roles and a score your code can read</td></tr>
+      <tr><td>Safety or policy</td><td><span class="yes">Principles-based</span></td><td>The same rules should apply to every task</td></tr>
+    </table>
+    </div>
+    <div class="callout co-note"><span class="co-tag">The honest version</span>
+      <p>In real systems these are <strong>usually combined, not chosen once</strong>. A working content pipeline runs a scorer loop, judges with a check list <em>and</em> a rule book, and keeps a memory of failures it has seen before. The table tells you what to build <em>first</em>, not what you end up with.</p>
+    </div>
+
+    <h3>What each step costs</h3>
+    <div class="verdictbar">
+      <div class="vb use"><div class="vb-t">Cheapest useful thing</div><div class="vb-d"><strong>Self-Refine, one round, on formats and rules.</strong> Three calls, nothing new to build, and it catches the rule failures that embarrass you.</div></div>
+      <div class="vb cost"><div class="vb-t">The next step</div><div class="vb-d"><strong>A check list, a JSON shape and a pass mark.</strong> Same cost, but now you have a number, a record, and a stopping rule you can defend.</div></div>
+      <div class="vb skip"><div class="vb-t">Do not start here</div><div class="vb-d"><strong>Multi-agent frameworks and growing memories.</strong> Both are genuinely useful and genuinely expensive, and neither helps until you have measured the plain version.</div></div>
+    </div>
+
+    <h3>How they stack in a real system</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">Task</div><span class="arrow">→</span>
+        <div class="node sky">Writer<small>task and rules only</small></div><span class="arrow">→</span>
+        <div class="node am">Scorer<small>check list and rule book</small></div><span class="arrow">→</span>
+        <div class="node vi">Controller<small>pass mark, counter</small></div>
+      </div>
+      <div class="box-row" style="margin-top:14px">
+        <div class="mbox"><div class="mb-t">Layer 1 · Shape</div><div class="mb-d"><strong>Evaluator-Generator</strong> — who writes, who scores, who decides</div></div>
+        <div class="mbox"><div class="mb-t">Layer 2 · Checks</div><div class="mb-d">A <strong>check list</strong> per task plus a <strong>rule book</strong> for everything</div></div>
+        <div class="mbox"><div class="mb-t">Layer 3 · Rewrite</div><div class="mb-d"><strong>Self-Refine</strong> — the rewrite step applies the instructions and nothing else</div></div>
+        <div class="mbox"><div class="mb-t">Layer 4 · Learning</div><div class="mb-d"><strong>Reflexion</strong> — one lesson per failure, carried to the next task</div></div>
+      </div>
+      <p class="readas"><strong>In plain words:</strong> these are not four systems. They are four <em>layers</em> of one system — shape, checks, rewrite and learning — and you can add them one at a time, in that order, measuring after each one.</p>
+    </div>
+
+    <h3>Which one for the problem in front of you</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">Is the problem the wording, or a missing fact?</div><div class="sd">A missing fact → <strong>none of these help.</strong> Add a search or a tool call first, then review the result against what came back.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">Can you write down what "good" means in five checkable lines?</div><div class="sd">Yes → <strong>Self-Refine</strong> today. No → your first job is writing the check list. The loop is the easy part.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">Does the output get published, sent or charged without a person seeing it?</div><div class="sd">Yes → <strong>Evaluator-Generator with a pass mark your code enforces</strong>, plus a rule book. Never trust the writer's own opinion of its work.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">Does the same kind of mistake keep coming back on different tasks?</div><div class="sd">Yes → <strong>Reflexion</strong>. Store one rule per kind of mistake, clean up weekly, and check each rule changes an action.</div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="st">Would a bad output cost money, trust or safety?</div><div class="sd">Yes → <strong>hand it to a person instead of looping.</strong> A loop that cannot pass should give a human the best draft, the score, and the checks it failed.</div></div></div>
+    </div>
+
+    <h3>How this compares to the patterns from last session</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>Pattern</th><th>The question it answers</th><th>When it runs</th><th>Needs outside facts?</th></tr>
+      <tr><td>Chain of Thought</td><td>How do I work this out?</td><td>Before the answer</td><td class="no">No</td></tr>
+      <tr><td>Tree of Thought</td><td>Which option is best?</td><td>Before the answer</td><td class="mid">Only for the scoring</td></tr>
+      <tr><td>ReAct</td><td>What should I do next?</td><td>During the attempt</td><td class="yes">Yes — that is the point</td></tr>
+      <tr><td>Self-Refine</td><td>How do I improve this answer?</td><td>After the answer</td><td class="no">No</td></tr>
+      <tr><td>Reflexion</td><td>What did I learn from failing?</td><td>Between attempts</td><td class="yes">Yes — the feedback</td></tr>
+      <tr><td>Evaluator-Generator</td><td>Is this good enough to send?</td><td>After the answer, as a gate</td><td class="mid">The check list, plus facts if needed</td></tr>
+    </table>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Summary of this slide</div>
+      <div class="sb-s">Four ways, one order to add them in</div>
+      <ol>
+        <li><strong>Self-Refine</strong> for drafts, <strong>Reflexion</strong> for retries, <strong>Evaluator-Generator</strong> for gates, <strong>rules</strong> for policy.</li>
+        <li>They are <strong>layers, not alternatives</strong>: shape, then checks, then rewrite, then learning.</li>
+        <li>If the problem is a missing fact, <strong>fix that first</strong>. No loop produces evidence.</li>
+        <li>Add one layer at a time and <strong>measure against the plain single call</strong> after each one.</li>
+      </ol>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(11)"><div class="pg-l">← Previous</div><div class="pg-t">When reviewing makes it worse</div></button>
+    <button class="rt" onclick="go(13)"><div class="pg-l">Next slide →</div><div class="pg-t">The Writing Critic Agent</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 13 · THE PRACTICAL ================= -->
+<section class="slide" data-title="The Writing Critic Agent">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">13</div>
+    <div>
+      <h2 class="stage-title">The Practical — The Writing Critic Agent</h2>
+      <p class="stage-kicker">The theory becomes a small system you run today, and a part you reuse in the next project. Everything on this slide is in the <code class="inl">self_reflection_critique</code> folder.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The whole thing, end to end</h3>
+    <div class="diagram">
+      <div class="flow">
+        <div class="node">The task<small>job, reader, rules</small></div><span class="arrow">→</span>
+        <div class="node sky">Draft<small>the first answer</small></div><span class="arrow">→</span>
+        <div class="node am">Reviewer<small>check list and rules</small></div><span class="arrow">→</span>
+        <div class="node em">Rewriter<small>the new version</small></div><span class="arrow">→</span>
+        <div class="node vi">Record<small>scores and problems</small></div>
+      </div>
+      <div class="dg-cap">Five parts · one loop · every run leaves a record</div>
+      <p class="readas"><strong>Why the record matters as much as the output:</strong> the final draft answers "what did we send?". The record answers "why did we send this one?" — which is the question somebody asks three weeks later.</p>
+    </div>
+
+    <h3>What each file does</h3>
+    <div class="tblwrap">
+    <table class="cmp">
+      <tr><th>File</th><th>What it does</th><th>The idea behind it</th></tr>
+      <tr><td><code>prompts.py</code></td><td>Builds the write, review and rewrite prompts</td><td>One model, three jobs, three output shapes</td></tr>
+      <tr><td><code>schemas.py</code></td><td>Pydantic models for the review</td><td>Structured output you can check</td></tr>
+      <tr><td><code>critic_loop.py</code></td><td>write → review → rewrite → stop</td><td>Stopping rules owned by code</td></tr>
+      <tr><td><code>data/rubric.md</code></td><td>Five checks, pass mark 8/10</td><td>Task checks you can observe</td></tr>
+      <tr><td><code>data/constitution.md</code></td><td>Five rules for the reviewer</td><td>The same rules on every task</td></tr>
+      <tr><td><code>data/weak_draft.txt</code></td><td>A deliberately hype-filled draft</td><td>Something with real problems to find</td></tr>
+      <tr><td><code>autogen_evaluator_preview.py</code></td><td>The reviewer as an agent</td><td>Scorer role design, preview only</td></tr>
+      <tr><td><code>demo_outputs/</code></td><td>Final draft and <code>iteration_trace.json</code></td><td>The record</td></tr>
+    </table>
+    </div>
+
+    <h3>Running it</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">terminal</span></div>
+      <pre><code><span class="cmt"># from inside the self_reflection_critique folder</span>
+python -m venv .venv <span class="kw">&amp;&amp;</span> source .venv/bin/activate   <span class="cmt"># Windows: .venv\Scripts\activate</span>
+pip install -r requirements.txt
+cp .env.sample .env                              <span class="cmt"># then add your OPENAI_API_KEY</span>
+
+python main.py                                   <span class="cmt"># command line: prints the record</span>
+jupyter notebook notebook.ipynb                  <span class="cmt"># or the guided walkthrough</span></code></pre>
+    </div>
+    <div class="callout co-note"><span class="co-tag">No internet in the room?</span>
+      <p>Set <code>BIA_OFFLINE_DEMO=true</code> in <code>.env</code>. The loop runs on canned responses, so the structure, the record and the stopping rules are all still visible. Only the model calls are simulated.</p>
+    </div>
+
+    <h3>What a run looks like</h3>
+    <div class="trace">
+      <div class="tr-head"><span class="tr-t">python main.py · the record</span><span class="tr-badge fail">stopped: out of rounds</span></div>
+      <div class="tr-line err"><span class="tr-k k-er">Round 1</span><span class="tr-v">score=3/10 | passed=False
+Summary: fails on specificity and audience fit.
+Problems: [major] Audience fit · [major] Specificity · [minor] Rule following · [major] Evidence · [minor] Next step
+Lesson: "Match the tone and content to the reader's background and their doubt."</span></div>
+      <div class="tr-line"><span class="tr-k k-ob">Round 2</span><span class="tr-v">score=7/10 | passed=False
+Summary: well structured, but still vague and the next step is not clear.
+Problems: [major] Specificity · [major] Next step
+Lesson: "Be specific about the skills and tools the programme actually covers."</span></div>
+      <div class="tr-line"><span class="tr-k k-ob">Round 3</span><span class="tr-v">score=7/10 | passed=False
+Summary: names TensorFlow and PyTorch, but not what students build with them.
+Problems: [major] Specificity · [minor] Evidence</span></div>
+      <div class="tr-line fin"><span class="tr-k k-an">Outcome</span><span class="tr-v">3 → 7 → 7. It never reached 8. The loop stopped, saved <code>final_draft.txt</code> and <code>iteration_trace.json</code>, and left a person about thirty seconds of work: supply the one fact the model never had.</span></div>
+    </div>
+    <div class="callout co-win"><span class="co-tag">This is the lesson, not a bug</span>
+      <p>The demo does not end with a triumphant 10/10, and that is deliberate. <strong>The record shows exactly where wording-level improvement runs out</strong>, and it hands you a clear next step: add the missing fact, or give it to a person.</p>
+    </div>
+
+    <h3>Where this component goes next</h3>
+    <div class="ucs">
+      <div class="uc"><div class="uc-n">Next project</div><div class="uc-t">Travel itineraries</div><div class="uc-d">Same loop, new check list: is the budget realistic, is the order sensible, do the times work, is it personal, are the trade-offs explained?</div><div class="uc-w"><b>Reuse</b>the rule book, the schema, the stopping rules</div></div>
+      <div class="uc"><div class="uc-n">Later</div><div class="uc-t">Agent plans</div><div class="uc-d">Review a plan before it runs: are the steps in order, do the tools exist, what happens if step 3 fails?</div><div class="uc-w"><b>Reuse</b>the severity levels and blocking issues</div></div>
+      <div class="uc"><div class="uc-n">Later</div><div class="uc-t">Summaries and reports</div><div class="uc-d">Faithfulness becomes the top check: every claim points at the source document, or it goes.</div><div class="uc-w"><b>Reuse</b>the quote-the-evidence trick</div></div>
+      <div class="uc"><div class="uc-n">Anywhere</div><div class="uc-t">Your own team's work</div><div class="uc-d">Paste in your PR template, style guide or definition of done as the check list. You already have one.</div><div class="uc-w"><b>Reuse</b>all of it</div></div>
+    </div>
+
+    <h3>Things to try in the lab</h3>
+    <div class="steps">
+      <div class="step"><div class="sn">1</div><div><div class="st">Drop the pass mark to 7</div><div class="sd">The loop now passes on round 2. Compare that draft with the round-3 draft and decide whether the extra round was worth it.</div></div></div>
+      <div class="step"><div class="sn">2</div><div><div class="st">Delete the rule book and run it again</div><div class="sd">Watch which problems stop being found. The unsupported-claim ones usually go first.</div></div></div>
+      <div class="step"><div class="sn">3</div><div><div class="st">Show the check list to the writer</div><div class="sd">The scores go up. Then read the draft. That is check-list gaming, reproduced in one edit.</div></div></div>
+      <div class="step"><div class="sn">4</div><div><div class="st">Replace <code>reflection_memory</code> with the whole review</div><div class="sd">The token count per call climbs and the quality does not. That is memory bloat, on your own laptop.</div></div></div>
+      <div class="step"><div class="sn">5</div><div><div class="st">Add a blocking issue by hand</div><div class="sd">Set a severity to <code>blocking</code> in a fake review and confirm the loop refuses to pass even at score 10.</div></div></div>
+    </div>
+
+    <h3>Before you ship a review loop</h3>
+    <div class="smells good">
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>You measured the plain version</b>You know what one good single call scores on 20 real inputs.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>The checks can be observed</b>Two people scoring the same draft would land within a point or two.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>The reviewer returns instructions</b>Not just a score, not a paragraph — something the rewrite step can follow.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Your code decides <code>passed</code></b>Pass marks and blocking issues are worked out by the application, not trusted from JSON.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>There are three exits</b>Passed, out of rounds, no longer improving — plus a way to hand it to a person.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>The best draft wins</b>Not the last one. And the score that chose it is stored next to it.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Facts have sources</b>Anything factual is checked against something you fetched, not polished until it sounds sure.</div></div>
+      <div class="smell"><span class="sm-x">✓</span><div class="sm-b"><b>Every run leaves a record</b>Scores, problems and lessons, so a bad output three weeks from now can still be explained.</div></div>
+    </div>
+
+    <div class="sumbox">
+      <div class="sb-t">Key takeaways</div>
+      <div class="sb-s">Reviewing turns "make it better" into something you can build</div>
+      <ol>
+        <li><strong>A review needs checks.</strong> A vague review produces a vague rewrite, every time.</li>
+        <li><strong>Reflexion uses feedback and a short memory</strong> to improve the next try, with no change to the model itself.</li>
+        <li><strong>Evaluator-Generator is the cleanest quality gate</strong>, because separate roles and a readable score make the decision inspectable.</li>
+        <li><strong>A short rule book adds the checks nobody thought to write down</strong> — and catches the failures that score highest on quality.</li>
+        <li><strong>Every loop needs a stopping rule.</strong> Pass mark, round limit, flat score, hand it over — written down, and owned by your code.</li>
+      </ol>
+    </div>
+
+    <h3>Where these ideas come from</h3>
+    <ul>
+      <li>Shinn et al. — <em>Reflexion: Language Agents with Verbal Reinforcement Learning</em>, NeurIPS 2023.</li>
+      <li>Madaan et al. — <em>Self-Refine: Iterative Refinement with Self-Feedback</em>, NeurIPS 2023.</li>
+      <li>Bai et al. — <em>Constitutional AI: Harmlessness from AI Feedback</em>, Anthropic / arXiv 2022.</li>
+      <li>Microsoft AutoGen documentation — the multi-agent framework and AgentChat concepts.</li>
+      <li>BIA curriculum and design specification — session scope, visual system and classroom constraints.</li>
+    </ul>
+
+    <div class="callout co-note"><span class="co-tag">DoubtBusters · every Thursday</span>
+      <p>Submit specific doubts through the DoubtBuster section of Campus Connect, then attend the Thursday session for your region. <strong>Specific questions get answered; whole-topic requests do not</strong> — "my reviewer gives 7/10 to every draft including the good ones" is answerable. "I don't understand reflection" is a conversation for your Campus Coordinator or a support ticket.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(12)"><div class="pg-l">← Previous</div><div class="pg-t">Which one to use</div></button>
+    <button class="rt" onclick="go(0)"><div class="pg-l">Back to →</div><div class="pg-t">Session overview</div></button>
+  </div>
+</div></div>
+</section>
+
+<div class="foot">Prompt Engineering &amp; Autonomous Reasoning · Generative &amp; Agentic AI Development · Boston Institute of Analytics</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+
+/* build dropdown */
+const menu=document.getElementById('dropMenu');
+menu.innerHTML='<div class="part">Session</div>'+slides.map((s,i)=>
+  `<a data-i="${i}" onclick="go(${i});return false;"><span class="dn">${i===0?'··':String(i).padStart(2,'0')}</span><span class="dt">${s.dataset.title}</span></a>`
+).join('');
+
+function go(i){
+  if(i<0||i>=slides.length)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  [...menu.querySelectorAll('a')].forEach(a=>a.classList.toggle('cur',+a.dataset.i===i));
+  document.getElementById('btnPrev').classList.toggle('disabled',i===0);
+  document.getElementById('btnNext').classList.toggle('disabled',i===slides.length-1);
+  document.getElementById('railFill').style.width=((i)/(slides.length-1)*100)+'%';
+  drop.classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* dropdown toggle */
+const drop=document.getElementById('chDrop');
+document.getElementById('chDropBtn').onclick=e=>{e.stopPropagation();drop.classList.toggle('open');};
+document.addEventListener('click',()=>drop.classList.remove('open'));
+
+/* keyboard */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+
+/* quiz */
+function qa(btn,correct){
+  const box=btn.closest('.quiz');
+  box.querySelectorAll('.opt').forEach(o=>o.disabled=true);
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    box.querySelectorAll('.opt').forEach(o=>{
+      if(o.getAttribute('onclick').includes(',1)'))o.classList.add('correct');
+    });
+  }
+  box.querySelector('.explain').classList.add('show');
+}
+
+go(0);
+</script>
+
+</body></html>

@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<!-- Practical companion deck: the self_reflection_critique project, file by file. -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Critic Loop, In Code — Self-Reflection &amp; Critique Practical</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--teal:#2dd4bf;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#10b981;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 14% 48%, rgba(16,185,129,.08), transparent 26%),radial-gradient(circle at 86% 26%, rgba(14,165,233,.07), transparent 26%);background-attachment:fixed;}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* ===== top site nav ===== */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--accent)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#c9f5e2;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:400px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--accent);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--emerald),var(--sky));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(42px,7.6vw,88px);margin-bottom:28px;background:linear-gradient(135deg,var(--emerald),var(--teal),var(--sky));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:900px;color:var(--ink-dim);margin-bottom:48px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:64px 0 84px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:36px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:60px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:870px}
+
+/* body */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:960px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(16,185,129,.13);border:1px solid rgba(16,185,129,.24);border-radius:4px;padding:2px 6px;color:#a8ecd0}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.callout ul{margin:8px 0 0}
+.callout li{font-size:15px}
+.callout code{font-family:'JetBrains Mono',monospace;font-size:13px;color:#a8ecd0}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+.co-say{background:rgba(139,92,246,.07);border-color:rgba(139,92,246,.3)}.co-say .co-tag{color:var(--violet)}
+
+/* ===== code block — the workhorse of this deck ===== */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:16px 0 20px;overflow:hidden}
+.codeblock.key{border-color:rgba(16,185,129,.34);box-shadow:0 0 0 1px rgba(16,185,129,.1)}
+.codeblock .cb-head{display:flex;align-items:center;gap:12px;padding:9px 14px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.015)}
+.codeblock .cb-title{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.1em;color:#a8ecd0}
+.codeblock .cb-ln{font:400 10.5px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);margin-left:auto}
+.codeblock pre{margin:0;padding:16px 18px;overflow-x:auto}
+.codeblock code{font-family:'JetBrains Mono',monospace;font-size:12.8px;line-height:1.72;color:#cfd3e0;white-space:pre;display:block}
+.cmt{color:#6a6a85}.kw{color:#a5b4fc}.str{color:#7fd4a0}.flg{color:#7cc5f0}
+.cb-note{padding:12px 16px;border-top:1px dashed var(--card-border);background:rgba(16,185,129,.045);font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.cb-note b{color:var(--ink);font-weight:600}
+.cb-note i{font-style:normal;font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--emerald);margin-right:8px}
+
+/* plain text file block (data/*.txt and *.md) */
+.fileblock{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:8px;margin:16px 0 20px;overflow:hidden}
+.fileblock.brief{border-top:3px solid var(--sky)}
+.fileblock.weak{border-top:3px solid var(--rose)}
+.fileblock.rub{border-top:3px solid var(--amber)}
+.fileblock.con{border-top:3px solid var(--violet)}
+.fileblock .fb-head{display:flex;align-items:center;gap:10px;padding:11px 15px;border-bottom:1px solid var(--card-border)}
+.fileblock .fb-name{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--ink)}
+.fileblock .fb-role{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right}
+.fileblock pre{margin:0;padding:15px 17px;overflow-x:auto}
+.fileblock code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap;display:block}
+
+/* terminal output */
+.term{background:#08080d;border:1px solid var(--card-border);border-radius:8px;margin:16px 0 20px;overflow:hidden}
+.term .t-head{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.02)}
+.term .t-dot{width:9px;height:9px;border-radius:50%;background:#2b2b38;flex:0 0 auto}
+.term .t-dot.r{background:rgba(244,63,94,.5)}.term .t-dot.a{background:rgba(245,158,11,.5)}.term .t-dot.g{background:rgba(16,185,129,.5)}
+.term .t-title{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-left:6px}
+.term pre{margin:0;padding:15px 18px;overflow-x:auto}
+.term code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.75;color:#b9bdcc;white-space:pre;display:block}
+.term .ok{color:#7fd4a0}.term .warn{color:#f0c078}.term .err{color:#ff9aab}.term .dim{color:#5f5a72}.term .cmd{color:#a8ecd0;font-weight:700}
+
+/* the one-line "what this earns you" strip */
+.fix{display:flex;gap:11px;align-items:flex-start;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.26);border-radius:7px;padding:12px 15px;margin:0 0 26px;font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.fix .fx-t{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--emerald);flex:0 0 auto;padding-top:3px}
+.fix strong{color:var(--ink);font-weight:600}
+
+/* concept / nav cards */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--emerald);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--sky)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--emerald);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--sky)}
+
+/* table */
+.cmp{width:100%;border-collapse:collapse;margin:20px 0;font-size:14.5px}
+.cmp th,.cmp td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--card-border);vertical-align:top}
+.cmp th{font:700 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+.cmp td{color:var(--ink-dim);font-weight:300}
+.cmp td:first-child{color:var(--ink);font-weight:500}
+.cmp tr:hover td{background:rgba(255,255,255,.02)}
+.cmp code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#a8ecd0}
+.yes{color:var(--emerald);font-weight:600}.no{color:var(--rose);font-weight:600}
+
+/* diagram */
+.diagram{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:26px 22px;margin:22px 0}
+.diagram .dg-cap{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);text-align:center;margin-top:16px}
+.flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px}
+.node{background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;padding:11px 15px;font:600 13px 'Inter Tight',sans-serif;color:var(--ink);text-align:center;min-width:96px}
+.node small{display:block;font-weight:300;font-size:11.5px;color:var(--ink-faint);margin-top:2px}
+.node.sky{background:rgba(14,165,233,.13);border-color:rgba(14,165,233,.34)}
+.node.em{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.32)}
+.node.am{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.32)}
+.node.ro{background:rgba(244,63,94,.13);border-color:rgba(244,63,94,.36)}
+.node.vi{background:rgba(139,92,246,.13);border-color:rgba(139,92,246,.34)}
+.arrow{color:var(--ink-faint);font-size:18px}
+.box-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.mbox{flex:1;min-width:150px;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:8px;padding:14px;text-align:center}
+.mbox .mb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.mbox .mb-d{font-size:13px;color:var(--ink-dim);font-weight:300}
+
+/* role strip: generator / critic / refiner */
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.role{background:rgba(13,13,20,.65);border:1px solid var(--card-border);border-radius:9px;padding:17px 19px;border-top:3px solid var(--ink-faint)}
+.role.gen{border-top-color:var(--sky)}.role.cri{border-top-color:var(--amber)}.role.ref{border-top-color:var(--emerald)}
+.role .r-n{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;margin-bottom:7px}
+.role.gen .r-n{color:var(--sky)}.role.cri .r-n{color:var(--amber)}.role.ref .r-n{color:var(--emerald)}
+.role .r-t{font-size:16px;color:var(--ink);font-weight:600;margin-bottom:6px;line-height:1.3}
+.role .r-d{font-size:14px;color:var(--ink-dim);font-weight:300;line-height:1.58}
+.role .r-c{margin-top:9px;padding-top:9px;border-top:1px dashed var(--card-border);font:400 12px 'JetBrains Mono',monospace;color:var(--ink-faint);line-height:1.5}
+
+/* file map */
+.fmap{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin:20px 0}
+.fm{display:flex;gap:13px;background:rgba(13,13,20,.66);border:1px solid var(--card-border);border-radius:8px;padding:15px 17px;align-items:flex-start}
+.fm .fm-i{font:700 12px 'JetBrains Mono',monospace;color:var(--emerald);flex:0 0 auto;padding-top:2px}
+.fm .fm-n{font:700 13px 'JetBrains Mono',monospace;color:var(--ink);margin-bottom:4px}
+.fm .fm-d{font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+.fm.dim{opacity:.62}
+
+/* numbered teaching steps */
+.steps{margin:20px 0}
+.step{display:grid;grid-template-columns:34px 1fr;gap:16px;padding:16px 0;border-bottom:1px solid var(--card-border)}
+.step:last-child{border-bottom:none}
+.step .sn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:#fff;background:color-mix(in srgb,var(--accent) 40%,transparent);border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.step .st{font-size:16.5px;color:var(--ink);font-weight:600;margin-bottom:6px}
+.step .sd{font-size:15px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.step .codeblock,.step .term{margin:12px 0 0}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:22px 0}
+.quiz .q{font-size:16.5px;color:var(--ink);font-weight:500;margin-bottom:14px}
+.quiz .q code{font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#a8ecd0}
+.quiz .opt{display:block;width:100%;text-align:left;background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:7px;padding:12px 16px;margin-bottom:9px;color:var(--ink-dim);font-size:15px;cursor:pointer;transition:all .15s;font-family:'Inter Tight',sans-serif}
+.quiz .opt:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.quiz .opt.correct{border-color:var(--emerald);background:rgba(16,185,129,.12);color:var(--ink)}
+.quiz .opt.wrong{border-color:var(--rose);background:rgba(244,63,94,.1)}
+.quiz .explain{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.6;margin-top:10px;padding-top:12px;border-top:1px solid var(--card-border);display:none}
+.quiz .explain.show{display:block}.quiz .explain strong{color:var(--ink)}
+
+.foot{padding:50px 0 80px;text-align:center;border-top:1px solid var(--card-border);color:var(--ink-faint);font-size:14px}
+
+/* bottom slide pager */
+.pager{display:flex;justify-content:space-between;gap:12px;padding:26px 0 70px}
+.pager button{flex:1;max-width:340px;text-align:left;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;padding:16px 20px;cursor:pointer;transition:all .18s;font-family:'Inter Tight',sans-serif}
+.pager button:hover{background:rgba(255,255,255,.05);border-color:var(--accent);transform:translateY(-2px)}
+.pager button.rt{text-align:right}
+.pager .pg-l{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+.pager .pg-t{font-family:'Fraunces',serif;font-weight:800;font-size:17px;letter-spacing:-.02em;color:var(--ink);line-height:1.2}
+.pager button:disabled{opacity:.25;pointer-events:none}
+
+@media(max-width:900px){
+  .stats,.code-cards,.roles,.fmap{grid-template-columns:1fr}
+  .stage-header,.body-wrap{grid-template-columns:1fr}
+  .dropmenu{min-width:280px}
+  .nav-prevnext{display:none}
+  .cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}
+  .pager{flex-direction:column}.pager button{max-width:none}
+  .codeblock code,.fileblock code,.term code{font-size:11.6px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body style="--accent:var(--emerald)">
+
+<nav class="sitenav">
+  <div class="sitenav-inner">
+    <a class="home-link" href="index.html" title="Back to all decks">← Home</a>
+    <a class="brand" href="#" onclick="go(0);return false;">The critic loop, <em>in code</em></a>
+    <div class="dropdown" id="chDrop">
+      <button class="dropbtn" id="chDropBtn">Slides <span class="chev">▾</span></button>
+      <div class="dropmenu" id="dropMenu"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-prevnext">
+      <button id="btnPrev" onclick="go(cur-1)">← Prev</button>
+      <button id="btnNext" onclick="go(cur+1)">Next →</button>
+    </div>
+  </div>
+  <div class="rail"><div class="rail-fill" id="railFill"></div></div>
+</nav>
+
+<!-- ================= SLIDE 0 · TITLE ================= -->
+<section class="slide active" data-title="Session overview">
+<div class="hero"><div class="container">
+  <div class="stage-num">Generative &amp; Agentic AI Development · Self-Reflection &amp; Critique · the practical</div>
+  <h1 class="display">The Critic Loop,<br><em>In Code</em></h1>
+  <p class="sub">The companion deck to the theory session. Every file in <code class="inl">self_reflection_critique/</code>, in the order you should meet them, with the real source on the slide. We start from a draft that looks fine and end with a program that scores its own work, writes down what it learned, rewrites, and knows when to stop.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">4</div><div class="label">Data files, no code</div></div>
+    <div class="stat"><div class="num">5</div><div class="label">Python modules</div></div>
+    <div class="stat"><div class="num">3</div><div class="label">Roles: generate · critique · refine</div></div>
+    <div class="stat"><div class="num">1</div><div class="label">Stopping rule, owned by code</div></div>
+  </div>
+</div></div>
+<div class="container">
+  <div class="prose" style="padding-bottom:20px">
+    <h3>The route through the project</h3>
+    <div class="code-cards">
+      <div class="code-card" onclick="go(1)"><span class="cc-ico">01</span><div><div class="cc-t">The draft that looks fine</div><div class="cc-s">weak_draft · writing_brief</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(2)"><span class="cc-ico">02</span><div><div class="cc-t">Turning taste into criteria</div><div class="cc-s">rubric · constitution</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(3)"><span class="cc-ico">03</span><div><div class="cc-t">How the five files fit</div><div class="cc-s">The architecture</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(4)"><span class="cc-ico">04</span><div><div class="cc-t">schemas.py</div><div class="cc-s">The shape of a critique</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(5)"><span class="cc-ico">05</span><div><div class="cc-t">prompts.py</div><div class="cc-s">Three roles, three prompts</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(6)"><span class="cc-ico">06</span><div><div class="cc-t">llm_client.py</div><div class="cc-s">The plumbing and JSON mode</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(7)"><span class="cc-ico">07</span><div><div class="cc-t">critic_loop.py — part one</div><div class="cc-s">Critique and refine</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(8)"><span class="cc-ico">08</span><div><div class="cc-t">critic_loop.py — part two</div><div class="cc-s">The loop and the stopping rule</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(9)"><span class="cc-ico">09</span><div><div class="cc-t">main.py</div><div class="cc-s">All of it, in fifteen lines</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(10)"><span class="cc-ico">10</span><div><div class="cc-t">Now run it</div><div class="cc-s">Real output, and what to watch</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(11)"><span class="cc-ico">11</span><div><div class="cc-t">The AutoGen preview</div><div class="cc-s">Optional · the same role, wrapped</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(12)"><span class="cc-ico">12</span><div><div class="cc-t">What to take away</div><div class="cc-s">And where it goes next</div></div><span class="cc-go">Open</span></div>
+    </div>
+    <div class="callout co-note"><span class="co-tag">How this deck is meant to be used</span>
+      <p>Slides 1–3 have <strong>no code</strong> — they set up the problem so the code has something to answer. Slides 4–9 are the project itself, in dependency order: the data shape first, then the prompts, then the plumbing, then the loop that uses all three. Slide 10 is where you leave the deck and run it.</p>
+      <p>Every code block on the following slides is the <strong>real file</strong>, not a simplified version. The filename and line numbers are in the block header so you can open the same lines in the editor beside you.</p>
+    </div>
+  </div>
+  <div class="pager">
+    <button disabled><div class="pg-l">← Previous</div><div class="pg-t">Start of deck</div></button>
+    <button class="rt" onclick="go(1)"><div class="pg-l">Next slide →</div><div class="pg-t">The draft that looks fine</div></button>
+  </div>
+</div>
+</section>
+
+<!-- ================= SLIDE 1 ================= -->
+<section class="slide" data-title="The draft that looks fine">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">01</div>
+    <div>
+      <h2 class="stage-title">Start With A Draft Nobody Would Reject</h2>
+      <p class="stage-kicker">Before any model scores anything, the room has to agree the draft is weak. If the class only believes it is weak because an LLM said 3/10, we have taught the wrong lesson.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>This is the text the project starts from. Read it out loud. It is grammatical, it is polite, it is on topic, and it would survive most review meetings.</p>
+
+    <div class="fileblock weak">
+      <div class="fb-head"><span class="fb-name">data/weak_draft.txt</span><span class="fb-role">the input · deliberately mediocre</span></div>
+      <pre><code>Hi everyone,
+
+AI is changing the world and you should learn it as soon as possible. Our course will make you skilled in all AI tools and help you get better opportunities. You will study Generative AI and Agentic AI with experienced trainers and projects. This is a great chance to upgrade yourself.
+
+Join now to become future ready.</code></pre>
+    </div>
+
+    <p>Now the brief it was supposed to satisfy. The gap between these two files is the entire motivation for the session.</p>
+
+    <div class="fileblock brief">
+      <div class="fb-head"><span class="fb-name">data/writing_brief.txt</span><span class="fb-role">the task · what "good" was supposed to mean</span></div>
+      <pre><code>Write a short launch email for working professionals who are considering a live weekend program in Generative AI and Agentic AI Development.
+
+Audience:
+- Software engineers, data analysts, DevOps professionals, and tech managers
+- They are busy, skeptical of hype, and want proof that the program is practical
+
+Constraints:
+- 140–180 words
+- Warm but professional tone
+- Mention live expert-led classes, hands-on projects, and career relevance
+- Do not make unrealistic salary promises
+- End with one clear call to action</code></pre>
+    </div>
+
+    <div class="fix"><span class="fx-t">Ask the room</span><div>"What is wrong with this answer, even though it sounds acceptable?" Collect answers <strong>before</strong> showing the brief, then again after. The second list is always sharper — that is the effect a rubric will have on the model, demonstrated on humans first.</div></div>
+
+    <h3>What the class will name, and what it maps to</h3>
+    <p>You will get most of these without prompting. Write them on the board, because in two slides they turn into rubric criteria and in four slides they turn into JSON fields.</p>
+
+    <table class="cmp">
+      <tr><th>What someone says</th><th>What it is really about</th><th>Becomes</th></tr>
+      <tr><td>"It could be about any course"</td><td>No concrete program detail</td><td><code>Specificity</code></td></tr>
+      <tr><td>"Better opportunities — says who?"</td><td>An unsupported promise</td><td><code>Evidence quality</code></td></tr>
+      <tr><td>"It talks down to them"</td><td>Wrong register for senior people</td><td><code>Audience fit</code></td></tr>
+      <tr><td>"It is way too short"</td><td>The brief asked for 140–180 words</td><td><code>Constraint following</code></td></tr>
+      <tr><td>"Join now — join what?"</td><td>No specific next action</td><td><code>Call to action</code></td></tr>
+    </table>
+
+    <div class="callout co-say"><span class="co-tag">Say this out loud</span>
+      <p>"Every one of you just did in ten seconds what we are about to spend an hour teaching a program to do. You held the draft against a standard, named what was missing, and said what to change. <strong>That is the whole loop.</strong> The rest is making it repeatable at 3am without you."</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Why does the practical hand you a weak draft instead of generating the first draft from the brief?</div>
+      <button class="opt" onclick="qa(this,1)">So every run starts from the same known input and the improvement is visible and comparable</button>
+      <button class="opt" onclick="qa(this,0)">Because generating a first draft is too expensive</button>
+      <button class="opt" onclick="qa(this,0)">Because the model cannot write a first draft</button>
+      <div class="explain"><strong>A fixed starting point makes the loop legible.</strong> If the first draft were generated fresh each run, the class could never tell whether the second version is better because the critique worked or because the generator got lucky. The project can still generate a draft — <code>generate_first_draft()</code> exists and you will see it on slide 7 — but the demo deliberately does not use it.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(0)"><div class="pg-l">← Previous</div><div class="pg-t">Session overview</div></button>
+    <button class="rt" onclick="go(2)"><div class="pg-l">Next slide →</div><div class="pg-t">Turning taste into criteria</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 2 ================= -->
+<section class="slide" data-title="Turning taste into criteria">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">02</div>
+    <div>
+      <h2 class="stage-title">Two Files That Make Critique Possible</h2>
+      <p class="stage-kicker">"Make it better" is not an instruction, it is a wish. These two files are what turn a vague opinion into a score you can threshold on and an instruction the next call can act on.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>The rubric answers <strong>what are we measuring</strong>. Five named criteria, one scale. Notice that each line is something you could argue about with evidence — not "is it good".</p>
+
+    <div class="fileblock rub">
+      <div class="fb-head"><span class="fb-name">data/rubric.md</span><span class="fb-role">what to measure</span></div>
+      <pre><code># Writing Quality Rubric
+
+Score each draft from 1 to 10 using these criteria:
+
+1. Audience fit — speaks to working professionals without hype.
+2. Specificity — includes concrete program benefits, not vague claims.
+3. Constraint following — respects word count, tone, and required elements.
+4. Evidence quality — avoids unsupported promises or unrealistic outcomes.
+5. Call to action — ends with one clear, practical next step.
+
+Passing threshold for the classroom demo: 8/10.</code></pre>
+    </div>
+
+    <p>The constitution answers a different question: <strong>how should the critic behave</strong> while it measures. A rubric without principles produces a critic that is technically correct and useless — it will happily invent a salary statistic to satisfy "evidence quality".</p>
+
+    <div class="fileblock con">
+      <div class="fb-head"><span class="fb-name">data/constitution.md</span><span class="fb-role">how to judge · the guardrails</span></div>
+      <pre><code># Principles for the Critic
+
+Use these principles while judging and improving the draft:
+
+- Be accurate: do not invent guarantees, rankings, salaries, placements, or outcomes.
+- Be specific: prefer concrete benefits over generic enthusiasm.
+- Be audience-aware: working professionals have limited time and low tolerance for hype.
+- Be concise: every sentence should move the reader toward a decision.
+- Be useful: critique should produce revision instructions, not vague opinions.</code></pre>
+    </div>
+
+    <div class="fix"><span class="fx-t">The distinction</span><div>The rubric is the <strong>scorecard</strong>. The constitution is the <strong>conduct rules for the judge</strong>. Both go into the critic prompt on slide 5, in separate labelled sections, and you will see exactly where.</div></div>
+
+    <h3>Why the last constitution line is the load-bearing one</h3>
+    <p>Read it again: <em>"Be useful: critique should produce revision instructions, not vague opinions."</em> That single line is what makes the loop mechanical rather than decorative. A critique that says "the tone is off" ends the conversation. A critique that says "replace the opening line with a specific benefit" is <strong>an input to the next function call</strong>.</p>
+
+    <div class="box-row">
+      <div class="mbox"><div class="mb-t">No rubric</div><div class="mb-d">"Make this better." <em>Model guesses what better means. Different guess every run.</em></div></div>
+      <div class="mbox"><div class="mb-t">Rubric only</div><div class="mb-d">"Score against five criteria." <em>Consistent scores, but the critic may invent facts to justify them.</em></div></div>
+      <div class="mbox"><div class="mb-t">Rubric + constitution</div><div class="mb-d">"Score against five criteria, honestly, and tell me what to change." <em>Scoreable and actionable.</em></div></div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">The trap to name now</span>
+      <p>A score is only ever as good as its rubric. <strong>An 8/10 does not mean the draft is true</strong> — it means the draft satisfied five criteria that a human wrote down, as judged by a model that cannot check facts. When correctness matters, the feedback has to come from something outside the model: a test suite, a validator, a retrieval step, a person.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Your critic keeps praising drafts that quietly invent statistics. The rubric already has an "Evidence quality" line. What is the most direct fix?</div>
+      <button class="opt" onclick="qa(this,0)">Lower the temperature</button>
+      <button class="opt" onclick="qa(this,1)">Strengthen the constitution — the principle that governs how the judge behaves — and mark invention as a blocking issue</button>
+      <button class="opt" onclick="qa(this,0)">Increase max_iterations so it has more chances</button>
+      <div class="explain"><strong>The rubric says what to look at; the constitution says how to behave while looking.</strong> "Do not invent guarantees, rankings, salaries, placements, or outcomes" is already the first line of this project's constitution — and on slide 7 you will see that a <code>blocking</code> severity overrides the score entirely, which is exactly the escalation this case needs.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(1)"><div class="pg-l">← Previous</div><div class="pg-t">The draft that looks fine</div></button>
+    <button class="rt" onclick="go(3)"><div class="pg-l">Next slide →</div><div class="pg-t">How the five files fit</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 3 ================= -->
+<section class="slide" data-title="How the five files fit">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">03</div>
+    <div>
+      <h2 class="stage-title">Five Files, One Loop</h2>
+      <p class="stage-kicker">Before opening any of them: here is the whole program on one screen, and the reason each file exists. Everything after this slide is filling in these boxes.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The loop, drawn once</h3>
+    <p>Draw this before you show a single line of Python. If the class holds this picture, every function they meet afterwards has an obvious place to sit.</p>
+
+    <div class="diagram">
+      <div class="flow">
+        <div class="node sky">Brief + draft<small>the task, the current answer</small></div><span class="arrow">→</span>
+        <div class="node am">Critic<small>scores vs rubric → JSON</small></div><span class="arrow">→</span>
+        <div class="node vi">Reflection<small>one reusable lesson</small></div><span class="arrow">→</span>
+        <div class="node em">Refiner<small>rewrites using the critique</small></div>
+      </div>
+      <div style="text-align:center;margin-top:14px;color:var(--ink-faint);font-size:13px">↑ &nbsp; loops back until <code class="inl">score ≥ pass_score</code> or retries run out &nbsp; ↑</div>
+      <div class="dg-cap">The model advises · the code decides when to stop</div>
+    </div>
+
+    <h3>Three roles, deliberately kept apart</h3>
+    <p>The same model does all three jobs, but never in the same call. One call writes, one judges, one rewrites — each with its own system prompt. Mixing them produces a model that grades its own homework in the same breath as writing it, and it always passes.</p>
+
+    <div class="roles">
+      <div class="role gen"><div class="r-n">Role 1</div><div class="r-t">Generator</div><div class="r-d">Produces a draft from the brief. Explicitly told not to critique itself in this step.</div><div class="r-c">temperature 0.4<br>build_generator_messages()</div></div>
+      <div class="role cri"><div class="r-n">Role 2</div><div class="r-t">Critic</div><div class="r-d">Scores the draft against rubric and constitution. Returns JSON only. Never rewrites.</div><div class="r-c">temperature 0.0 · json_mode<br>build_critic_messages()</div></div>
+      <div class="role ref"><div class="r-n">Role 3</div><div class="r-t">Refiner</div><div class="r-d">Rewrites the draft using the structured critique. Returns the draft only, no commentary.</div><div class="r-c">temperature 0.3<br>build_refiner_messages()</div></div>
+    </div>
+
+    <div class="fix"><span class="fx-t">Why temperatures differ</span><div>The critic runs at <strong>0.0</strong> because a judge that changes its mind between runs is not a judge. The generator and refiner run warmer because writing benefits from some variety. <strong>Same model, three different jobs, three different settings.</strong></div></div>
+
+    <h3>The five modules, and what each one owns</h3>
+
+    <div class="fmap">
+      <div class="fm"><span class="fm-i">01</span><div><div class="fm-n">schemas.py</div><div class="fm-d">The shape a critique must have. Pydantic models that reject anything malformed before it reaches your loop.</div></div></div>
+      <div class="fm"><span class="fm-i">02</span><div><div class="fm-n">prompts.py</div><div class="fm-d">The three role prompts. Pure string building — no network, no state, trivially testable.</div></div></div>
+      <div class="fm"><span class="fm-i">03</span><div><div class="fm-n">llm_client.py</div><div class="fm-d">One place that knows about OpenAI, the API key, JSON mode, and the offline fallback.</div></div></div>
+      <div class="fm"><span class="fm-i">04</span><div><div class="fm-n">critic_loop.py</div><div class="fm-d">The actual lesson: critique, refine, loop, stop. Everything else exists to serve this file.</div></div></div>
+      <div class="fm"><span class="fm-i">05</span><div><div class="fm-n">main.py</div><div class="fm-d">A command-line front door. Reads the four data files, runs the loop, prints and saves.</div></div></div>
+      <div class="fm dim"><span class="fm-i">+</span><div><div class="fm-n">autogen_evaluator_preview.py</div><div class="fm-d">Optional. The same critic role wrapped as an AutoGen agent. Separate requirements file.</div></div></div>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">The dependency direction</span>
+      <p><code>main.py</code> → <code>critic_loop.py</code> → <code>prompts.py</code> + <code>schemas.py</code> + <code>llm_client.py</code>. Nothing points back upward. That is why you can read the project bottom-up in one sitting, and it is also why the notebook and the CLI can share <strong>exactly the same engine</strong> with no duplication.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Why does the critic get its own function and its own system prompt instead of asking the generator to "write a draft and then critique it"?</div>
+      <button class="opt" onclick="qa(this,0)">It is faster</button>
+      <button class="opt" onclick="qa(this,1)">A model asked to produce and judge in one call tends to justify what it just wrote — and you lose the ability to debug either half</button>
+      <button class="opt" onclick="qa(this,0)">Because the OpenAI API requires separate calls for different tasks</button>
+      <div class="explain"><strong>Role separation buys you two things: less self-justification, and a debuggable system.</strong> When critique and generation live in one call you cannot tell whether a bad result came from a bad draft or a bad judgment, you cannot set different temperatures, and you cannot swap the critic for a stricter one later. It costs an extra API call. It is worth it.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(2)"><div class="pg-l">← Previous</div><div class="pg-t">Turning taste into criteria</div></button>
+    <button class="rt" onclick="go(4)"><div class="pg-l">Next slide →</div><div class="pg-t">schemas.py — the shape of a critique</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 4 ================= -->
+<section class="slide" data-title="schemas.py — the shape of a critique">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">04</div>
+    <div>
+      <h2 class="stage-title">schemas.py — Decide The Shape First</h2>
+      <p class="stage-kicker">Before you ask a model for a critique, decide exactly what a critique <em>is</em>. This file is that decision, written as code that can reject a bad answer.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>Start at the top. Three imports and one type alias — but that alias is the first design decision in the project.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">schemas.py</span><span class="cb-ln">lines 1–10</span></div>
+      <pre><code><span class="str">&quot;&quot;&quot;Pydantic schemas for the self-reflection and critique practical.&quot;&quot;&quot;</span>
+
+<span class="kw">from</span> __future__ <span class="kw">import</span> annotations
+
+<span class="kw">from</span> typing <span class="kw">import</span> Literal
+
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel, Field, field_validator
+
+
+Severity = Literal[<span class="str">&quot;minor&quot;</span>, <span class="str">&quot;major&quot;</span>, <span class="str">&quot;blocking&quot;</span>]</code></pre>
+      <div class="cb-note"><i>What it does</i><b>Severity is a closed set, not a string.</b> The model may return exactly <code>minor</code>, <code>major</code>, or <code>blocking</code>. "pretty bad" is not a severity, and this line is what makes that a crash instead of a silent bug three functions later.</div>
+    </div>
+
+    <h3>One issue the critic found</h3>
+    <p>Each problem the critic reports is one of these. Look at the last field especially — <code class="inl">revision_instruction</code> is what makes this loop mechanical. It is not a description of the problem, it is <strong>an order the next model call can follow</strong>.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">schemas.py</span><span class="cb-ln">lines 13–28</span></div>
+      <pre><code><span class="kw">class</span> CritiqueIssue(BaseModel):
+    <span class="str">&quot;&quot;&quot;One concrete issue found by the evaluator.
+
+    Params:
+        criterion: Rubric criterion the issue relates to.
+        severity: Impact level for the issue.
+        explanation: Plain-language explanation of the problem.
+        revision_instruction: Specific instruction the refiner can use.
+    Returns:
+        A validated critique issue.
+    &quot;&quot;&quot;</span>
+
+    criterion: str = Field(..., min_length=2)
+    severity: Severity
+    explanation: str = Field(..., min_length=10)
+    revision_instruction: str = Field(..., min_length=10)</code></pre>
+      <div class="cb-note"><i>What it does</i>The <code>min_length</code> constraints are quiet quality control. <b>A ten-character minimum makes "bad tone" fail validation</b> — the critic is forced to write something long enough to be actionable.</div>
+    </div>
+
+    <h3>The whole critique</h3>
+    <p>Now the full evaluator output. Read the field names as a checklist of everything you want back from a judge: a number to threshold on, a verdict, a human summary, what to keep, what to fix, and two kinds of memory.</p>
+
+    <div class="codeblock key">
+      <div class="cb-head"><span class="cb-title">schemas.py</span><span class="cb-ln">lines 31–52</span></div>
+      <pre><code><span class="kw">class</span> CritiqueResult(BaseModel):
+    <span class="str">&quot;&quot;&quot;Structured evaluator output for a draft.
+
+    Params:
+        score: Overall score from 1 to 10.
+        passed: Whether the draft is good enough to stop retrying.
+        summary: Short overall judgment.
+        strengths: What should be preserved in the next version.
+        issues: Concrete problems to fix.
+        reflection_memory: Reusable lesson for the next iteration.
+        revised_strategy: How the refiner should approach the rewrite.
+    Returns:
+        A validated critique result.
+    &quot;&quot;&quot;</span>
+
+    score: int = Field(..., ge=1, le=10)
+    passed: bool
+    summary: str = Field(..., min_length=10)
+    strengths: list[str] = Field(default_factory=list)
+    issues: list[CritiqueIssue] = Field(default_factory=list)
+    reflection_memory: str = Field(..., min_length=10)
+    revised_strategy: str = Field(..., min_length=10)</code></pre>
+      <div class="cb-note"><i>Point at this</i><b><code>score</code> is bounded 1–10 by the schema, not by the prompt.</b> If the model returns 47 because it misread the rubric, validation fails loudly here rather than sailing past your <code>score &gt;= 8</code> check and passing a broken draft.</div>
+    </div>
+
+    <p>Two validators follow, and they exist for teaching reasons as much as engineering ones.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">schemas.py</span><span class="cb-ln">lines 54–64</span></div>
+      <pre><code>@field_validator(<span class="str">&quot;strengths&quot;</span>)
+@classmethod
+<span class="kw">def</span> limit_strengths(<span class="flg">cls</span>, strengths: list[str]) -&gt; list[str]:
+    <span class="str">&quot;&quot;&quot;Keep output readable for classroom inspection.&quot;&quot;&quot;</span>
+    <span class="kw">return</span> strengths[:4]
+
+@field_validator(<span class="str">&quot;issues&quot;</span>)
+@classmethod
+<span class="kw">def</span> limit_issues(<span class="flg">cls</span>, issues: list[CritiqueIssue]) -&gt; list[CritiqueIssue]:
+    <span class="str">&quot;&quot;&quot;Keep the refiner focused on the highest-impact issues.&quot;&quot;&quot;</span>
+    <span class="kw">return</span> issues[:5]</code></pre>
+      <div class="cb-note"><i>What it does</i>Caps the critique at four strengths and five issues. <b>A critic that returns nineteen issues has not prioritised</b> — and the refiner, given nineteen instructions, will follow about four of them anyway. Truncating in code makes that choice explicit instead of accidental.</div>
+    </div>
+
+    <h3>One trip round the loop</h3>
+    <p>The last model records a single iteration so the whole run can be replayed afterwards. The two properties are pure convenience for printing.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">schemas.py</span><span class="cb-ln">lines 67–90</span></div>
+      <pre><code><span class="kw">class</span> IterationRecord(BaseModel):
+    <span class="str">&quot;&quot;&quot;One pass through the generate-critique-refine loop.
+
+    Params:
+        iteration: Iteration number.
+        draft: Draft text evaluated during this iteration.
+        critique: Structured critique for the draft.
+    Returns:
+        A validated loop record.
+    &quot;&quot;&quot;</span>
+
+    iteration: int = Field(..., ge=1)
+    draft: str = Field(..., min_length=1)
+    critique: CritiqueResult
+
+    @property
+    <span class="kw">def</span> score(<span class="flg">self</span>) -&gt; int:
+        <span class="str">&quot;&quot;&quot;Return the score for quick trace printing.&quot;&quot;&quot;</span>
+        <span class="kw">return</span> <span class="flg">self</span>.critique.score
+
+    @property
+    <span class="kw">def</span> passed(<span class="flg">self</span>) -&gt; bool:
+        <span class="str">&quot;&quot;&quot;Return whether this iteration met the stopping threshold.&quot;&quot;&quot;</span>
+        <span class="kw">return</span> <span class="flg">self</span>.critique.passed</code></pre>
+      <div class="cb-note"><i>Why it matters</i>Because every iteration is stored as a validated object, the run can be <b>serialised to JSON and inspected after class</b> — which is exactly what <code>save_demo_outputs()</code> does on slide 8.</div>
+    </div>
+
+    <h3>The two fields people skip past</h3>
+    <p>Give these thirty seconds each, because they are the difference between this session and the previous one on prompting.</p>
+
+    <table class="cmp">
+      <tr><th>Field</th><th>What it holds</th><th>Who consumes it</th></tr>
+      <tr><td><code>reflection_memory</code></td><td>One reusable lesson, compressed from this failure</td><td>Every <em>later</em> iteration, accumulated into a list</td></tr>
+      <tr><td><code>revised_strategy</code></td><td>How to approach the rewrite that comes next</td><td>The refiner, on the very next call</td></tr>
+    </table>
+
+    <div class="callout co-note"><span class="co-tag">The distinction worth drawing</span>
+      <p><code>revised_strategy</code> is tactical and disposable — it is about <strong>this rewrite</strong>. <code>reflection_memory</code> is meant to survive: it is the sentence you would want the system to still know on attempt four. That is why the loop keeps a growing list of reflections but throws each strategy away after use.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">The model returns valid JSON, but sets <code>"severity": "critical"</code>. What happens?</div>
+      <button class="opt" onclick="qa(this,1)">Pydantic raises a validation error — "critical" is not in the Literal, so the call fails loudly</button>
+      <button class="opt" onclick="qa(this,0)">It is accepted; severity is just a string</button>
+      <button class="opt" onclick="qa(this,0)">It is silently converted to "major"</button>
+      <div class="explain"><strong>This is the entire point of the file.</strong> Without the <code>Literal</code>, "critical" flows through happily — and then the blocking check on slide 7, which tests <code>severity == "blocking"</code>, quietly never fires, and a draft with a fatal problem passes. A schema turns a silent wrong answer into a visible crash.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(3)"><div class="pg-l">← Previous</div><div class="pg-t">How the five files fit</div></button>
+    <button class="rt" onclick="go(5)"><div class="pg-l">Next slide →</div><div class="pg-t">prompts.py — three roles</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 5 ================= -->
+<section class="slide" data-title="prompts.py — three roles, three prompts">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">05</div>
+    <div>
+      <h2 class="stage-title">prompts.py — Three Jobs, Kept Apart</h2>
+      <p class="stage-kicker">Pure functions that build message lists. No network, no state, no cleverness — which means you can print any prompt in this file without spending a rupee.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>First, a small helper. It formats accumulated reflection memory for insertion into a prompt, and it handles the first iteration — when there are no reflections yet — by saying so explicitly rather than leaving a blank.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">prompts.py</span><span class="cb-ln">lines 1–18</span></div>
+      <pre><code><span class="str">&quot;&quot;&quot;Prompt builders for generator, critic, and refiner roles.&quot;&quot;&quot;</span>
+
+<span class="kw">from</span> __future__ <span class="kw">import</span> annotations
+
+<span class="kw">from</span> typing <span class="kw">import</span> Iterable
+
+
+<span class="kw">def</span> _join_reflections(reflections: Iterable[str] | <span class="kw">None</span>) -&gt; str:
+    <span class="str">&quot;&quot;&quot;Format reflection memory for prompt context.
+
+    Params:
+        reflections: Prior lessons from the critique loop.
+    Returns:
+        A clean bullet list for prompt insertion.
+    &quot;&quot;&quot;</span>
+    <span class="kw">if</span> <span class="kw">not</span> reflections:
+        <span class="kw">return</span> <span class="str">&quot;No prior reflections yet.&quot;</span>
+    <span class="kw">return</span> <span class="str">&quot;\n&quot;</span>.join(<span class="str">f&quot;- {item}&quot;</span> <span class="kw">for</span> item <span class="kw">in</span> reflections <span class="kw">if</span> item.strip())</code></pre>
+      <div class="cb-note"><i>Small but deliberate</i><b>"No prior reflections yet." beats an empty string.</b> A blank section in a prompt is ambiguous — the model cannot tell whether memory is empty or whether you forgot to send it.</div>
+    </div>
+
+    <h3>Role one — the generator</h3>
+    <p>The shortest prompt in the file, and note the second sentence of the system message: it is there to stop the model from helpfully critiquing itself, which would collapse two roles into one call.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">prompts.py</span><span class="cb-ln">lines 21–41</span></div>
+      <pre><code><span class="kw">def</span> build_generator_messages(brief: str) -&gt; list[dict[str, str]]:
+    <span class="str">&quot;&quot;&quot;Create messages for the first-draft generator.
+
+    Params:
+        brief: Writing brief supplied by the user or trainer.
+    Returns:
+        Chat messages for the generator model call.
+    &quot;&quot;&quot;</span>
+    <span class="kw">return</span> [
+        {
+            <span class="str">&quot;role&quot;</span>: <span class="str">&quot;system&quot;</span>,
+            <span class="str">&quot;content&quot;</span>: (
+                <span class="str">&quot;You are a concise professional copywriter. Produce the first draft only. &quot;</span>
+                <span class="str">&quot;Do not critique your own answer in this step.&quot;</span>
+            ),
+        },
+        {
+            <span class="str">&quot;role&quot;</span>: <span class="str">&quot;user&quot;</span>,
+            <span class="str">&quot;content&quot;</span>: <span class="str">f&quot;Create a draft for this brief:\n\n{brief}&quot;</span>,
+        },
+    ]</code></pre>
+      <div class="cb-note"><i>What it does</i>Builds a two-message list: a system message that fixes the role, and a user message carrying the brief. <b>The demo does not normally call this</b> — it starts from the fixed weak draft instead — but it is here so you can show the full generate → critique → refine cycle if you want to.</div>
+    </div>
+
+    <h3>Role two — the critic</h3>
+    <p>This is the most important prompt in the project. Its signature takes everything the judge needs: the original task, the draft, both criteria files, whatever has been learned so far, and the bar it has to clear.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">prompts.py</span><span class="cb-ln">lines 44–63</span></div>
+      <pre><code><span class="kw">def</span> build_critic_messages(
+    brief: str,
+    draft: str,
+    rubric: str,
+    constitution: str,
+    reflections: Iterable[str] | <span class="kw">None</span> = <span class="kw">None</span>,
+    pass_score: int = 8,
+) -&gt; list[dict[str, str]]:
+    <span class="str">&quot;&quot;&quot;Create messages for a rubric-based evaluator.
+
+    Params:
+        brief: Original task brief.
+        draft: Draft being evaluated.
+        rubric: Scoring criteria.
+        constitution: Principles that guide the critique.
+        reflections: Prior lessons from earlier attempts.
+        pass_score: Score required to stop retrying.
+    Returns:
+        Chat messages that request strict JSON output.
+    &quot;&quot;&quot;</span></code></pre>
+    </div>
+
+    <p>Then the shape it must return, written out as a literal example rather than described in prose. This block and <code class="inl">schemas.py</code> have to agree — and keeping them in sync by hand is a real cost you should name out loud.</p>
+
+    <div class="codeblock key">
+      <div class="cb-head"><span class="cb-title">prompts.py</span><span class="cb-ln">lines 64–82</span></div>
+      <pre><code>    schema_instructions = <span class="str">&quot;&quot;&quot;
+Return ONLY valid JSON with this exact shape:
+{
+  &quot;score&quot;: 1,
+  &quot;passed&quot;: false,
+  &quot;summary&quot;: &quot;short overall judgment&quot;,
+  &quot;strengths&quot;: [&quot;what is working&quot;],
+  &quot;issues&quot;: [
+{
+  &quot;criterion&quot;: &quot;rubric criterion name&quot;,
+  &quot;severity&quot;: &quot;minor | major | blocking&quot;,
+  &quot;explanation&quot;: &quot;what is wrong&quot;,
+  &quot;revision_instruction&quot;: &quot;specific rewrite instruction&quot;
+}
+  ],
+  &quot;reflection_memory&quot;: &quot;one reusable lesson for the next attempt&quot;,
+  &quot;revised_strategy&quot;: &quot;the next rewrite strategy&quot;
+}
+&quot;&quot;&quot;</span></code></pre>
+      <div class="cb-note"><i>Point at this</i><b>Showing the shape beats describing it.</b> "Return JSON with a score field" invites interpretation; a literal skeleton does not. The belt-and-braces version of this is JSON mode on the API call (slide 6) plus Pydantic validation on the way back (slide 4) — this project uses all three.</div>
+    </div>
+
+    <p>And finally the assembled messages. Watch how every input arrives in its own labelled section — brief, rubric, principles, memory, threshold, draft — rather than being blended into one paragraph.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">prompts.py</span><span class="cb-ln">lines 83–104</span></div>
+      <pre><code><span class="kw">return</span> [
+    {
+        <span class="str">&quot;role&quot;</span>: <span class="str">&quot;system&quot;</span>,
+        <span class="str">&quot;content&quot;</span>: (
+            <span class="str">&quot;You are a strict but constructive evaluator. Judge the draft against the brief, &quot;</span>
+            <span class="str">&quot;rubric, and principles. Do not praise vague text. Do not invent facts. &quot;</span>
+            <span class="str">&quot;A draft passes only when it earns at least the required score and has no blocking issue.&quot;</span>
+        ),
+    },
+    {
+        <span class="str">&quot;role&quot;</span>: <span class="str">&quot;user&quot;</span>,
+        <span class="str">&quot;content&quot;</span>: (
+            <span class="str">f&quot;Original brief:\n{brief}\n\n&quot;</span>
+            <span class="str">f&quot;Rubric:\n{rubric}\n\n&quot;</span>
+            <span class="str">f&quot;Principles / constitution:\n{constitution}\n\n&quot;</span>
+            <span class="str">f&quot;Prior reflection memory:\n{_join_reflections(reflections)}\n\n&quot;</span>
+            <span class="str">f&quot;Passing score: {pass_score}/10\n\n&quot;</span>
+            <span class="str">f&quot;Draft to critique:\n{draft}\n\n&quot;</span>
+            <span class="str">f&quot;{schema_instructions}&quot;</span>
+        ),
+    },
+]</code></pre>
+      <div class="cb-note"><i>Read the system message aloud</i>"Do not praise vague text. Do not invent facts." <b>Those two sentences are the constitution compressed into the judge's job description</b> — the principles arrive twice, once as a rule and once as reference material.</div>
+    </div>
+
+    <h3>Role three — the refiner</h3>
+    <p>The rewrite call. It receives the critique as JSON — not as prose — so the instructions arrive as discrete items rather than a paragraph the model can skim.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">prompts.py</span><span class="cb-ln">lines 107–144</span></div>
+      <pre><code><span class="kw">def</span> build_refiner_messages(
+    brief: str,
+    draft: str,
+    critique_json: str,
+    constitution: str,
+    reflections: Iterable[str] | <span class="kw">None</span> = <span class="kw">None</span>,
+) -&gt; list[dict[str, str]]:
+    <span class="str">&quot;&quot;&quot;Create messages for the revision step.
+
+    Params:
+        brief: Original task brief.
+        draft: Current draft.
+        critique_json: Structured critique as JSON text.
+        constitution: Principles to preserve during revision.
+        reflections: Prior lessons from earlier attempts.
+    Returns:
+        Chat messages for the refiner model call.
+    &quot;&quot;&quot;</span>
+    <span class="kw">return</span> [
+        {
+            <span class="str">&quot;role&quot;</span>: <span class="str">&quot;system&quot;</span>,
+            <span class="str">&quot;content&quot;</span>: (
+                <span class="str">&quot;You are a refinement editor. Rewrite the draft using the critique. &quot;</span>
+                <span class="str">&quot;Return only the revised draft, with no commentary.&quot;</span>
+            ),
+        },
+        {
+            <span class="str">&quot;role&quot;</span>: <span class="str">&quot;user&quot;</span>,
+            <span class="str">&quot;content&quot;</span>: (
+                <span class="str">f&quot;Original brief:\n{brief}\n\n&quot;</span>
+                <span class="str">f&quot;Principles to preserve:\n{constitution}\n\n&quot;</span>
+                <span class="str">f&quot;Prior reflection memory:\n{_join_reflections(reflections)}\n\n&quot;</span>
+                <span class="str">f&quot;Current draft:\n{draft}\n\n&quot;</span>
+                <span class="str">f&quot;Structured critique:\n{critique_json}\n\n&quot;</span>
+                <span class="str">&quot;Rewrite the draft so it better satisfies the brief and rubric.&quot;</span>
+            ),
+        },
+    ]</code></pre>
+      <div class="cb-note"><i>What it does</i><b>"Return only the revised draft, with no commentary."</b> Without that line, models love to append "Here's what I changed and why" — which then becomes part of the draft that gets scored on the next iteration, and the critic marks it down for breaking the word count.</div>
+    </div>
+
+    <div class="fix"><span class="fx-t">The pattern to name</span><div>Three roles, three system messages, one file. When you later swap in a stricter critic or a different house style, <strong>you edit one function and nothing else moves.</strong> That is the payoff for keeping prompts out of the loop code.</div></div>
+
+    <div class="quiz">
+      <div class="q">The refiner gets <code>critique_json</code> — the full structured critique — rather than a prose summary of it. Why?</div>
+      <button class="opt" onclick="qa(this,0)">JSON uses fewer tokens than prose</button>
+      <button class="opt" onclick="qa(this,1)">Each issue stays a discrete, addressable item with its own instruction, instead of dissolving into a paragraph</button>
+      <button class="opt" onclick="qa(this,0)">Because the OpenAI API only accepts JSON in user messages</button>
+      <div class="explain"><strong>Structure survives the handoff.</strong> A paragraph saying "it's vague and the call to action is weak" gives the refiner one blurry impression. Five objects, each with a criterion, a severity and a specific instruction, give it five things to check off — and give <em>you</em> the ability to ask afterwards which ones actually got fixed.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(4)"><div class="pg-l">← Previous</div><div class="pg-t">schemas.py — the shape of a critique</div></button>
+    <button class="rt" onclick="go(6)"><div class="pg-l">Next slide →</div><div class="pg-t">llm_client.py — the plumbing</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 6 ================= -->
+<section class="slide" data-title="llm_client.py — the plumbing">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">06</div>
+    <div>
+      <h2 class="stage-title">llm_client.py — One Place That Knows About OpenAI</h2>
+      <p class="stage-kicker">The least interesting file in the project, and that is the achievement. Every mention of API keys, models, JSON mode and offline fallback lives here and nowhere else.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>The header first. Six imports, and the one that matters for setup day is the last: <code class="inl">dotenv</code> is what lets a student put a key in a file instead of pasting it into code.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">llm_client.py</span><span class="cb-ln">lines 1–14</span></div>
+      <pre><code><span class="str">&quot;&quot;&quot;Small OpenAI client wrapper used by the practical notebook.
+
+The wrapper keeps model choice, API key loading, JSON-mode calls, and offline
+fallback behavior in one place so the classroom demo remains easy to follow.
+&quot;&quot;&quot;</span>
+
+<span class="kw">from</span> __future__ <span class="kw">import</span> annotations
+
+<span class="kw">import</span> json
+<span class="kw">import</span> os
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+<span class="kw">from</span> typing <span class="kw">import</span> Any
+
+<span class="kw">from</span> dotenv <span class="kw">import</span> load_dotenv</code></pre>
+      <div class="cb-note"><i>Say this once</i><b>The API key never appears in code.</b> It lives in <code>.env</code>, which is listed in <code>.gitignore</code>. A key in a source file is a key in your git history forever.</div>
+    </div>
+
+    <p>Settings next. A frozen dataclass loaded from environment variables — so the model name and the offline switch are configuration, not code.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">llm_client.py</span><span class="cb-ln">lines 17–48</span></div>
+      <pre><code>@dataclass(frozen=<span class="kw">True</span>)
+<span class="kw">class</span> LLMSettings:
+    <span class="str">&quot;&quot;&quot;Runtime settings for model calls.
+
+    Params:
+        api_key: OpenAI API key.
+        model: Model name.
+        offline_demo: Whether to use deterministic simulated responses.
+    Returns:
+        Immutable settings object.
+    &quot;&quot;&quot;</span>
+
+    api_key: str | <span class="kw">None</span>
+    model: str
+    offline_demo: bool
+
+
+<span class="kw">def</span> load_settings() -&gt; LLMSettings:
+    <span class="str">&quot;&quot;&quot;Load settings from environment variables.
+
+    Params:
+        None.
+    Returns:
+        LLMSettings with API and model configuration.
+    &quot;&quot;&quot;</span>
+    load_dotenv()
+    offline_demo = os.getenv(<span class="str">&quot;BIA_OFFLINE_DEMO&quot;</span>, <span class="str">&quot;false&quot;</span>).strip().lower() <span class="kw">in</span> {<span class="str">&quot;1&quot;</span>, <span class="str">&quot;true&quot;</span>, <span class="str">&quot;yes&quot;</span>}
+    <span class="kw">return</span> LLMSettings(
+        api_key=os.getenv(<span class="str">&quot;OPENAI_API_KEY&quot;</span>),
+        model=os.getenv(<span class="str">&quot;OPENAI_MODEL&quot;</span>, <span class="str">&quot;gpt-4o-mini&quot;</span>),
+        offline_demo=offline_demo,
+    )</code></pre>
+      <div class="cb-note"><i>What it does</i><code>load_dotenv()</code> reads the <code>.env</code> file into the environment, then three values come out. <b><code>frozen=True</code> means settings cannot be mutated mid-run</b> — no function can quietly switch models on you halfway through a loop.</div>
+    </div>
+
+    <p>Then a guard that fails early with a useful sentence. Compare this to what the OpenAI SDK says when the key is missing — this is the difference between a student debugging for ten minutes and a student fixing it in ten seconds.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">llm_client.py</span><span class="cb-ln">lines 51–66</span></div>
+      <pre><code><span class="kw">def</span> check_api_ready(settings: LLMSettings | <span class="kw">None</span> = <span class="kw">None</span>) -&gt; <span class="kw">None</span>:
+    <span class="str">&quot;&quot;&quot;Raise a friendly error if no API key is available.
+
+    Params:
+        settings: Optional preloaded settings.
+    Returns:
+        None. Raises RuntimeError when configuration is missing.
+    &quot;&quot;&quot;</span>
+    settings = settings <span class="kw">or</span> load_settings()
+    <span class="kw">if</span> settings.offline_demo:
+        <span class="kw">return</span>
+    <span class="kw">if</span> <span class="kw">not</span> settings.api_key:
+        <span class="kw">raise</span> RuntimeError(
+            <span class="str">&quot;OPENAI_API_KEY was not found. Copy .env.sample to .env and add your key, &quot;</span>
+            <span class="str">&quot;or set BIA_OFFLINE_DEMO=true for a deterministic offline classroom fallback.&quot;</span>
+        )</code></pre>
+      <div class="cb-note"><i>Classroom detail</i>The error message names the fix <b>and</b> the escape hatch. If the venue's network dies mid-session, <code>BIA_OFFLINE_DEMO=true</code> keeps the whole practical running on deterministic canned responses.</div>
+    </div>
+
+    <h3>The offline fallback, in one line</h3>
+    <p>There is a hundred-line function here that returns hand-written responses when offline mode is on. <strong>Do not open it in class.</strong> It is canned strings chosen to make the loop produce a realistic 6/10 then 9/10; reading it derails the room into discussing fake data. Show the signature, say what it is for, move on.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">llm_client.py</span><span class="cb-ln">lines 69–78 · the remaining ~95 lines are canned demo text</span></div>
+      <pre><code><span class="kw">def</span> _offline_response(messages: list[dict[str, str]], json_mode: bool = <span class="kw">False</span>) -&gt; str:
+    <span class="str">&quot;&quot;&quot;Return deterministic demo output when the API is unavailable.
+
+    Params:
+        messages: Chat messages from the caller.
+        json_mode: Whether the caller expects JSON.
+    Returns:
+        Simulated text or JSON string.
+    &quot;&quot;&quot;</span>
+    combined = <span class="str">&quot;\n&quot;</span>.join(m.get(<span class="str">&quot;content&quot;</span>, <span class="str">&quot;&quot;</span>) <span class="kw">for</span> m <span class="kw">in</span> messages).lower()</code></pre>
+      <div class="cb-note"><i>Say this</i>"There is a fallback that fakes the model when we have no network. It exists so a broken wifi does not end the class. <b>We are not reading it, because none of it is the lesson.</b>"</div>
+    </div>
+
+    <h3>The one call the whole project makes</h3>
+    <p>Every model call in this project — generator, critic, refiner — comes through this single function. Four parameters, one branch for offline, one for JSON mode.</p>
+
+    <div class="codeblock key">
+      <div class="cb-head"><span class="cb-title">llm_client.py</span><span class="cb-ln">lines 174–213</span></div>
+      <pre><code><span class="kw">def</span> call_chat_model(
+    messages: list[dict[str, str]],
+    temperature: float = 0.2,
+    max_tokens: int = 900,
+    json_mode: bool = <span class="kw">False</span>,
+) -&gt; str:
+    <span class="str">&quot;&quot;&quot;Call the configured chat model and return text.
+
+    Params:
+        messages: List of role/content chat messages.
+        temperature: Sampling temperature.
+        max_tokens: Output token budget.
+        json_mode: Whether to request JSON object output.
+    Returns:
+        Model response text.
+    &quot;&quot;&quot;</span>
+    settings = load_settings()
+    <span class="kw">if</span> settings.offline_demo:
+        <span class="kw">return</span> _offline_response(messages, json_mode=json_mode)
+
+    check_api_ready(settings)
+
+    <span class="cmt"># Import lazily so offline demos do not require the package at import time.</span>
+    <span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+
+    client = OpenAI(api_key=settings.api_key)
+
+    kwargs: dict[str, Any] = {
+        <span class="str">&quot;model&quot;</span>: settings.model,
+        <span class="str">&quot;messages&quot;</span>: messages,
+        <span class="str">&quot;temperature&quot;</span>: temperature,
+        <span class="str">&quot;max_tokens&quot;</span>: max_tokens,
+    }
+    <span class="kw">if</span> json_mode:
+        kwargs[<span class="str">&quot;response_format&quot;</span>] = {<span class="str">&quot;type&quot;</span>: <span class="str">&quot;json_object&quot;</span>}
+
+    <span class="cmt"># COST NOTE: With gpt-4o-mini and these small prompts, a full classroom demo</span>
+    <span class="cmt"># usually costs only a few cents. Token use grows with draft length and iterations.</span>
+    response = client.chat.completions.create(**kwargs)
+    <span class="kw">return</span> response.choices[0].message.content <span class="kw">or</span> <span class="str">&quot;&quot;</span></code></pre>
+      <div class="cb-note"><i>Point at this</i><b><code>response_format = {"type": "json_object"}</code></b> is the API-level guarantee that you get parseable JSON back. It is not a substitute for validation — the model can still return well-formed JSON with the wrong fields — but it removes an entire category of failure before Pydantic ever sees the text.</div>
+    </div>
+
+    <p>And the parser. Note the defensive first few lines: some models wrap JSON in a markdown fence even when told not to, so the code strips it rather than pretending it never happens.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">llm_client.py</span><span class="cb-ln">lines 216–234</span></div>
+      <pre><code><span class="kw">def</span> parse_json_object(raw_text: str) -&gt; dict[str, Any]:
+    <span class="str">&quot;&quot;&quot;Parse a JSON object from model output.
+
+    Params:
+        raw_text: Raw model response.
+    Returns:
+        Parsed JSON dictionary.
+    &quot;&quot;&quot;</span>
+    cleaned = raw_text.strip()
+    <span class="kw">if</span> cleaned.startswith(<span class="str">&quot;```&quot;</span>):
+        cleaned = cleaned.strip(<span class="str">&quot;`&quot;</span>)
+        cleaned = cleaned.replace(<span class="str">&quot;json\n&quot;</span>, <span class="str">&quot;&quot;</span>, 1).replace(<span class="str">&quot;JSON\n&quot;</span>, <span class="str">&quot;&quot;</span>, 1)
+    <span class="kw">try</span>:
+        value = json.loads(cleaned)
+    <span class="kw">except</span> json.JSONDecodeError <span class="kw">as</span> exc:
+        <span class="kw">raise</span> ValueError(<span class="str">f&quot;Evaluator did not return valid JSON. Raw output:\n{raw_text}&quot;</span>) <span class="kw">from</span> exc
+    <span class="kw">if</span> <span class="kw">not</span> isinstance(value, dict):
+        <span class="kw">raise</span> ValueError(<span class="str">f&quot;Expected JSON object, received: {type(value).__name__}&quot;</span>)
+    <span class="kw">return</span> value</code></pre>
+      <div class="cb-note"><i>What it does</i>When parsing fails, the error <b>includes the raw model output</b>. That single detail is what turns "the evaluator returned invalid JSON" from a mystery into a two-second diagnosis.</div>
+    </div>
+
+    <div class="callout co-cost"><span class="co-tag">Cost, since someone always asks</span>
+      <p>One critique call plus one refine call per failed iteration. With <code>gpt-4o-mini</code> and prompts this short, a full three-iteration classroom run lands in the region of a few cents — well under ₹50. Cost scales with draft length and iteration count, not with how impressive the loop looks.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">JSON mode is enabled on the critic call. Why does the project <em>still</em> validate the result with Pydantic?</div>
+      <button class="opt" onclick="qa(this,0)">It does not need to — JSON mode is enough</button>
+      <button class="opt" onclick="qa(this,1)">JSON mode guarantees the syntax is valid JSON. It guarantees nothing about the fields, types, or ranges inside it</button>
+      <button class="opt" onclick="qa(this,0)">Pydantic makes the API call faster</button>
+      <div class="explain"><strong>Two different guarantees.</strong> <code>{"banana": true}</code> is perfectly valid JSON and completely useless as a critique. JSON mode gets you past the parser; the schema gets you a critique with a bounded score, a legal severity, and an instruction long enough to act on. You want both, and they cost almost nothing together.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(5)"><div class="pg-l">← Previous</div><div class="pg-t">prompts.py — three roles</div></button>
+    <button class="rt" onclick="go(7)"><div class="pg-l">Next slide →</div><div class="pg-t">critic_loop.py — critique and refine</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 7 ================= -->
+<section class="slide" data-title="critic_loop.py — critique and refine">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">07</div>
+    <div>
+      <h2 class="stage-title">critic_loop.py — The Two Halves Of The Loop</h2>
+      <p class="stage-kicker">This is the file the session is about. Everything you have seen so far exists to make these functions short. Part one: judge a draft, then rewrite it.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>The imports tell you the whole story of the project's structure — this module pulls the client, the prompts and the schemas together, and nothing pulls on it except <code class="inl">main.py</code> and the notebook.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 1–11</span></div>
+      <pre><code><span class="str">&quot;&quot;&quot;Generate-critique-refine loop for the practical session.&quot;&quot;&quot;</span>
+
+<span class="kw">from</span> __future__ <span class="kw">import</span> annotations
+
+<span class="kw">import</span> json
+<span class="kw">from</span> pathlib <span class="kw">import</span> Path
+<span class="kw">from</span> typing <span class="kw">import</span> Iterable
+
+<span class="kw">from</span> llm_client <span class="kw">import</span> call_chat_model, parse_json_object
+<span class="kw">from</span> prompts <span class="kw">import</span> build_critic_messages, build_generator_messages, build_refiner_messages
+<span class="kw">from</span> schemas <span class="kw">import</span> CritiqueResult, IterationRecord</code></pre>
+    </div>
+
+    <p>Two small functions before the real work. A file reader, and the first-draft generator that the demo keeps in reserve.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 14–34</span></div>
+      <pre><code><span class="kw">def</span> read_text(path: str | Path) -&gt; str:
+    <span class="str">&quot;&quot;&quot;Read a UTF-8 text file.
+
+    Params:
+        path: File path.
+    Returns:
+        File contents as text.
+    &quot;&quot;&quot;</span>
+    <span class="kw">return</span> Path(path).read_text(encoding=<span class="str">&quot;utf-8&quot;</span>).strip()
+
+
+<span class="kw">def</span> generate_first_draft(brief: str) -&gt; str:
+    <span class="str">&quot;&quot;&quot;Generate an initial draft from a brief.
+
+    Params:
+        brief: Task brief.
+    Returns:
+        Draft text.
+    &quot;&quot;&quot;</span>
+    messages = build_generator_messages(brief)
+    <span class="kw">return</span> call_chat_model(messages, temperature=0.4, max_tokens=700).strip()</code></pre>
+      <div class="cb-note"><i>What it does</i><code>generate_first_draft()</code> runs at temperature <b>0.4</b> — warmer than the critic, because a first draft benefits from some range. The classroom demo skips it so every run starts from the identical weak draft.</div>
+    </div>
+
+    <h3>The critic</h3>
+    <p>Here is the signature. Every input the judge needs is explicit — nothing is read from global state, which is why this function is easy to test and easy to reuse on a completely different task.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 37–56</span></div>
+      <pre><code><span class="kw">def</span> critique_draft(
+    brief: str,
+    draft: str,
+    rubric: str,
+    constitution: str,
+    reflections: Iterable[str] | <span class="kw">None</span> = <span class="kw">None</span>,
+    pass_score: int = 8,
+) -&gt; CritiqueResult:
+    <span class="str">&quot;&quot;&quot;Evaluate a draft against a rubric and constitution.
+
+    Params:
+        brief: Original task brief.
+        draft: Draft to evaluate.
+        rubric: Scoring rubric.
+        constitution: Principles for critique.
+        reflections: Prior reflection memory.
+        pass_score: Score required to pass.
+    Returns:
+        Structured critique result.
+    &quot;&quot;&quot;</span></code></pre>
+    </div>
+
+    <p>And the body — six lines that do the actual work. Build the messages, call the model at temperature zero in JSON mode, parse, validate. Then the last three lines, which are the most important lines in the project.</p>
+
+    <div class="codeblock key">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 57–72</span></div>
+      <pre><code>messages = build_critic_messages(
+    brief=brief,
+    draft=draft,
+    rubric=rubric,
+    constitution=constitution,
+    reflections=reflections,
+    pass_score=pass_score,
+)
+raw = call_chat_model(messages, temperature=0.0, max_tokens=900, json_mode=<span class="kw">True</span>)
+parsed = parse_json_object(raw)
+critique = CritiqueResult.model_validate(parsed)
+
+<span class="cmt"># The application owns the stopping rule. The model can recommend, but code enforces.</span>
+has_blocking_issue = any(issue.severity == <span class="str">&quot;blocking&quot;</span> <span class="kw">for</span> issue <span class="kw">in</span> critique.issues)
+critique.passed = critique.score &gt;= pass_score <span class="kw">and</span> <span class="kw">not</span> has_blocking_issue
+<span class="kw">return</span> critique</code></pre>
+      <div class="cb-note"><i>Stop here and point</i><b>The model's own <code>passed</code> field is overwritten.</b> Whatever the critic claimed about itself is discarded, and the verdict is recomputed from the score and the presence of a blocking issue. The model recommends; <b>the code decides.</b></div>
+    </div>
+
+    <div class="fix"><span class="fx-t">Why it matters</span><div>A model asked "did this pass?" is being asked to grade its own strictness. Sometimes it says yes at 6/10 because the draft "improved a lot". <strong>Recomputing the verdict in code makes the standard non-negotiable</strong> — and it means one blocking issue sinks a draft that scored 9.</div></div>
+
+    <h3>The refiner</h3>
+    <p>Shorter, and structurally the same: build messages, call the model, return text. The one line worth pausing on is the first one in the body.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 75–101</span></div>
+      <pre><code><span class="kw">def</span> refine_draft(
+    brief: str,
+    draft: str,
+    critique: CritiqueResult,
+    constitution: str,
+    reflections: Iterable[str] | <span class="kw">None</span> = <span class="kw">None</span>,
+) -&gt; str:
+    <span class="str">&quot;&quot;&quot;Rewrite a draft using structured critique.
+
+    Params:
+        brief: Original task brief.
+        draft: Current draft.
+        critique: Structured critique object.
+        constitution: Principles to preserve during rewrite.
+        reflections: Prior reflection memory.
+    Returns:
+        Revised draft text.
+    &quot;&quot;&quot;</span>
+    critique_json = critique.model_dump_json(indent=2)
+    messages = build_refiner_messages(
+        brief=brief,
+        draft=draft,
+        critique_json=critique_json,
+        constitution=constitution,
+        reflections=reflections,
+    )
+    <span class="kw">return</span> call_chat_model(messages, temperature=0.3, max_tokens=800).strip()</code></pre>
+      <div class="cb-note"><i>What it does</i><code>critique.model_dump_json(indent=2)</code> turns the validated Pydantic object <b>back into JSON text</b> to embed in the refiner's prompt. The critique makes a round trip: model → JSON → validated object → JSON → model. Each hop is checked.</div>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">The symmetry to point out</span>
+      <p>Both functions are the same four moves — <strong>build messages, call the model, handle the response, return</strong>. Once the class sees that, the loop on the next slide is obvious: it is just these two functions in a <code>for</code> statement with a condition.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">A critique comes back with <code>score: 9</code> and one issue at <code>severity: "blocking"</code>. What does <code>critique_draft</code> set <code>passed</code> to?</div>
+      <button class="opt" onclick="qa(this,1)">False — a blocking issue fails the draft regardless of how high the score is</button>
+      <button class="opt" onclick="qa(this,0)">True — 9 clears the threshold of 8</button>
+      <button class="opt" onclick="qa(this,0)">Whatever the model put in its own passed field</button>
+      <div class="explain"><strong>Two conditions, both required:</strong> <code>score &gt;= pass_score</code> <em>and</em> no blocking issue. This is how you encode "some problems are not negotiable at any score" — an invented salary figure, a broken constraint, a safety violation. The score is a gradient; blocking is a gate.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(6)"><div class="pg-l">← Previous</div><div class="pg-t">llm_client.py — the plumbing</div></button>
+    <button class="rt" onclick="go(8)"><div class="pg-l">Next slide →</div><div class="pg-t">critic_loop.py — the loop</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 8 ================= -->
+<section class="slide" data-title="critic_loop.py — the loop and the stopping rule">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">08</div>
+    <div>
+      <h2 class="stage-title">The Loop, And Knowing When To Stop</h2>
+      <p class="stage-kicker">Thirty lines that turn two functions into a system. The interesting part is not the iteration — it is the three separate things that can end it.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>The signature first. Note <code class="inl">initial_draft</code> is optional: pass one and the loop starts there, pass <code class="inl">None</code> and it generates its own. The classroom demo passes the weak draft.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 104–123</span></div>
+      <pre><code><span class="kw">def</span> run_refinement_loop(
+    brief: str,
+    initial_draft: str | <span class="kw">None</span>,
+    rubric: str,
+    constitution: str,
+    pass_score: int = 8,
+    max_iterations: int = 3,
+) -&gt; tuple[str, list[IterationRecord]]:
+    <span class="str">&quot;&quot;&quot;Run a generate-critique-refine loop until the draft passes or retries end.
+
+    Params:
+        brief: Original writing brief.
+        initial_draft: Optional starting draft; if None, one is generated.
+        rubric: Evaluation rubric.
+        constitution: Principles for evaluation and revision.
+        pass_score: Minimum accepted score.
+        max_iterations: Maximum critique attempts.
+    Returns:
+        Final draft and list of iteration records.
+    &quot;&quot;&quot;</span></code></pre>
+    </div>
+
+    <p>And the body. Read it slowly with the class — it is short enough to hold entirely in your head, and that is the point.</p>
+
+    <div class="codeblock key">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 124–153</span></div>
+      <pre><code>draft = initial_draft.strip() <span class="kw">if</span> initial_draft <span class="kw">else</span> generate_first_draft(brief)
+trace: list[IterationRecord] = []
+reflections: list[str] = []
+
+<span class="kw">for</span> iteration <span class="kw">in</span> range(1, max_iterations + 1):
+    critique = critique_draft(
+        brief=brief,
+        draft=draft,
+        rubric=rubric,
+        constitution=constitution,
+        reflections=reflections,
+        pass_score=pass_score,
+    )
+    record = IterationRecord(iteration=iteration, draft=draft, critique=critique)
+    trace.append(record)
+
+    reflections.append(critique.reflection_memory)
+
+    <span class="kw">if</span> critique.passed:
+        <span class="kw">break</span>
+
+    draft = refine_draft(
+        brief=brief,
+        draft=draft,
+        critique=critique,
+        constitution=constitution,
+        reflections=reflections,
+    )
+
+<span class="kw">return</span> draft, trace</code></pre>
+      <div class="cb-note"><i>Trace it aloud</i>Critique the current draft → record it → <b>append the reflection to a growing list</b> → if it passed, stop → otherwise rewrite and go again. The reflections list is the memory: <b>iteration three sees what iterations one and two learned.</b></div>
+    </div>
+
+    <h3>Three ways this loop ends</h3>
+    <p>Ask the class to find them before you list them. Two are visible in the code above; the third is the one people miss.</p>
+
+    <div class="steps">
+      <div class="step"><span class="sn">1</span><div><div class="st">The draft passes</div><div class="sd"><code class="inl">critique.passed</code> is true — the score cleared the threshold and nothing was blocking. The <code class="inl">break</code> fires and the current draft is returned. This is the happy path.</div></div></div>
+      <div class="step"><span class="sn">2</span><div><div class="st">Retries run out</div><div class="sd">The <code class="inl">for</code> statement finishes all <code class="inl">max_iterations</code> passes without a break. The loop returns the last draft it produced — <strong>which was never critiqued</strong>. Worth saying out loud: on a failing run, the returned draft has one more revision than the trace has scores.</div></div></div>
+      <div class="step"><span class="sn">3</span><div><div class="st">A blocking issue, at any score</div><div class="sd">Set inside <code class="inl">critique_draft</code> on the previous slide, not here. Even a 10/10 draft cannot pass with one blocking issue — the gate is separate from the gradient.</div></div></div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">The subtle bit worth teaching</span>
+      <p>Look at the order: the loop <strong>critiques, then refines</strong>. So the final draft on a failing run is one revision <em>newer</em> than the last score in the trace. If you want the returned draft to always carry a score, you critique once more after the loop — a deliberate design choice this project does not make, and a good five-minute discussion.</p>
+    </div>
+
+    <h3>Printing and saving the trace</h3>
+    <p>The last two functions are housekeeping, but they are what makes the run inspectable after class. The trace printer is what students will actually watch on screen.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 156–172</span></div>
+      <pre><code><span class="kw">def</span> print_iteration_trace(trace: list[IterationRecord]) -&gt; <span class="kw">None</span>:
+    <span class="str">&quot;&quot;&quot;Print a compact trace of scores and reflection memory.
+
+    Params:
+        trace: Iteration records from the loop.
+    Returns:
+        None.
+    &quot;&quot;&quot;</span>
+    <span class="kw">for</span> record <span class="kw">in</span> trace:
+        print(<span class="str">f&quot;Iteration {record.iteration}: score={record.score}/10 | passed={record.passed}&quot;</span>)
+        print(<span class="str">f&quot;Summary: {record.critique.summary}&quot;</span>)
+        print(<span class="str">f&quot;Reflection memory: {record.critique.reflection_memory}&quot;</span>)
+        <span class="kw">if</span> record.critique.issues:
+            print(<span class="str">&quot;Top issues:&quot;</span>)
+            <span class="kw">for</span> issue <span class="kw">in</span> record.critique.issues:
+                print(<span class="str">f&quot;  - [{issue.severity}] {issue.criterion}: {issue.revision_instruction}&quot;</span>)
+        print(<span class="str">&quot;-&quot;</span> * 80)</code></pre>
+    </div>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">critic_loop.py</span><span class="cb-ln">lines 175–190</span></div>
+      <pre><code><span class="kw">def</span> save_demo_outputs(final_draft: str, trace: list[IterationRecord], output_dir: str | Path = <span class="str">&quot;demo_outputs&quot;</span>) -&gt; <span class="kw">None</span>:
+    <span class="str">&quot;&quot;&quot;Save final draft and trace for trainer review.
+
+    Params:
+        final_draft: Final generated draft.
+        trace: Iteration records.
+        output_dir: Directory to write outputs.
+    Returns:
+        None.
+    &quot;&quot;&quot;</span>
+    output_path = Path(output_dir)
+    output_path.mkdir(exist_ok=<span class="kw">True</span>)
+
+    (output_path / <span class="str">&quot;final_draft.txt&quot;</span>).write_text(final_draft, encoding=<span class="str">&quot;utf-8&quot;</span>)
+    trace_payload = [record.model_dump(mode=<span class="str">&quot;json&quot;</span>) <span class="kw">for</span> record <span class="kw">in</span> trace]
+    (output_path / <span class="str">&quot;iteration_trace.json&quot;</span>).write_text(json.dumps(trace_payload, indent=2), encoding=<span class="str">&quot;utf-8&quot;</span>)</code></pre>
+      <div class="cb-note"><i>What it does</i>Writes <code>final_draft.txt</code> and <code>iteration_trace.json</code> into <code>demo_outputs/</code>. Because every record is a Pydantic model, <code>model_dump(mode="json")</code> serialises the whole run <b>with no hand-written conversion code.</b></div>
+    </div>
+
+    <div class="fix"><span class="fx-t">Three dials, one sentence</span><div><strong><code>pass_score</code></strong> sets how good is good enough. <strong><code>max_iterations</code></strong> caps what you are willing to spend. <strong><code>severity == "blocking"</code></strong> defines what is unacceptable at any price. Every self-correcting system you build later will have these same three.</div></div>
+
+    <div class="quiz">
+      <div class="q">Why does the loop append <code>critique.reflection_memory</code> to a list <em>before</em> checking whether the draft passed?</div>
+      <button class="opt" onclick="qa(this,0)">It is a bug — the reflection is wasted on a passing run</button>
+      <button class="opt" onclick="qa(this,1)">So the trace records what was learned on every iteration, including the one that succeeded</button>
+      <button class="opt" onclick="qa(this,0)">Because Python requires list operations before conditionals</button>
+      <div class="explain"><strong>The lesson from a successful attempt is still a lesson.</strong> "Specific, credible benefits outperform generic enthusiasm for this audience" is worth keeping whether or not that iteration passed — and if you later persist reflections across runs rather than discarding them, the passing ones are the most valuable of all.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(7)"><div class="pg-l">← Previous</div><div class="pg-t">critic_loop.py — critique and refine</div></button>
+    <button class="rt" onclick="go(9)"><div class="pg-l">Next slide →</div><div class="pg-t">main.py — fifteen lines</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 9 ================= -->
+<section class="slide" data-title="main.py — the whole thing in fifteen lines">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">09</div>
+    <div>
+      <h2 class="stage-title">main.py — Everything You Just Read, Assembled</h2>
+      <p class="stage-kicker">The payoff slide. Four files of careful design collapse into one function that any developer in the room could have written — which is exactly what good structure is supposed to feel like.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <p>Here is the entire command-line program. Read the four <code class="inl">read_text</code> calls, the single loop call, and the two output calls. That is the whole thing.</p>
+
+    <div class="codeblock key">
+      <div class="cb-head"><span class="cb-title">main.py</span><span class="cb-ln">the complete file · 43 lines</span></div>
+      <pre><code><span class="str">&quot;&quot;&quot;Command-line runner for the writing critic practical.&quot;&quot;&quot;</span>
+
+<span class="kw">from</span> __future__ <span class="kw">import</span> annotations
+
+<span class="kw">from</span> critic_loop <span class="kw">import</span> (
+    print_iteration_trace,
+    read_text,
+    run_refinement_loop,
+    save_demo_outputs,
+)
+
+
+<span class="kw">def</span> main() -&gt; <span class="kw">None</span>:
+    <span class="str">&quot;&quot;&quot;Run the full practical from sample files.
+
+    Params:
+        None.
+    Returns:
+        None.
+    &quot;&quot;&quot;</span>
+    brief = read_text(<span class="str">&quot;data/writing_brief.txt&quot;</span>)
+    weak_draft = read_text(<span class="str">&quot;data/weak_draft.txt&quot;</span>)
+    rubric = read_text(<span class="str">&quot;data/rubric.md&quot;</span>)
+    constitution = read_text(<span class="str">&quot;data/constitution.md&quot;</span>)
+
+    final_draft, trace = run_refinement_loop(
+        brief=brief,
+        initial_draft=weak_draft,
+        rubric=rubric,
+        constitution=constitution,
+        pass_score=8,
+        max_iterations=3,
+    )
+
+    print_iteration_trace(trace)
+    print(<span class="str">&quot;\nFINAL DRAFT\n&quot;</span>)
+    print(final_draft)
+
+    save_demo_outputs(final_draft, trace)
+
+
+<span class="kw">if</span> __name__ == <span class="str">&quot;__main__&quot;</span>:
+    main()</code></pre>
+      <div class="cb-note"><i>Say this</i>"Six slides of design, and the program that uses it is <b>fifteen lines with no cleverness in them.</b> That is the trade you are making when you separate schemas, prompts and client code — the top of the stack gets boring, and boring is what you want at the top."</div>
+    </div>
+
+    <h3>The two numbers you will change in class</h3>
+    <p>Both are passed here, in plain sight, rather than hidden inside the loop. Changing either one changes the behaviour of the whole system, and that is a live demo worth doing.</p>
+
+    <table class="cmp">
+      <tr><th>Argument</th><th>In the demo</th><th>Try changing it to</th><th>What happens</th></tr>
+      <tr><td><code>pass_score</code></td><td>8</td><td><code>7</code></td><td>The loop usually passes on iteration two instead of exhausting retries</td></tr>
+      <tr><td><code>pass_score</code></td><td>8</td><td><code>9</code></td><td>Almost nothing passes — good for showing that a threshold is a policy choice</td></tr>
+      <tr><td><code>max_iterations</code></td><td>3</td><td><code>1</code></td><td>One critique, no rewrite. Shows the loop is doing real work</td></tr>
+      <tr><td><code>max_iterations</code></td><td>3</td><td><code>6</code></td><td>Watch the score plateau. More retries is not more quality</td></tr>
+    </table>
+
+    <div class="callout co-note"><span class="co-tag">The notebook is the same engine</span>
+      <p><code>notebook.ipynb</code> calls these identical functions, just one step at a time so the class can inspect the critique JSON between calls. <strong>There is no second implementation.</strong> If you fix a bug in <code>critic_loop.py</code>, both front doors get the fix.</p>
+    </div>
+
+    <div class="quiz">
+      <div class="q">Where would you add a second evaluator that only checks factual claims?</div>
+      <button class="opt" onclick="qa(this,0)">Inside main.py, after the loop returns</button>
+      <button class="opt" onclick="qa(this,1)">A new prompt builder in prompts.py, a new schema if its output differs, and a call inside the loop alongside the existing critique</button>
+      <button class="opt" onclick="qa(this,0)">Inside llm_client.py, as another branch of call_chat_model</button>
+      <div class="explain"><strong>Follow the existing seams.</strong> A new role means a new prompt builder; a new output shape means a new schema; and it has to run <em>inside</em> the loop so its findings can reach the refiner. Putting it after the loop means you discover the invented statistic once it is too late to fix it — which is the whole failure mode this session exists to prevent.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(8)"><div class="pg-l">← Previous</div><div class="pg-t">critic_loop.py — the loop</div></button>
+    <button class="rt" onclick="go(10)"><div class="pg-l">Next slide →</div><div class="pg-t">Now run it</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 10 ================= -->
+<section class="slide" data-title="Now run it">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">10</div>
+    <div>
+      <h2 class="stage-title">Leave The Deck. Run It.</h2>
+      <p class="stage-kicker">Everything below is a real run of this project against gpt-4o-mini. Including the part where it does not pass — which is the most useful thing that happens all session.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Setup, once</h3>
+
+    <div class="term">
+      <div class="t-head"><span class="t-dot r"></span><span class="t-dot a"></span><span class="t-dot g"></span><span class="t-title">terminal · one-time setup</span></div>
+      <pre><code><span class="cmd">cd self_reflection_critique</span>
+<span class="cmd">python3 -m venv .venv</span>
+<span class="cmd">source .venv/bin/activate</span>          <span class="dim"># Windows: .venv\Scripts\activate</span>
+<span class="cmd">pip install -r requirements.txt</span>
+<span class="cmd">cp .env.sample .env</span>              <span class="dim"># then paste your OPENAI_API_KEY into .env</span></code></pre>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">Check this before class starts</span>
+      <p>macOS ships Python 3.9, which is <strong>too old</strong> — this project needs 3.10 or newer for the <code>str | None</code> type syntax used throughout. Run <code>python3 --version</code> on the teaching machine first. If it says 3.9, the venv must be created from a newer interpreter or every import will fail on the first cell.</p>
+    </div>
+
+    <h3>The run</h3>
+
+    <div class="term">
+      <div class="t-head"><span class="t-dot r"></span><span class="t-dot a"></span><span class="t-dot g"></span><span class="t-title">terminal · python main.py</span></div>
+      <pre><code><span class="cmd">python main.py</span>
+
+Iteration 1: score=<span class="err">3</span>/10 | passed=<span class="err">False</span>
+Summary: The draft fails to meet several key criteria, particularly in
+         specificity and audience fit.
+Reflection memory: Ensure that the tone and content are tailored to the
+         audience's professional background and skepticism.
+Top issues:
+  - [<span class="err">major</span>] Audience fit: Adopt a more professional tone that acknowledges
+           the audience's skepticism and busy schedules.
+  - [<span class="err">major</span>] Specificity: Include specific details about the live expert-led
+           classes and hands-on projects.
+  - [<span class="err">major</span>] Constraint following: Expand the content to meet the word count.
+  - [<span class="err">major</span>] Evidence quality: Avoid broad claims; focus on practical skills.
+  - [<span class="warn">minor</span>] Call to action: Provide a specific action, such as 'Register now'.
+<span class="dim">--------------------------------------------------------------------</span>
+Iteration 2: score=<span class="warn">7</span>/10 | passed=<span class="err">False</span>
+Summary: The draft is well-structured but lacks specificity and a clear
+         call to action.
+Reflection memory: Be specific about the skills and tools offered in the
+         program to better engage the audience.
+<span class="dim">--------------------------------------------------------------------</span>
+Iteration 3: score=<span class="warn">7</span>/10 | passed=<span class="err">False</span>
+Summary: The draft is well-structured and addresses the audience but lacks
+         specificity in program benefits.
+<span class="dim">--------------------------------------------------------------------</span>
+
+FINAL DRAFT
+
+Subject: Elevate Your Skills in Generative AI and Agentic AI Development
+...</code></pre>
+    </div>
+
+    <div class="fix"><span class="fx-t">Expect this</span><div>The live run goes <strong>3 → 7 → 7</strong> and never reaches the threshold of 8. It exits because retries ran out, not because the draft passed. <strong>This is not a broken demo.</strong> It is the single best teaching moment in the session, and the next section is how to use it.</div></div>
+
+    <h3>Teach the plateau — do not apologise for it</h3>
+    <p>When the room sees <code class="inl">passed=False</code> three times, you have a live demonstration of four things that are hard to argue in the abstract.</p>
+
+    <div class="steps">
+      <div class="step"><span class="sn">1</span><div><div class="st">The code owned the stopping rule, and it said no</div><div class="sd">Every iteration the model was fairly pleased with itself. The threshold did not care. <strong>This is what "the model recommends, the code decides" looks like when it actually bites.</strong></div></div></div>
+      <div class="step"><span class="sn">2</span><div><div class="st">Self-critique has a ceiling</div><div class="sd">Iterations two and three scored identically and produced nearly identical reflection memory. The critic has run out of things it can notice using only its own judgment. More retries will not fix that — <strong>a different feedback source would.</strong></div></div></div>
+      <div class="step"><span class="sn">3</span><div><div class="st">A rubric can outrun the refiner</div><div class="sd">"Specificity" needs facts about the program that are in nobody's context — not the brief's, not the model's. The loop keeps asking for detail that <strong>does not exist anywhere in the inputs.</strong> That is a brief problem, not a model problem.</div></div></div>
+      <div class="step"><span class="sn">4</span><div><div class="st">Now change one number, live</div><div class="sd">Set <code class="inl">pass_score=7</code> in <code class="inl">main.py</code> and run again. It passes on iteration two. Ask the room the real question: <strong>did the draft get better, or did we just move the bar?</strong></div></div></div>
+    </div>
+
+    <div class="callout co-say"><span class="co-tag">The line to land</span>
+      <p>"Nothing about this system got smarter when I changed that 8 to a 7. <strong>I changed a policy, not a capability.</strong> Every quality threshold you set in production is exactly this decision — and it should be made deliberately, by a person, in code you can point at."</p>
+    </div>
+
+    <h3>If the network dies</h3>
+    <p>One environment variable and the whole practical keeps running on deterministic canned responses. The offline path also happens to <em>pass</em>, so it is a useful contrast to the live run.</p>
+
+    <div class="term">
+      <div class="t-head"><span class="t-dot r"></span><span class="t-dot a"></span><span class="t-dot g"></span><span class="t-title">terminal · offline fallback</span></div>
+      <pre><code><span class="cmd">BIA_OFFLINE_DEMO=true python main.py</span>
+
+Iteration 1: score=<span class="warn">6</span>/10 | passed=<span class="err">False</span>
+Reflection memory: Avoid generic AI hype; tie every claim to a concrete
+         program feature or learner outcome.
+<span class="dim">--------------------------------------------------------------------</span>
+Iteration 2: score=<span class="ok">9</span>/10 | passed=<span class="ok">True</span>
+Summary: The revised draft is specific, credible, and well matched to
+         working professionals.
+<span class="dim">--------------------------------------------------------------------</span></code></pre>
+    </div>
+
+    <h3>What lands in demo_outputs/</h3>
+    <p>Open <code class="inl">iteration_trace.json</code> on screen after the run. It contains every draft and every critique, in full — this is the artefact that makes the session reviewable rather than a thing that scrolled past.</p>
+
+    <div class="term">
+      <div class="t-head"><span class="t-dot r"></span><span class="t-dot a"></span><span class="t-dot g"></span><span class="t-title">terminal · what was saved</span></div>
+      <pre><code><span class="cmd">ls demo_outputs/</span>
+final_draft.txt        <span class="dim"># the last draft the loop produced</span>
+iteration_trace.json   <span class="dim"># every draft + every critique, validated</span></code></pre>
+    </div>
+
+    <div class="quiz">
+      <div class="q">The loop plateaus at 7/10 for two iterations running. Which change is most likely to actually move it?</div>
+      <button class="opt" onclick="qa(this,0)">Raise max_iterations to 10</button>
+      <button class="opt" onclick="qa(this,1)">Give the system information it does not have — real program details in the brief — or a feedback source outside the model</button>
+      <button class="opt" onclick="qa(this,0)">Raise the temperature on the refiner</button>
+      <div class="explain"><strong>The loop is not stuck because it is impatient. It is stuck because it has run out of information.</strong> The critic keeps asking for specifics that appear in no input, so the refiner invents plausible-sounding filler and the critic marks it down again. Ten more iterations buys ten more rounds of the same. This is the practical case for retrieval, tools, and human feedback — and the bridge to the next session.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(9)"><div class="pg-l">← Previous</div><div class="pg-t">main.py — fifteen lines</div></button>
+    <button class="rt" onclick="go(11)"><div class="pg-l">Next slide →</div><div class="pg-t">The AutoGen preview</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 11 ================= -->
+<section class="slide" data-title="The AutoGen preview (optional)">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">11</div>
+    <div>
+      <h2 class="stage-title">Optional — The Same Critic, As An Agent</h2>
+      <p class="stage-kicker">Run this only if setup is stable and you have time. It is a preview of framing, not a framework lesson — the deep dive comes later in the course.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="callout co-cost"><span class="co-tag">Before you run it</span>
+      <p>AutoGen is deliberately kept out of the core requirements. It needs its own install — <code>pip install -r requirements_autogen.txt</code> — and it costs one extra model call. <strong>If setup is at all shaky, skip this slide entirely.</strong> Nothing later depends on it.</p>
+    </div>
+
+    <p>The signature, and an import guard that turns a confusing <code class="inl">ModuleNotFoundError</code> into an instruction.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">autogen_evaluator_preview.py</span><span class="cb-ln">lines 13–31</span></div>
+      <pre><code><span class="kw">async</span> <span class="kw">def</span> run_autogen_evaluator_preview(brief: str, draft: str, rubric: str, constitution: str) -&gt; str:
+    <span class="str">&quot;&quot;&quot;Run a minimal AutoGen AssistantAgent as a critique agent.
+
+    Params:
+        brief: Original task brief.
+        draft: Draft to evaluate.
+        rubric: Scoring rubric.
+        constitution: Principles for critique.
+    Returns:
+        Final message content from the AutoGen evaluator.
+    &quot;&quot;&quot;</span>
+    <span class="kw">try</span>:
+        <span class="kw">from</span> autogen_agentchat.agents <span class="kw">import</span> AssistantAgent
+        <span class="kw">from</span> autogen_ext.models.openai <span class="kw">import</span> OpenAIChatCompletionClient
+    <span class="kw">except</span> ImportError <span class="kw">as</span> exc:
+        <span class="kw">raise</span> ImportError(
+            <span class="str">&quot;AutoGen preview dependencies are not installed. Run: &quot;</span>
+            <span class="str">&quot;pip install -r requirements_autogen.txt&quot;</span>
+        ) <span class="kw">from</span> exc</code></pre>
+      <div class="cb-note"><i>Worth copying</i><b>Catching ImportError to re-raise with the actual fix</b> is a small kindness that pays for itself in any project with optional dependencies.</div>
+    </div>
+
+    <p>And the agent itself. Read it next to <code class="inl">build_critic_messages</code> from slide 5 — the inputs are the same, the job is the same, only the packaging changed.</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-title">autogen_evaluator_preview.py</span><span class="cb-ln">lines 33–59</span></div>
+      <pre><code>model_client = OpenAIChatCompletionClient(
+    model=os.getenv(<span class="str">&quot;AUTOGEN_MODEL&quot;</span>, os.getenv(<span class="str">&quot;OPENAI_MODEL&quot;</span>, <span class="str">&quot;gpt-4o-mini&quot;</span>)),
+    temperature=0,
+    response_format={<span class="str">&quot;type&quot;</span>: <span class="str">&quot;json_object&quot;</span>},
+)
+
+evaluator = AssistantAgent(
+    name=<span class="str">&quot;writing_critic&quot;</span>,
+    model_client=model_client,
+    system_message=(
+        <span class="str">&quot;You are an evaluator agent. Return only JSON with score, summary, issues, &quot;</span>
+        <span class="str">&quot;and revision_instructions. Be strict, practical, and concise.&quot;</span>
+    ),
+)
+
+task = (
+    <span class="str">f&quot;Brief:\n{brief}\n\n&quot;</span>
+    <span class="str">f&quot;Rubric:\n{rubric}\n\n&quot;</span>
+    <span class="str">f&quot;Principles:\n{constitution}\n\n&quot;</span>
+    <span class="str">f&quot;Draft:\n{draft}&quot;</span>
+)
+
+<span class="cmt"># COST NOTE: This is one extra LLM call beyond the main practical loop.</span>
+result = <span class="kw">await</span> evaluator.run(task=task)
+<span class="kw">await</span> model_client.close()
+
+<span class="kw">return</span> str(result.messages[-1].content)</code></pre>
+      <div class="cb-note"><i>What changed, and what did not</i>Same model, same temperature 0, same <code>json_object</code> response format, same four inputs. <b>What the framework adds is a named, addressable agent</b> that can later sit in a conversation with other agents. What it does not add is any new evaluation ability.</div>
+    </div>
+
+    <h3>The honest comparison</h3>
+
+    <table class="cmp">
+      <tr><th></th><th>Direct call (this project)</th><th>AutoGen AssistantAgent</th></tr>
+      <tr><td>Lines of code</td><td>Two functions you can read in a minute</td><td>One agent plus a client plus a runtime</td></tr>
+      <tr><td>Output validation</td><td><span class="yes">Pydantic schema, enforced</span></td><td><span class="no">Returns a message string; validate it yourself</span></td></tr>
+      <tr><td>Stopping rule</td><td><span class="yes">Yours, in plain code</span></td><td>Framework termination conditions</td></tr>
+      <tr><td>Multi-agent conversation</td><td><span class="no">Not supported — you would build it</span></td><td><span class="yes">The reason the framework exists</span></td></tr>
+      <tr><td>Right choice when</td><td>One evaluator, one loop, full control</td><td>Several agents that need to talk to each other</td></tr>
+    </table>
+
+    <div class="fix"><span class="fx-t">The framing to give</span><div>"A framework does not make the critique better. <strong>It makes coordinating several critics easier.</strong> We built the loop by hand first so that when we pick up a framework later, you know exactly which part it is replacing — and can tell whether it earned its place."</div></div>
+
+    <div class="callout co-note"><span class="co-tag">If someone asks why bother at all</span>
+      <p>Fair question, and the honest answer is: for this task, you should not. One evaluator and one loop is a job for fifty lines of your own code. The framework starts paying when you have <strong>three evaluators disagreeing and needing to reach a verdict</strong> — which is where the course goes next.</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(10)"><div class="pg-l">← Previous</div><div class="pg-t">Now run it</div></button>
+    <button class="rt" onclick="go(12)"><div class="pg-l">Next slide →</div><div class="pg-t">What to take away</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 12 ================= -->
+<section class="slide" data-title="What to take away">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">12</div>
+    <div>
+      <h2 class="stage-title">What To Take Away</h2>
+      <p class="stage-kicker">Five sentences worth more than the code. If the room remembers only this slide, the session worked.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <div class="steps">
+      <div class="step"><span class="sn">1</span><div><div class="st">"Improve this" is not an instruction</div><div class="sd">A rubric names what you are measuring. A constitution names how the judge should behave. Without both, critique is just a differently-worded opinion — and it changes every time you run it.</div></div></div>
+      <div class="step"><span class="sn">2</span><div><div class="st">The model recommends. The code decides.</div><div class="sd">The critic returns a <code class="inl">passed</code> field and the loop <strong>throws it away</strong>, recomputing the verdict from the score and the blocking check. Every self-correcting system you build needs this line somewhere.</div></div></div>
+      <div class="step"><span class="sn">3</span><div><div class="st">Structure is what makes feedback usable</div><div class="sd">JSON mode gets you parseable text. A schema gets you a bounded score, a legal severity, and an instruction long enough to act on. The refiner can follow five discrete items; it cannot follow a mood.</div></div></div>
+      <div class="step"><span class="sn">4</span><div><div class="st">Reflection memory is a compressed lesson, not a transcript</div><div class="sd">One reusable sentence that changes the next attempt. If you cannot answer "what will the next iteration do differently?", the memory is decoration and you are paying tokens for it.</div></div></div>
+      <div class="step"><span class="sn">5</span><div><div class="st">Self-critique has a ceiling, and you saw it</div><div class="sd">Two iterations at 7/10 with the same reflection. When the only feedback is the model's own opinion, the loop converges on what the model already believed. Real progress needs a signal from outside — a test, a validator, a retrieval step, a person.</div></div></div>
+    </div>
+
+    <div class="callout co-trap"><span class="co-tag">And the discipline that goes with it</span>
+      <p>Do not put a critique loop on everything. It multiplies latency and cost by the number of iterations. <strong>Use it where quality genuinely justifies the spend</strong> — and where you have something better than the model's own opinion to judge against.</p>
+    </div>
+
+    <h3>Where this goes next</h3>
+    <p>The same loop, pointed at a different artefact. This file ships in the project as the bridge to the upcoming build.</p>
+
+    <div class="fileblock brief">
+      <div class="fb-head"><span class="fb-name">data/travel_planner_bridge_brief.txt</span><span class="fb-role">the next project</span></div>
+      <pre><code>Upcoming project bridge:
+
+The same evaluator-generator loop can critique a travel itinerary.
+
+Example itinerary criteria:
+- Budget realism
+- Logical ordering of activities
+- Time feasibility
+- Personalization to user preferences
+- Clear explanation of trade-offs</code></pre>
+    </div>
+
+    <p>Nothing in <code class="inl">critic_loop.py</code> changes. You swap the rubric, swap the constitution, and the evaluator now argues about budget realism and time feasibility instead of tone and specificity. <strong>That portability is the actual deliverable of this session</strong> — the loop was never about writing.</p>
+
+    <div class="callout co-win"><span class="co-tag">Challenges to leave them with</span>
+      <ul>
+        <li>Raise <code>pass_score</code> to 9 and watch what the critic starts complaining about.</li>
+        <li>Add a second evaluator that <strong>only</strong> checks for unsupported claims, and make any hit a <code>blocking</code> issue.</li>
+        <li>Write a rubric for a travel itinerary and run the identical loop against it.</li>
+        <li>Persist <code>reflection_memory</code> across runs instead of discarding it — does attempt one get better tomorrow?</li>
+      </ul>
+    </div>
+
+    <div class="quiz">
+      <div class="q">One sentence to carry out of the room. Which is it?</div>
+      <button class="opt" onclick="qa(this,0)">"Models can reliably evaluate their own work"</button>
+      <button class="opt" onclick="qa(this,1)">"A critique is only as good as the criteria you gave it and the evidence it can actually check"</button>
+      <button class="opt" onclick="qa(this,0)">"More iterations produce better output"</button>
+      <div class="explain"><strong>Both halves matter.</strong> Criteria without evidence gives you a confident score built on nothing — which is exactly the 7/10 plateau you watched happen live. Evidence without criteria gives you facts and no verdict. The loop is the cheap part; deciding what "good" means, and where the proof comes from, is the engineering.</div>
+    </div>
+
+    <div class="foot">
+      Self-Reflection &amp; Critique · the practical · <code class="inl">self_reflection_critique/</code><br>
+      Theory deck: <a href="self-reflection-critique.html" style="color:var(--emerald);text-decoration:none;border-bottom:1px solid rgba(16,185,129,.4)">Self-Refine, Reflexion &amp; evaluator-generator →</a>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(11)"><div class="pg-l">← Previous</div><div class="pg-t">The AutoGen preview</div></button>
+    <button class="rt" onclick="go(0)"><div class="pg-l">Back to →</div><div class="pg-t">Session overview</div></button>
+  </div>
+</div></div>
+</section>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+
+/* build the slide dropdown */
+const menu=document.getElementById('dropMenu');
+menu.innerHTML='<div class="part">The practical</div>'+slides.map((s,i)=>
+  `<a data-i="${i}" onclick="go(${i});return false;"><span class="dn">${i===0?'··':String(i).padStart(2,'0')}</span><span class="dt">${s.dataset.title}</span></a>`
+).join('');
+
+function go(i){
+  if(i<0||i>=slides.length)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  [...menu.querySelectorAll('a')].forEach(a=>a.classList.toggle('cur',+a.dataset.i===i));
+  document.getElementById('btnPrev').classList.toggle('disabled',i===0);
+  document.getElementById('btnNext').classList.toggle('disabled',i===slides.length-1);
+  document.getElementById('railFill').style.width=((i)/(slides.length-1)*100)+'%';
+  drop.classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* dropdown toggle */
+const drop=document.getElementById('chDrop');
+document.getElementById('chDropBtn').onclick=e=>{e.stopPropagation();drop.classList.toggle('open');};
+document.addEventListener('click',()=>drop.classList.remove('open'));
+
+/* keyboard: arrows move between slides */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+
+/* quiz */
+function qa(btn,correct){
+  const box=btn.closest('.quiz');
+  box.querySelectorAll('.opt').forEach(o=>o.disabled=true);
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    box.querySelectorAll('.opt').forEach(o=>{
+      if(o.getAttribute('onclick').includes(',1)'))o.classList.add('correct');
+    });
+  }
+  box.querySelector('.explain').classList.add('show');
+}
+
+go(0);
+</script>
+</body></html>

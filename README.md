@@ -14,11 +14,13 @@ cd bia-batch-july
 
 | Folder | What it is | Do you need to install anything? |
 | --- | --- | --- |
-| [`presentations/`](presentations) | All six slide decks, plus a landing page linking them | No — plain HTML, open in a browser |
+| [`presentations/`](presentations) | All eight slide decks, plus a landing page linking them | No — plain HTML, open in a browser |
 | [`google-collab-notebooks/`](google-collab-notebooks) | Python notebooks for Google Colab | No — upload to Colab, runs in the cloud |
 | [`mood-app/`](mood-app) | Notes app + chatbot with 17 real tools (session two) | Yes — Python and Node. See [mood-app/SETUP.md](mood-app/SETUP.md) |
 | [`simple_agent_chatbot/`](simple_agent_chatbot) | The agent loop on its own, nothing else (session three) | Yes — Python and Node. See [simple_agent_chatbot/SETUP.md](simple_agent_chatbot/SETUP.md) |
 | [`prompt_essentials/`](prompt_essentials) | Notebook lab for the prompt design session (session five) | Yes — Python only. See [prompt_essentials/README.md](prompt_essentials/README.md) |
+| [`structured_prompting/`](structured_prompting) | Notebook lab for the structured prompting session (session six) | Yes — Python only. See [structured_prompting/README.md](structured_prompting/README.md) |
+| [`self_reflection_critique/`](self_reflection_critique) | Notebook + CLI lab for the self-reflection session (session seven) | Yes — Python only. See [self_reflection_critique/README.md](self_reflection_critique/README.md) |
 
 ---
 
@@ -26,7 +28,7 @@ cd bia-batch-july
 
 **Nothing to download: <https://jadenitishraj.github.io/bia-batch-july/>**
 
-That page links to all six decks. Inside a deck, use the **Slides** menu at the top or just
+That page links to all eight decks. Inside a deck, use the **Slides** menu at the top or just
 press the arrow keys, and **← Home** to come back.
 
 If you have cloned the repo, the same page is [`presentations/index.html`](presentations/index.html)
@@ -40,6 +42,8 @@ If you have cloned the repo, the same page is [`presentations/index.html`](prese
 | `simple-agent-architecture.html` | Session three | The `simple_agent_chatbot` project explained file by file — system prompt, tools, the registry, memory, FastAPI, React |
 | `mini-gpt.html` | Session four | Inside the model: characters to vectors, self-attention, residuals, softmax, sampling, training |
 | `prompt-essentials.html` | Session five | Prompt anatomy, thirty wrong/right prompt pairs, zero/one/few-shot, system messages, templates and versioning, temperature, tracing |
+| `structured-prompting.html` | Session six | Chain of Thought, Tree of Thought, Graph of Thought, ReAct, and `SKILL.md` / `AGENTS.md` — twenty worked examples from coding, code review and research, each one a scenario followed by the wrong prompt and the right prompt |
+| `self-reflection-critique.html` | Session seven | Self-Refine, Reflexion, Evaluator-Generator and principles-based review — what a good review contains, twenty-nine full worked examples across writing, code, support and data, the six ways reviewing backfires, and how every loop stops |
 
 Nothing to install. They are single HTML files.
 
@@ -175,7 +179,7 @@ Your key is like a password with your credit card behind it.
 
 ```
 bia-batch-july/
-├── presentations/              6 HTML decks + index.html landing page
+├── presentations/              8 HTML decks + index.html landing page
 ├── google-collab-notebooks/    Colab notebooks (.ipynb)
 ├── mood-app/                   Notes app + 17-tool chatbot
 │   ├── backend/                FastAPI, SQLModel, SQLite, OpenAI Agents SDK
@@ -186,9 +190,22 @@ bia-batch-july/
 │   ├── data/                   The corpus it searches + its memory file
 │   ├── frontend/               Vite + React
 │   └── SETUP.md                Full setup, verification, troubleshooting
-└── prompt_essentials/          Notebook lab for the prompt design session
-    ├── notebook.ipynb          Seven labs, runnable with or without an API key
-    ├── utils.py                Live-call helpers + offline fallback outputs
-    ├── data/                   Support-ticket and travel-request datasets
-    └── trainer_guide.md        Minute-by-minute teaching guide
+├── prompt_essentials/          Notebook lab for the prompt design session
+│   ├── notebook.ipynb          Seven labs, runnable with or without an API key
+│   ├── utils.py                Live-call helpers + offline fallback outputs
+│   ├── data/                   Support-ticket and travel-request datasets
+│   └── trainer_guide.md        Minute-by-minute teaching guide
+├── structured_prompting/       Notebook lab for the structured prompting session
+│   ├── 1_chain_of_thought.ipynb   Show the working
+│   ├── 2_tree_of_thought.ipynb    Try three, keep the best
+│   ├── 3_graph_of_thought.ipynb   Combine the pieces
+│   └── 4_react.ipynb              A LangChain agent that looks things up
+└── self_reflection_critique/   Writing critic agent for the self-reflection session
+    ├── notebook.ipynb          Guided generate → critique → refine walkthrough
+    ├── main.py                 CLI version, prints the iteration trace
+    ├── critic_loop.py          The loop, the stopping rules, the trace
+    ├── prompts.py              Generator, critic and refiner prompt builders
+    ├── schemas.py              Pydantic contract for the evaluator's JSON
+    ├── data/                   Brief, weak draft, rubric, constitution
+    └── trainer_guide.md        Teaching flow, timings, troubleshooting
 ```
