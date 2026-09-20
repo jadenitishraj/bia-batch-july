@@ -1,0 +1,99 @@
+WEBVTT
+
+NOTE Original fictional YouTube-style classroom script; not a transcript of a real video.
+
+1
+00:00:00.000 --> 00:00:50.000
+Welcome to this part of A practical RAG classroom handbook. Our focus is ingestion and evidence. The fictional Atlas classroom collection contains travel guides, policy notes, diagrams and transcripts. Its reference code is ATLAS-LAB-73. Each upload is parsed into readable text before chunking. Image understanding should describe visible relationships and labels; it must not invent values obscured in a chart.
+
+2
+00:00:50.000 --> 00:01:40.000
+Pause the lesson and identify the claims you can verify. The fictional Atlas classroom collection contains travel guides, policy notes, diagrams and transcripts. Its reference code is ATLAS-LAB-73. Each upload is parsed into readable text before chunking. Image understanding should describe visible relationships and labels; it must not invent values obscured in a chart. Separate exact facts from assumptions. When you ask an assistant a question, request a source and check that the evidence really supports the answer.
+
+3
+00:01:40.000 --> 00:02:30.000
+Here is a classroom exercise for this passage. The fictional Atlas classroom collection contains travel guides, policy notes, diagrams and transcripts. Its reference code is ATLAS-LAB-73. Each upload is parsed into readable text before chunking. Image understanding should describe visible relationships and labels; it must not invent values obscured in a chart. Write one direct question, one paraphrase and one question the passage cannot answer. Compare the responses and discuss why missing evidence should be acknowledged.
+
+4
+00:02:30.000 --> 00:03:20.000
+Now consider how this text is stored and retrieved. The fictional Atlas classroom collection contains travel guides, policy notes, diagrams and transcripts. Its reference code is ATLAS-LAB-73. Each upload is parsed into readable text before chunking. Image understanding should describe visible relationships and labels; it must not invent values obscured in a chart. A chunk may contain only part of the explanation. Check neighboring evidence when context is missing, and avoid treating a plausible completion as a documented fact.
+
+5
+00:03:20.000 --> 00:04:10.000
+Welcome to this part of A practical RAG classroom handbook. Our focus is ingestion and evidence. Token chunking divides text into manageable pieces. In this teaching example the chunk size is 512 tokens and the overlap is 50 tokens. Overlap repeats a small boundary region so a sentence near an edge has additional context. A token is not always a complete word.
+
+6
+00:04:10.000 --> 00:05:00.000
+Pause the lesson and identify the claims you can verify. Token chunking divides text into manageable pieces. In this teaching example the chunk size is 512 tokens and the overlap is 50 tokens. Overlap repeats a small boundary region so a sentence near an edge has additional context. A token is not always a complete word. Separate exact facts from assumptions. When you ask an assistant a question, request a source and check that the evidence really supports the answer.
+
+7
+00:05:00.000 --> 00:05:50.000
+Here is a classroom exercise for this passage. Token chunking divides text into manageable pieces. In this teaching example the chunk size is 512 tokens and the overlap is 50 tokens. Overlap repeats a small boundary region so a sentence near an edge has additional context. A token is not always a complete word. Write one direct question, one paraphrase and one question the passage cannot answer. Compare the responses and discuss why missing evidence should be acknowledged.
+
+8
+00:05:50.000 --> 00:06:40.000
+Now consider how this text is stored and retrieved. Token chunking divides text into manageable pieces. In this teaching example the chunk size is 512 tokens and the overlap is 50 tokens. Overlap repeats a small boundary region so a sentence near an edge has additional context. A token is not always a complete word. A chunk may contain only part of the explanation. Check neighboring evidence when context is missing, and avoid treating a plausible completion as a documented fact.
+
+9
+00:06:40.000 --> 00:07:30.000
+Welcome to this part of A practical RAG classroom handbook. Our focus is three storage destinations. Vector storage holds embeddings that support similarity search by meaning. A BM25 corpus supports lexical matching, which is useful for exact references such as ATLAS-LAB-73. A graph stores extracted entities and relationships such as a coordinator leading a group. These representations serve different purposes.
+
+10
+00:07:30.000 --> 00:08:20.000
+Pause the lesson and identify the claims you can verify. Vector storage holds embeddings that support similarity search by meaning. A BM25 corpus supports lexical matching, which is useful for exact references such as ATLAS-LAB-73. A graph stores extracted entities and relationships such as a coordinator leading a group. These representations serve different purposes. Separate exact facts from assumptions. When you ask an assistant a question, request a source and check that the evidence really supports the answer.
+
+11
+00:08:20.000 --> 00:09:10.000
+Here is a classroom exercise for this passage. Vector storage holds embeddings that support similarity search by meaning. A BM25 corpus supports lexical matching, which is useful for exact references such as ATLAS-LAB-73. A graph stores extracted entities and relationships such as a coordinator leading a group. These representations serve different purposes. Write one direct question, one paraphrase and one question the passage cannot answer. Compare the responses and discuss why missing evidence should be acknowledged.
+
+12
+00:09:10.000 --> 00:10:00.000
+Now consider how this text is stored and retrieved. Vector storage holds embeddings that support similarity search by meaning. A BM25 corpus supports lexical matching, which is useful for exact references such as ATLAS-LAB-73. A graph stores extracted entities and relationships such as a coordinator leading a group. These representations serve different purposes. A chunk may contain only part of the explanation. Check neighboring evidence when context is missing, and avoid treating a plausible completion as a documented fact.
+
+13
+00:10:00.000 --> 00:10:50.000
+Welcome to this part of A practical RAG classroom handbook. Our focus is three storage destinations. Saving a graph does not prove that the answer pipeline queries it. Inspect retrieval separately from ingestion. In the classroom demonstration, verify vector and BM25 chunk identifiers after upload and report the graph extraction result separately. If graph extraction fails, do not describe it as a verified graph save.
+
+14
+00:10:50.000 --> 00:11:40.000
+Pause the lesson and identify the claims you can verify. Saving a graph does not prove that the answer pipeline queries it. Inspect retrieval separately from ingestion. In the classroom demonstration, verify vector and BM25 chunk identifiers after upload and report the graph extraction result separately. If graph extraction fails, do not describe it as a verified graph save. Separate exact facts from assumptions. When you ask an assistant a question, request a source and check that the evidence really supports the answer.
+
+15
+00:11:40.000 --> 00:12:30.000
+Here is a classroom exercise for this passage. Saving a graph does not prove that the answer pipeline queries it. Inspect retrieval separately from ingestion. In the classroom demonstration, verify vector and BM25 chunk identifiers after upload and report the graph extraction result separately. If graph extraction fails, do not describe it as a verified graph save. Write one direct question, one paraphrase and one question the passage cannot answer. Compare the responses and discuss why missing evidence should be acknowledged.
+
+16
+00:12:30.000 --> 00:13:20.000
+Now consider how this text is stored and retrieved. Saving a graph does not prove that the answer pipeline queries it. Inspect retrieval separately from ingestion. In the classroom demonstration, verify vector and BM25 chunk identifiers after upload and report the graph extraction result separately. If graph extraction fails, do not describe it as a verified graph save. A chunk may contain only part of the explanation. Check neighboring evidence when context is missing, and avoid treating a plausible completion as a documented fact.
+
+17
+00:13:20.000 --> 00:14:10.000
+Welcome to this part of A practical RAG classroom handbook. Our focus is evaluation and missing answers. Faithfulness asks whether the answer is supported by retrieved evidence. Relevance asks whether it addresses the question. Context precision concerns the usefulness of retrieved material. These concepts should be demonstrated with examples rather than interpreted as guarantees of correctness.
+
+18
+00:14:10.000 --> 00:15:00.000
+Pause the lesson and identify the claims you can verify. Faithfulness asks whether the answer is supported by retrieved evidence. Relevance asks whether it addresses the question. Context precision concerns the usefulness of retrieved material. These concepts should be demonstrated with examples rather than interpreted as guarantees of correctness. Separate exact facts from assumptions. When you ask an assistant a question, request a source and check that the evidence really supports the answer.
+
+19
+00:15:00.000 --> 00:15:50.000
+Here is a classroom exercise for this passage. Faithfulness asks whether the answer is supported by retrieved evidence. Relevance asks whether it addresses the question. Context precision concerns the usefulness of retrieved material. These concepts should be demonstrated with examples rather than interpreted as guarantees of correctness. Write one direct question, one paraphrase and one question the passage cannot answer. Compare the responses and discuss why missing evidence should be acknowledged.
+
+20
+00:15:50.000 --> 00:16:40.000
+Now consider how this text is stored and retrieved. Faithfulness asks whether the answer is supported by retrieved evidence. Relevance asks whether it addresses the question. Context precision concerns the usefulness of retrieved material. These concepts should be demonstrated with examples rather than interpreted as guarantees of correctness. A chunk may contain only part of the explanation. Check neighboring evidence when context is missing, and avoid treating a plausible completion as a documented fact.
+
+21
+00:16:40.000 --> 00:17:30.000
+Welcome to this part of A practical RAG classroom handbook. Our focus is evaluation and missing answers. Ask one question with an exact reference, one paraphrased question, one question requiring two sections and one unanswerable question. The handbook does not specify the classroom Wi-Fi password. A grounded answer should acknowledge that missing information instead of inventing a password. Keep the test questions unchanged when comparing runs.
+
+22
+00:17:30.000 --> 00:18:20.000
+Pause the lesson and identify the claims you can verify. Ask one question with an exact reference, one paraphrased question, one question requiring two sections and one unanswerable question. The handbook does not specify the classroom Wi-Fi password. A grounded answer should acknowledge that missing information instead of inventing a password. Keep the test questions unchanged when comparing runs. Separate exact facts from assumptions. When you ask an assistant a question, request a source and check that the evidence really supports the answer.
+
+23
+00:18:20.000 --> 00:19:10.000
+Here is a classroom exercise for this passage. Ask one question with an exact reference, one paraphrased question, one question requiring two sections and one unanswerable question. The handbook does not specify the classroom Wi-Fi password. A grounded answer should acknowledge that missing information instead of inventing a password. Keep the test questions unchanged when comparing runs. Write one direct question, one paraphrase and one question the passage cannot answer. Compare the responses and discuss why missing evidence should be acknowledged.
+
+24
+00:19:10.000 --> 00:20:00.000
+Now consider how this text is stored and retrieved. Ask one question with an exact reference, one paraphrased question, one question requiring two sections and one unanswerable question. The handbook does not specify the classroom Wi-Fi password. A grounded answer should acknowledge that missing information instead of inventing a password. Keep the test questions unchanged when comparing runs. A chunk may contain only part of the explanation. Check neighboring evidence when context is missing, and avoid treating a plausible completion as a documented fact.

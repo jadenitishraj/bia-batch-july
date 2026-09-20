@@ -1,4 +1,4 @@
-"""Integration around the untouched rag_v2 package."""
+"""Upload and retrieval integration for rag_v2."""
 import json
 import logging
 import threading
@@ -47,8 +47,8 @@ def retrieve(question):
 @router.post('/upload')
 async def upload(file: UploadFile = File(...), trace: bool = False):
     name = Path((file.filename or '').replace('\\', '/')).name
-    if Path(name).suffix.lower() not in {'.pdf', '.txt', '.md'}:
-        raise HTTPException(400, 'Choose a PDF, TXT or Markdown file.')
+    if Path(name).suffix.lower() not in {'.pdf', '.txt', '.md', '.png', '.json', '.srt', '.vtt', '.html', '.htm', '.log', '.trace', '.py'}:
+        raise HTTPException(400, 'Choose a document, PNG image, or JSON/SRT/VTT transcript.')
     content = await file.read(20 * 1024 * 1024 + 1)
     await file.close()
     if not content or len(content) > 20 * 1024 * 1024:
@@ -61,8 +61,10 @@ async def upload(file: UploadFile = File(...), trace: bool = False):
         return upload_stream(destination)
     try:
         result = await run_in_threadpool(ingest, destination)
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from None
     except Exception as error:
-        logger.error('Unmodified RAG upload failed: %s', type(error).__name__)
-        raise HTTPException(502, 'The original RAG pipeline could not finish indexing. Some stores may have been updated. The RAG code has not been changed; check the backend output before retrying.') from None
+        logger.error('RAG upload failed: %s', type(error).__name__)
+        raise HTTPException(502, 'The original RAG pipeline could not finish indexing. Some stores may have been updated. Check the backend output before retrying.') from None
     return {'filename': name, 'chunks': result.get('chunks_created', 0),
             'message': 'Indexing completed.'}

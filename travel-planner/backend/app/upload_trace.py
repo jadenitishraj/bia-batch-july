@@ -1,4 +1,4 @@
-"""Observable upload orchestration using unmodified RAG functions."""
+"""Observable upload orchestration using RAG functions."""
 import asyncio
 import json
 from pathlib import Path
@@ -6,6 +6,8 @@ from fastapi.responses import StreamingResponse
 from .documents import rag_lock, STORAGE
 
 STRATEGIES = {
+    'image_markdown': ('LlamaIndex vision → MarkdownNodeParser', 'Interprets visible chart or diagram meaning, then splits the extracted Markdown into chunks.'),
+    'transcript': ('LlamaIndex TokenTextSplitter', 'Subtitle text is read with pysubs2 and split into 512-token chunks with 50-token overlap. Per-chunk timestamps are not assigned.'),
     'markdown': ('MarkdownNodeParser', 'Splits using Markdown headings and document structure.'),
     'html': ('HTMLNodeParser', 'Splits using HTML structure.'),
     'token': ('TokenTextSplitter', '512-token chunks with 50-token overlap. Selected for sparse punctuation or code-like content.'),
@@ -21,6 +23,8 @@ def trace_ingestion(path, emit):
     with rag_lock:
         configure_settings()
         emit({'type': 'stage', 'message': 'Reading and classifying the document…'})
+        if path.suffix.lower() == '.png':
+            emit({'type': 'stage', 'message': 'Sending the PNG to the vision model to extract its meaning…'})
         parsed = parse_file(str(path))
         if parsed['text'].startswith('Error parsing PDF:'):
             raise ValueError('PDF extraction failed')
@@ -63,8 +67,10 @@ def upload_stream(path):
         def worker():
             try:
                 trace_ingestion(path, emit)
+            except ValueError as error:
+                emit({'type': 'error', 'message': str(error)})
             except Exception:
-                emit({'type': 'error', 'message': 'Upload could not finish. The stages above show where it stopped. Some data may have been saved; the original RAG code has not been changed.'})
+                emit({'type': 'error', 'message': 'Upload could not finish. The stages above show where it stopped. Some data may have been saved; check the backend output before retrying.'})
             finally:
                 emit(None)
         task = asyncio.create_task(asyncio.to_thread(worker))

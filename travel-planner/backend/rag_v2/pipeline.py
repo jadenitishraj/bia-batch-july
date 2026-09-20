@@ -17,7 +17,8 @@ def ingest_file(file_path: str) -> dict:
     print(f"\n=== Starting Upload Pipeline for: {file_path} ===")
     
     # 1. Loader & Parser
-    parsed_dict = parse_file(file_path)
+    parsed_dict = parse_file(file_path) 
+    
     
     # 2. Chunker
     chunk_dicts = chunk_document(parsed_dict)

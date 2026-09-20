@@ -1,4 +1,4 @@
-"""Evaluate live retrieval using the unchanged rag_v2 scoring function."""
+"""Evaluate live retrieval using the simple Ragas evaluator."""
 import json
 import math
 import sys
@@ -14,14 +14,16 @@ from rag_v2.llm import complete
 from rag_v2.ragas_evaluation import run_ragas_evaluation
 
 QUESTIONS = [
-    'Who carved the glass clocks of Veridia?',
-    'According to travel-planner-demo.md, where and when does the demo walking group meet, and what is its reference code?',
+    ('Who carved the glass clocks of Veridia?',
+     'The glass clocks were carved by the reclusive horologist Edran Vask.'),
+    ('According to travel-planner-demo.md, where and when does the demo walking group meet, and what is its reference code?',
+     'The group meets at Lavender MRT station at 9:15 AM. Its reference code is LAVENDER-915.'),
 ]
 
 
 def main():
     rows = []
-    for question in QUESTIONS:
+    for question, expected_answer in QUESTIONS:
         print(f'\nQuestion: {question}', flush=True)
         context_text = search_rag(question, top_k=3)
         if not context_text or context_text.startswith(('Error:', 'No relevant information')):
@@ -33,17 +35,17 @@ def main():
             f'Question: {question}\n\nExcerpts:\n{context_text}'
         )
         print(f'Answer: {answer}', flush=True)
-        scores = run_ragas_evaluation(question, answer, contexts)
+        scores = run_ragas_evaluation(question, answer, contexts, expected_answer)
         if 'error' in scores:
             raise RuntimeError(scores['error'])
         scores = {name: value if math.isfinite(value) else None for name, value in scores.items()}
-        rows.append({'question': question, 'answer': answer, 'retrieved_contexts': contexts, 'scores': scores})
+        rows.append({'question': question, 'expected_answer': expected_answer, 'answer': answer, 'retrieved_contexts': contexts, 'scores': scores})
         print(json.dumps(scores, indent=2), flush=True)
     aggregate = {}
     for name in rows[0]['scores']:
         values = [row['scores'][name] for row in rows if row['scores'][name] is not None]
         aggregate[name] = round(sum(values) / len(values), 4) if values else None
-    report = {'created_at': datetime.now(timezone.utc).isoformat(), 'evaluation': 'reference-free, live retrieval, no dummy contexts', 'per_question': rows, 'aggregate': aggregate}
+    report = {'created_at': datetime.now(timezone.utc).isoformat(), 'evaluation': 'five metrics, source-checked expected answers, live retrieval, no dummy contexts', 'per_question': rows, 'aggregate': aggregate}
     out = ROOT / 'reports' / 'ragas-evaluation.json'
     out.parent.mkdir(exist_ok=True)
     out.write_text(json.dumps(report, indent=2, ensure_ascii=False, allow_nan=False))

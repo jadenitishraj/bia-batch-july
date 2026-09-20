@@ -1,31 +1,40 @@
+import { createDownloads } from './downloads';
+import { createArchitecture, renderArchitecture } from './architecture';
+
 
 export function setupDocuments() {
  const workspace = document.querySelector('.workspace');
  const panel = document.createElement('section');
  panel.className = 'documents-panel'; panel.hidden = true;
  panel.innerHTML = `<div class="eyebrow">YOUR PERSONAL KNOWLEDGE BASE</div><h1>A little local knowledge.</h1><p class="documents-intro">Bring your guides, notes and documents along for the trip.</p>
- <form id="upload-form" class="upload-card"><div class="upload-symbol">↥</div><h2>Add a document</h2><p>PDF, text or Markdown · up to 20 MB</p><label class="sr-only" for="document-file">Choose a document</label><input id="document-file" type="file" accept=".pdf,.txt,.md" required/><button id="upload-submit" type="submit">Upload to knowledge base <span>↗</span></button></form>
+ <form id="upload-form" class="upload-card"><div class="upload-symbol">↥</div><h2>Add a document</h2><p>Documents, PNG charts, or JSON / SRT / VTT transcripts · up to 20 MB</p><label class="sr-only" for="document-file">Choose a document</label><input id="document-file" type="file" accept=".pdf,.txt,.md,.png,.json,.srt,.vtt,.html,.htm,.log,.trace,.py" required/><button id="upload-submit" type="submit">Upload to knowledge base <span>↗</span></button></form>
  <div id="upload-feedback" role="status" aria-live="polite" hidden></div>
  <section id="upload-trace" hidden><h2>Inside your upload</h2><ol id="upload-stages" aria-live="polite"></ol><div id="upload-strategy"></div><div id="upload-chunks"></div><div id="upload-storage"></div></section>
  <div class="library-heading"><h2>Your library</h2><span id="library-count"></span></div><div id="document-library"></div>
  <div class="document-hint"><strong>Ask about your documents in Trip planner</strong><p>Try “What does my uploaded guide recommend?” or “Plan my Singapore trip and append the recommendations from my documents.”</p><button id="ask-documents" type="button">Ask a question ↗</button></div>
  <p class="storage-note">Uploads are added to the shared knowledge base. The original pipeline stores vectors, extracts graph relationships when possible, and saves a BM25 corpus.</p>`;
  workspace.after(panel);
+ const downloads=createDownloads(showView);panel.after(downloads);
+ const architecture=createArchitecture();downloads.after(architecture);
  const tabs = document.createElement('nav');tabs.className='view-tabs';tabs.setAttribute('aria-label','Planner views');
- tabs.innerHTML='<button id="planner-tab" class="active" type="button" aria-pressed="true">Trip planner</button><button id="documents-tab" type="button" aria-pressed="false">Upload documents</button>';
+ tabs.innerHTML='<button id="planner-tab" class="active" type="button" aria-pressed="true">Trip planner</button><button id="documents-tab" type="button" aria-pressed="false">Upload documents</button><button id="downloads-tab" type="button" aria-pressed="false">Downloads</button><button id="architecture-tab" type="button" aria-pressed="false">Architecture</button>';
  document.querySelector('header').after(tabs);
- function showDocuments(show) {
-  workspace.hidden=show;panel.hidden=!show;
-  document.querySelector('#planner-tab').classList.toggle('active',!show);
-  document.querySelector('#documents-tab').classList.toggle('active',show);
-  document.querySelector('#planner-tab').setAttribute('aria-pressed',String(!show));
-  document.querySelector('#documents-tab').setAttribute('aria-pressed',String(show));
-  if(show)loadLibrary();
+ function showView(view) {
+  workspace.hidden=view!=='planner';panel.hidden=view!=='documents';downloads.hidden=view!=='downloads';architecture.hidden=view!=='architecture';
+  for(const name of ['planner','documents','downloads','architecture']) {
+   const button=document.querySelector(`#${name}-tab`);
+   button.classList.toggle('active',name===view);
+   button.setAttribute('aria-pressed',String(name===view));
+  }
+  if(view==='documents')loadLibrary();
+  if(view==='architecture')renderArchitecture(architecture);
  }
- document.querySelector('#planner-tab').onclick=()=>showDocuments(false);
- document.querySelector('#documents-tab').onclick=()=>showDocuments(true);
- document.querySelector('.new-trip').addEventListener('click',()=>showDocuments(false));
- document.querySelector('#ask-documents').onclick=()=>{showDocuments(false);document.querySelector('#request').value='What do my uploaded documents say about ';document.querySelector('#request').focus();};
+ document.querySelector('#planner-tab').onclick=()=>showView('planner');
+ document.querySelector('#documents-tab').onclick=()=>showView('documents');
+ document.querySelector('#downloads-tab').onclick=()=>showView('downloads');
+ document.querySelector('#architecture-tab').onclick=()=>showView('architecture');
+ document.querySelector('.new-trip').addEventListener('click',()=>showView('planner'));
+ document.querySelector('#ask-documents').onclick=()=>{showView('planner');document.querySelector('#request').value='What do my uploaded documents say about ';document.querySelector('#request').focus();};
  async function loadLibrary(){
   const library=document.querySelector('#document-library');
   try{const response=await fetch('/api/documents');if(!response.ok)throw new Error();const data=await response.json();

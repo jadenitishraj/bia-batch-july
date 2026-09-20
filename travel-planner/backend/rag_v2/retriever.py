@@ -2,7 +2,7 @@
 
 Multi-stage hybrid RAG retrieval using LlamaIndex primitives end-to-end.
 
-Pipeline:  rephrase  →  multi-query  →  HyDE  →  vector+BM25  →  RRF+dedup  →  LLM rerank
+Pipeline:  rephrase  →  multi-query  →  HyDE  →  vector+BM25+graph  →  RRF+dedup  →  LLM rerank
 """
 
 import json
@@ -11,7 +11,7 @@ from llama_index.core import VectorStoreIndex
 from llama_index.core.indices.query.query_transform import HyDEQueryTransform
 from llama_index.core.indices.query.schema import QueryBundle
 from llama_index.core.postprocessor import LLMRerank
-from llama_index.core.retrievers import QueryFusionRetriever
+from llama_index.core.retrievers import QueryFusionRetriever, KnowledgeGraphRAGRetriever
 from llama_index.core.schema import TextNode
 from llama_index.retrievers.bm25 import BM25Retriever
 
@@ -21,7 +21,7 @@ from .llm import get_llama_embed_model, get_llama_llm
 
 @tool
 def search_global_db(query: str, top_k: int = 3, num_variants: int = 5) -> str:
-    """Search the internal global RAG database using hybrid vector and BM25 search with LLM reranking."""
+    """Search the internal global RAG database using vector, BM25 and graph search with LLM reranking."""
     print(f"\n=== Searching global database for: '{query}' ===")
     llm = get_llama_llm()
     storage = get_global_storage()
@@ -35,7 +35,7 @@ def search_global_db(query: str, top_k: int = 3, num_variants: int = 5) -> str:
     # 2. HyDE — vector search uses a hypothetical answer, not the raw query
     hyde = HyDEQueryTransform(llm=llm, include_original=True)
 
-    # Load vector + BM25 retrievers
+    # Load vector, BM25 and graph retrievers
     vector_retriever = VectorStoreIndex.from_vector_store(
         storage.vector_store, embed_model=get_llama_embed_model()
     ).as_retriever(similarity_top_k=top_k * 2)
@@ -47,6 +47,16 @@ def search_global_db(query: str, top_k: int = 3, num_variants: int = 5) -> str:
     bm25_retriever = BM25Retriever.from_defaults(nodes=nodes, similarity_top_k=top_k * 2)
     print(f"  → Loaded {len(raw_chunks)} chunks")
 
+    # LlamaIndex finds entities in the question and follows their graph relationships.
+    graph_retriever = KnowledgeGraphRAGRetriever(
+        storage_context=storage,
+        llm=llm,
+        retriever_mode="keyword",
+        graph_traversal_depth=2,
+        max_knowledge_sequence=top_k * 2,
+    )
+    print("  → Searching vector DB, BM25 and graph relationships")
+
     # 3 + 4 + 5. MULTI-QUERY + HYBRID RETRIEVAL + RRF + DEDUP
     # QueryFusionRetriever does all four in one primitive:
     #   - num_queries generates K paraphrases via the LLM
@@ -54,7 +64,7 @@ def search_global_db(query: str, top_k: int = 3, num_variants: int = 5) -> str:
     #   - "reciprocal_rerank" fuses all ranked lists with RRF
     #   - dedup happens automatically by node_id
     fusion = QueryFusionRetriever(
-        retrievers=[vector_retriever, bm25_retriever],
+        retrievers=[vector_retriever, bm25_retriever, graph_retriever],
         llm=llm,
         num_queries=num_variants + 1,   # +1 keeps the original
         mode="reciprocal_rerank",
@@ -62,7 +72,15 @@ def search_global_db(query: str, top_k: int = 3, num_variants: int = 5) -> str:
         use_async=False,
     )
     candidates = fusion.retrieve(hyde.run(QueryBundle(query_str=rephrased)))
-    print(f"  → {len(candidates)} unique candidates after fusion + dedup")
+    # Query variants can return the same graph text with different metadata.
+    unique_candidates = {}
+    for item in candidates:
+        key = (item.node.text, item.node.metadata.get("source_file", ""))
+        if key not in unique_candidates:
+            unique_candidates[key] = item
+    candidates = list(unique_candidates.values())
+    graph_count = sum("kg_rel_text" in item.node.metadata for item in candidates)
+    print(f"  → {len(candidates)} candidates after fusion, including {graph_count} graph results")
 
     # 6. LLM RERANK — final precision pass
     best = LLMRerank(llm=llm, choice_batch_size=5, top_n=top_k).postprocess_nodes(
@@ -72,7 +90,7 @@ def search_global_db(query: str, top_k: int = 3, num_variants: int = 5) -> str:
 
     results = [
         {"text": n.node.text, "score": n.score,
-         "source": n.node.metadata.get("source_file", "Unknown")}
+         "source": n.node.metadata.get("source_file", "Knowledge graph (extracted relationships; original file not recorded)" if "kg_rel_text" in n.node.metadata else "Unknown")}
         for n in best
     ]
     

@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 def determine_strategy(text: str, ext: str) -> str:
@@ -32,21 +31,30 @@ def parse_file(file_path: str) -> dict:
     print(f"  → Parsing file: {path.name}...")
     ext = path.suffix.lower()
     
-    if ext == ".pdf":
-        try:
-            from pypdf import PdfReader
-            reader = PdfReader(str(path))
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text() + "\n\n"
-        except Exception as e:
-            print(f"  → Error parsing PDF: {e}")
-            text = f"Error parsing PDF: {e}"
+    source_type = 'document'
+    if ext == '.png':
+        from .image_parser import extract_image
+        text = extract_image(path)
+        source_type = 'image'
+    elif ext == '.pdf':
+        from pypdf import PdfReader
+        text = '\n\n'.join(page.extract_text() or '' for page in PdfReader(str(path)).pages)
+    elif ext == '.json':
+        from llama_index.readers.json import JSONReader
+        documents = JSONReader().load_data(input_file=str(path))
+        text = '\n'.join(document.text for document in documents)
+    elif ext in {'.srt', '.vtt'}:
+        import pysubs2
+        captions = pysubs2.load(str(path), encoding='utf-8-sig')
+        text = '\n'.join(caption.plaintext for caption in captions)
+        source_type = 'video_transcript'
     else:
-        text = path.read_text(encoding="utf-8", errors="replace")
-    
+        text = path.read_text(encoding='utf-8-sig', errors='replace')
+    if not text.strip():
+        raise ValueError('No readable content found. Nothing was indexed.')
+
     # Determine classification using heuristic function
-    strategy = determine_strategy(text, ext)
+    strategy = 'transcript' if ext in {'.srt', '.vtt'} else ('image_markdown' if ext == '.png' else determine_strategy(text, ext))
         
     print(f"  → Classified as: {strategy} strategy")
     
@@ -56,6 +64,7 @@ def parse_file(file_path: str) -> dict:
         "chunk_strategy": strategy,
         "metadata": {
             "source_file": path.name,
+            "source_type": source_type,
             "extension": ext
         }
     }

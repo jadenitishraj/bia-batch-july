@@ -73,9 +73,9 @@ The copied `backend/rag_v2/` folder is used without source edits. Its existing k
 - Document-only questions search the RAG knowledge base without generating an unrelated trip.
 - Mixed requests retain the trip answer and append a **From your documents** section.
 - The original RAG pipeline returns text directly; this adapter consumes that text without using the incompatible legacy `/rag/search` response mapping.
-- The pipeline's existing behavior is preserved: graph extraction is best-effort, retrieval searches vector + BM25, uploads append rather than replace, and repeated uploads can duplicate chunks.
+- The pipeline's existing behavior is preserved: graph extraction is best-effort, retrieval searches vector + BM25 + graph, uploads append rather than replace, and repeated uploads can duplicate chunks.
 
-`backend/rag_v2-copy-manifest.json` records hashes from the exact initial copy, including its initial storage files. The test suite verifies that all copied Python source files remain unchanged. Runtime storage naturally changes as files are indexed.
+`backend/rag_v2-copy-manifest.json` records hashes from the exact initial copy, including its initial storage files. The test suite verifies that copied Python source files remain unchanged except the explicitly updated parser, chunker, evaluator and retriever. Runtime storage naturally changes as files are indexed.
 
 Live verification indexed the clearly labelled `backend/tests/fixtures/travel-planner-demo.md` sample and confirmed its vector entry, graph relationships, BM25 chunk and correctly sourced answer through the UI. This sample appears in the library alongside the copied documents. After explicit user approval for sending retrieved excerpts to OpenAI, a live mixed request also passed: the original flight answer was retained exactly and the sourced document answer was appended, including the verified 9:15 AM meeting time and LAVENDER-915 reference code.
 
@@ -87,9 +87,9 @@ From the `travel-planner` folder:
 .venv/bin/python scripts/evaluate_ragas.py
 ```
 
-This runs two live document questions and scores faithfulness, answer relevance and context precision using the existing, unchanged `rag_v2.ragas_evaluation.run_ragas_evaluation` function. It sends retrieved excerpts and generated answers to OpenAI and consumes API usage. Results are written to `reports/ragas-evaluation.json`.
+This runs two live document questions and scores faithfulness, answer relevance, context precision, context recall and factual correctness using the simplified `rag_v2.ragas_evaluation.run_ragas_evaluation` function. It sends retrieved excerpts and generated answers to OpenAI and consumes API usage. Results are written to `reports/ragas-evaluation.json`.
 
-The separate runner adapts the retriever's string output. The original evaluation CLI expects a dictionary and would fail at `search_result.get(...)`; it remains unchanged. The copied golden-set script also assumes a dictionary, and its reference answers are labelled as placeholders, so this runner reports reference-free scores rather than claiming a validated golden-set benchmark. No dummy-context fallback is used.
+The separate runner adapts the retriever's string output. The evaluator uses the standard Ragas `evaluate()` call with five metrics. Recall and factual correctness use expected answers checked against the stored source documents. Its module entry point also accepts the retriever's string output. The copied golden-set script also assumes a dictionary, and its reference answers are labelled as placeholders, so it is not used by this runner. The two-question runner is a small teaching check, not a comprehensive benchmark. No dummy-context fallback is used.
 
 ## Classroom upload walkthrough
 
@@ -100,3 +100,13 @@ This is implemented in `backend/app/upload_trace.py` by calling the original `co
 ## Fresh clone
 
 Credentials, uploaded files, local database contents and generated evaluation reports are excluded from Git. After cloning, configure `.env` and upload your own documents in the Upload documents tab. The local development copy includes previously indexed documents, but a fresh clone starts with an empty knowledge base. Upload `backend/tests/fixtures/travel-planner-demo.md` to try its example prompt; the Veridia prompt and evaluation also require the corresponding document to be uploaded.
+
+## PNG charts and uploaded transcripts
+
+PNG uploads use LlamaIndex `ImageBlock` and its `OpenAI` integration to send images to a vision model (`RAG_VISION_MODEL`, default `gpt-4o-mini`) to extract visible meaning, labels, relationships, values and trends. Meaningful descriptions are chunked with LlamaIndex `MarkdownNodeParser`; blank/unreadable images are rejected before indexing. This uses paid OpenAI calls.
+
+Upload transcript JSON, SRT or VTT files. LlamaIndex `JSONReader` loads JSON (including transcript exports) as text; `pysubs2` reads SRT/VTT caption text. LlamaIndex `TokenTextSplitter` chunks the resulting document with a 512-token budget and 50-token overlap. JSON fields, including timestamps, remain in the text; no per-chunk timestamp metadata is assigned. Plain TXT scripts continue to use content-based strategy selection.
+
+As explicitly requested, the travel-planner copy's `parser.py` and `chunker.py` now include this support, with a vision helper in `image_parser.py`. Earlier notes about all RAG code being byte-identical refer to the original implementation; the evaluator was simplified and graph retrieval was connected on request; other original RAG Python files remain unchanged. The source project in Documents/agents and the downloaded multimodal project are untouched.
+
+Graph retrieval uses LlamaIndex `KnowledgeGraphRAGRetriever` with the existing `SimpleGraphStore`, follows relationships up to two hops, and joins vector/BM25 results in reciprocal-rank fusion before LLM reranking. Logs show graph candidates after fusion. Empty graph matches add no evidence. Graph results are labelled as extracted relationships because the original graph does not store source filenames. This compatible LlamaIndex retriever is deprecated upstream; migration to PropertyGraphIndex would require a separate storage change.

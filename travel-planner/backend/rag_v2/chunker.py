@@ -13,11 +13,11 @@ def chunk_document(parsed_doc: dict) -> list[dict]:
     print("  → Splitting document into chunks...")
     strategy = parsed_doc["chunk_strategy"]
     
-    if strategy == "markdown":
+    if strategy in {"markdown", "image_markdown"}:
         splitter = MarkdownNodeParser()
     elif strategy == "html":
         splitter = HTMLNodeParser()
-    elif strategy == "token":
+    elif strategy in {"token", "transcript"}:
         splitter = TokenTextSplitter(chunk_size=512, chunk_overlap=50)
     elif strategy == "semantic":
         splitter = SemanticSplitterNodeParser(
@@ -26,9 +26,8 @@ def chunk_document(parsed_doc: dict) -> list[dict]:
     else:
         splitter = SentenceSplitter(chunk_size=768, chunk_overlap=80)
         
-    # Wrap text in a LlamaIndex Document just to pass it to the splitter
-    doc = Document(text=parsed_doc["text"], metadata=parsed_doc["metadata"])
-    nodes = splitter.get_nodes_from_documents([doc])
+    documents = [Document(text=parsed_doc["text"], metadata=parsed_doc["metadata"])]
+    nodes = splitter.get_nodes_from_documents(documents)
     
     # Extract the raw chunk data into simple Python dictionaries
     chunks = []
