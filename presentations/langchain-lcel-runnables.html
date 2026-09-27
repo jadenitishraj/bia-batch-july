@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain LCEL &amp; Runnables — The Support Ticket Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;500;700&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--teal:#2dd4bf;--cyan:#22d3ee;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 12% 45%, rgba(45,212,191,.07), transparent 26%),radial-gradient(circle at 88% 28%, rgba(139,92,246,.07), transparent 26%);
+  background-attachment:fixed;
+}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* sitenav */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--teal)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#c7f5ee;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:420px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--teal);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(40px,7.4vw,84px);margin-bottom:26px;background:linear-gradient(135deg,var(--teal),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:44px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide transitions */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:60px 0 80px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:34px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:56px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;line-height:1.08;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:880px}
+
+/* prose */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:940px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(45,212,191,.13);border:1px solid rgba(45,212,191,.24);border-radius:4px;padding:2px 6px;color:#b8f0e8}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+
+/* pairs (comparison) */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 12px}
+.pcard{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.bad{border-top:3px solid var(--rose)}
+.pcard.good{border-top:3px solid var(--emerald)}
+.p-head{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--card-border)}
+.p-sig{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px 'JetBrains Mono',monospace;flex:0 0 auto}
+.pcard.bad .p-sig{background:rgba(244,63,94,.16);border:1px solid rgba(244,63,94,.42);color:var(--rose)}
+.pcard.good .p-sig{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--emerald)}
+.p-lab{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.pcard.bad .p-lab{color:var(--rose)}
+.pcard.good .p-lab{color:var(--emerald)}
+.p-sub{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right}
+.p-prompt{margin:0;padding:16px 18px;background:rgba(255,255,255,.012);overflow-x:auto}
+.p-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.p-why{padding:14px 18px;border-top:1px solid var(--card-border);font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.p-why strong{color:var(--ink);font-weight:600}
+
+/* code cards & grids */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--teal);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--emerald)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--teal);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--emerald)}
+
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#b8f0e8;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* codeblock */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:20px 0;overflow:hidden}
+.cb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.02)}
+.cb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.cb-lang{font:600 10px 'JetBrains Mono',monospace;color:var(--ink-faint);text-transform:uppercase}
+.cb-body{padding:16px 18px;margin:0;overflow-x:auto}
+.cb-body code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;color:#d8deea;white-space:pre-wrap}
+.cb-body .kw{color:#c678dd;font-weight:600}
+.cb-body .fn{color:#61afef}
+.cb-body .str{color:#98c379}
+.cb-body .cm{color:#5c6370;font-style:italic}
+.cb-body .op{color:#56b6c2;font-weight:700}
+.cb-body .cls{color:#e5c07b}
+
+/* visual diagram box */
+.diagram-box{background:rgba(12,12,18,.8);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:22px 0;text-align:center}
+.diag-flow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+.diag-node{background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35);padding:10px 16px;border-radius:6px;font:600 13px 'JetBrains Mono',monospace;color:#c7f5ee}
+.diag-node.hl{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.45);color:#dcd6ff}
+.diag-arr{color:var(--accent);font-weight:700;font-size:18px}
+
+/* pager */
+.pager{display:flex;justify-content:space-between;gap:14px;margin-top:48px;padding-top:28px;border-top:1px solid var(--card-border)}
+.pager button{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 18px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;text-align:left;transition:all .18s}
+.pager button:hover:not(:disabled){background:rgba(255,255,255,.06);border-color:var(--accent)}
+.pager button.rt{margin-left:auto;text-align:right}
+.pager button:disabled{opacity:.25;cursor:default}
+.pager .pg-l{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px}
+.pager .pg-t{font-size:14px;font-weight:500}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:24px 0}
+.q-title{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:14px}
+.opts{display:grid;gap:9px}
+.opt{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:6px;padding:12px 16px;font-size:14.5px;color:var(--ink-dim);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
+.opt:hover:not(:disabled){background:rgba(255,255,255,.06);color:var(--ink)}
+.opt.correct{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.5)!important;color:#6ee7b7!important}
+.opt.wrong{background:rgba(244,63,94,.14)!important;border-color:rgba(244,63,94,.5)!important;color:#fda4af!important}
+.opt:disabled{cursor:default}
+.explain{margin-top:14px;font-size:14px;color:var(--ink-dim);display:none;line-height:1.6;border-top:1px dashed var(--card-border);padding-top:10px}
+.explain.show{display:block;animation:fadeIn .2s ease}
+
+/* table */
+.comp-table{width:100%;border-collapse:collapse;margin:22px 0;font-size:14.5px}
+.comp-table th,.comp-table td{border:1px solid var(--card-border);padding:12px 16px;text-align:left}
+.comp-table th{background:rgba(255,255,255,.04);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.comp-table tr:nth-child(even){background:rgba(255,255,255,.015)}
+
+.foot{text-align:center;padding:40px 0;color:var(--ink-faint);font-size:13px;border-top:1px solid var(--card-border);margin-top:40px}
+
+@media(max-width:820px){
+  .hero h1{font-size:38px}
+  .stage-header,.body-wrap{grid-template-columns:1fr;gap:12px}
+  .stage-num-big{font-size:36px}
+  .stats,.pair,.vocab-grid,.code-cards{grid-template-columns:1fr}
+  .container{padding:0 20px}
+  .sitenav-inner{padding:12px 20px}
+  .dropmenu{min-width:300px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SITENAV ===== -->
+<div class="sitenav">
+  <div class="sitenav-inner">
+    <a href="index.html" class="home-link">← Decks</a>
+    <a href="#" class="brand">LangChain <em>LCEL &amp; Runnables</em></a>
+    <div class="dropdown" id="chDrop">
+      <button class="dropbtn" id="chDropBtn"><span>Menu</span> <span class="chev">▾</span></button>
+      <div class="dropmenu" id="dropMenu"></div>
+    </div>
+    <div class="nav-spacer"></div>
+    <div class="nav-prevnext">
+      <button id="btnPrev" onclick="go(cur-1)">← Prev</button>
+      <button id="btnNext" onclick="go(cur+1)">Next →</button>
+    </div>
+  </div>
+  <div class="rail"><div class="rail-fill" id="railFill"></div></div>
+</div>
+
+<!-- ================= SLIDE 0 · HERO / OVERVIEW ================= -->
+<section class="slide active" data-title="Session overview">
+<div class="hero"><div class="container">
+  <div class="stage-num">Generative &amp; Agentic AI Development · LangChain Core Architecture</div>
+  <h1 class="display">LangChain LCEL<br><em>&amp; Runnables</em></h1>
+  <p class="sub">How to build robust, production-grade AI pipelines using the pipe operator (<code>|</code>), <code>RunnableLambda</code>, <code>RunnableParallel</code>, and <code>RunnablePassthrough</code> — explained in simple English using one complete support-ticket workflow.</p>
+  <div class="stats">
+    <div class="stat"><div class="num">1</div><div class="label">Support Ticket Problem</div></div>
+    <div class="stat"><div class="num">4</div><div class="label">Core Runnables</div></div>
+    <div class="stat"><div class="num">0</div><div class="label">Glue Boilerplate</div></div>
+    <div class="stat"><div class="num">3×</div><div class="label">Faster with Parallel</div></div>
+  </div>
+</div></div>
+
+<div class="container">
+  <div class="prose" style="padding-bottom:30px">
+
+    <h3>The Big Picture: What Happens to a Ticket</h3>
+    <div class="diagram-box">
+      <p style="font-size:14px;color:var(--ink-faint);margin-bottom:12px;font-family:'JetBrains Mono',monospace;">ONE MESSAGE IN → AUTOMATIC DATA FLOW → FINAL RESULT OUT</p>
+      <div class="diag-flow">
+        <div class="diag-node">Incoming Ticket</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-node hl">clean_step<br><small style="color:var(--teal)">RunnableLambda</small></div>
+        <div class="diag-arr">→</div>
+        <div class="diag-node hl">analyse_ticket<br><small style="color:var(--violet)">RunnableParallel</small></div>
+        <div class="diag-arr">→</div>
+        <div class="diag-node hl">add_decision<br><small style="color:var(--sky)">Passthrough</small></div>
+        <div class="diag-arr">→</div>
+        <div class="diag-node hl">add_reply<br><small style="color:var(--emerald)">LCEL Reply</small></div>
+        <div class="diag-arr">→</div>
+        <div class="diag-node">Final Answer</div>
+      </div>
+    </div>
+
+    <h3>The Four Runnables in This Lesson</h3>
+    <div class="legend" style="display:grid;gap:12px;margin:20px 0;">
+      <div class="vocab" style="border-left-color:var(--teal);">
+        <div class="vt">1. RunnableLambda</div>
+        <div class="vd">Takes a regular Python function (like cleaning text) and turns it into a LangChain Lego block.</div>
+      </div>
+      <div class="vocab" style="border-left-color:var(--violet);">
+        <div class="vt">2. RunnableSequence (The | Pipe)</div>
+        <div class="vd">Connects Prompt → Model → OutputParser in one clean line. No manual return statements needed.</div>
+      </div>
+      <div class="vocab" style="border-left-color:var(--amber);">
+        <div class="vt">3. RunnableParallel</div>
+        <div class="vd">Fires independent AI tasks (summary, category, urgency) at the exact same millisecond in background threads.</div>
+      </div>
+      <div class="vocab" style="border-left-color:var(--emerald);">
+        <div class="vt">4. RunnablePassthrough.assign()</div>
+        <div class="vd">The state backpack: keeps your original data while appending new analysis fields to the dictionary.</div>
+      </div>
+    </div>
+
+    <h3>Jump Directly to Any Chapter</h3>
+    <div class="code-cards">
+      <div class="code-card" onclick="go(1)"><span class="cc-ico">01</span><div><div class="cc-t">What is a Runnable?</div><div class="cc-s">The mental model: workers &amp; Lego blocks</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(2)"><span class="cc-ico">02</span><div><div class="cc-t">The Pipe Operator (|)</div><div class="cc-s">How Unix pipes work inside Python</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(3)"><span class="cc-ico">03</span><div><div class="cc-t">Step 1: RunnableLambda</div><div class="cc-s">Custom Python cleaning &amp; validation</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(4)"><span class="cc-ico">04</span><div><div class="cc-t">The Micro-Chain: Prompt → Model → Parser</div><div class="cc-s">Building predictable chains</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(5)"><span class="cc-ico">05</span><div><div class="cc-t">Step 2: RunnableParallel</div><div class="cc-s">Concurrent execution &amp; 3x speedup</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(6)"><span class="cc-ico">06</span><div><div class="cc-t">RunnablePassthrough &amp; State</div><div class="cc-s">Preserving data across pipeline stages</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(7)"><span class="cc-ico">07</span><div><div class="cc-t">Steps 3 &amp; 4: Decisions &amp; Customer Reply</div><div class="cc-s">Making business logic &amp; response</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(8)"><span class="cc-ico">08</span><div><div class="cc-t">Step 5: The Complete ticket_workflow</div><div class="cc-s">Connecting all 4 steps together</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(9)"><span class="cc-ico">09</span><div><div class="cc-t">Interactive Quiz</div><div class="cc-s">Test your understanding with instant feedback</div></div><span class="cc-go">Open</span></div>
+      <div class="code-card" onclick="go(10)"><span class="cc-ico">10</span><div><div class="cc-t">The Decision Matrix &amp; Cheat Sheet</div><div class="cc-s">Pure Python vs LCEL vs LangGraph</div></div><span class="cc-go">Open</span></div>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">Core Teaching Rule</span>
+      <p>LCEL looks intimidating at first glance because of all the pipes (<code>|</code>). But once you realize that <strong>every pipe is just connecting a Lego block that takes input and gives output</strong>, it becomes the simplest way to write AI pipelines.</p>
+    </div>
+
+  </div>
+
+  <div class="pager">
+    <button disabled><div class="pg-l">← Previous</div><div class="pg-t">Start of deck</div></button>
+    <button class="rt" onclick="go(1)"><div class="pg-l">Next slide →</div><div class="pg-t">What is a Runnable?</div></button>
+  </div>
+</div>
+</section>
+
+<!-- ================= SLIDE 1 · WHAT IS A RUNNABLE ================= -->
+<section class="slide" data-title="What is a Runnable?">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">01</div>
+    <div>
+      <h2 class="stage-title">What is a "Runnable"?</h2>
+      <p class="stage-kicker">Before writing any pipes, you must understand the single word that powers all of modern LangChain: the <strong>Runnable</strong>.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The Mental Model: A Standardized Worker</h3>
+    <p>In standard Python, every library has different method names: some use <code>.predict()</code>, some use <code>.generate()</code>, some use <code>.run()</code>, and some use <code>client.chat.completions.create()</code>. This makes connecting different tools a nightmare.</p>
+
+    <p>LangChain solved this with a single rule: <strong>Everything must be a Runnable</strong>.</p>
+
+    <div class="vocab-grid">
+      <div class="vocab">
+        <div class="vt">The Runnable Contract</div>
+        <div class="vd">Every Runnable implements the exact same 3 methods:
+          <br>• <code>.invoke(x)</code> — run on 1 item
+          <br>• <code>.batch([x1, x2])</code> — run on a list in parallel
+          <br>• <code>.stream(x)</code> — stream chunks live
+        </div>
+      </div>
+      <div class="vocab">
+        <div class="vt">The Lego Analogy</div>
+        <div class="vd">Think of a Lego brick. It has standard circular pegs on top and tubes on the bottom. It doesn't matter what color or shape the brick is — <strong>if it has the standard pegs, it snaps into any other brick!</strong></div>
+      </div>
+    </div>
+
+    <h3>What can be a Runnable?</h3>
+    <ul>
+      <li><strong>A Prompt</strong> (<code>ChatPromptTemplate</code>) is a Runnable: takes a dict, outputs formatted messages.</li>
+      <li><strong>A Model</strong> (<code>ChatOpenAI</code>) is a Runnable: takes messages, outputs an <code>AIMessage</code>.</li>
+      <li><strong>A Parser</strong> (<code>StrOutputParser</code>) is a Runnable: takes an <code>AIMessage</code>, outputs a clean string.</li>
+      <li><strong>Your Python Function</strong> wrapped in <code>RunnableLambda</code> is a Runnable: takes your input, runs your logic!</li>
+    </ul>
+
+    <div class="callout co-note"><span class="co-tag">The Big Takeaway</span>
+      <p>Because they all share the exact same interface, you can connect them together in any order using the <code>|</code> pipe operator!</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(0)"><div class="pg-l">← Previous</div><div class="pg-t">Session overview</div></button>
+    <button class="rt" onclick="go(2)"><div class="pg-l">Next slide →</div><div class="pg-t">The Pipe Operator (|)</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 2 · THE PIPE OPERATOR ================= -->
+<section class="slide" data-title="The Pipe Operator (|)">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">02</div>
+    <div>
+      <h2 class="stage-title">The Pipe Operator (<code>|</code>)</h2>
+      <p class="stage-kicker">How LCEL borrows the smartest idea from the Unix terminal and brings it into Python.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The Terminal Concept</h3>
+    <p>In Linux and macOS, you often chain commands together:</p>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Unix Terminal</span><span class="cb-lang">bash</span></div>
+      <pre class="cb-body"><code>cat tickets.txt <span class="op">|</span> grep "urgent" <span class="op">|</span> wc -l</code></pre>
+    </div>
+    <p>Notice what you <strong>didn't</strong> do: you didn't save intermediate files to your desktop, and you didn't write Python loops. The output of <code>cat</code> flows automatically into <code>grep</code>, and <code>grep</code> flows into <code>wc</code>.</p>
+
+    <h3>How It Works in LangChain</h3>
+    <p>Python allows classes to customize the <code>|</code> operator using a special method called <code>__or__</code>. LangChain overloaded <code>|</code> so that:</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">LangChain Expression Language (LCEL)</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code>chain = prompt <span class="op">|</span> model <span class="op">|</span> StrOutputParser()</code></pre>
+    </div>
+
+    <h3>Why We Don't Need "return" Statements</h3>
+    <p>A student recently asked: <em>"Where are the return statements? How does the data move?"</em></p>
+
+    <div class="pair">
+      <div class="pcard bad">
+        <div class="p-head"><div class="p-sig">✕</div><div class="p-lab">Old / Manual Plumbing</div><div class="p-sub">Repetitive glue code</div></div>
+        <div class="p-prompt"><code># Manual passing of variables
+formatted_prompt = prompt.format(ticket=t)
+raw_response = model.invoke(formatted_prompt)
+cleaned_text = raw_response.content.strip()
+return cleaned_text</code></div>
+        <div class="p-why">You have to create 3 temporary variables and manually extract <code>.content</code> every single time.</div>
+      </div>
+      <div class="pcard good">
+        <div class="p-head"><div class="p-sig">✓</div><div class="p-lab">The LCEL Pipe</div><div class="p-sub">Automatic handoff</div></div>
+        <div class="p-prompt"><code># One clean pipeline
+chain = prompt | model | StrOutputParser()
+
+result = chain.invoke({"ticket": t})</code></div>
+        <div class="p-why">The output of each step is fed automatically as the input to the next step. Zero glue variables!</div>
+      </div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(1)"><div class="pg-l">← Previous</div><div class="pg-t">What is a Runnable?</div></button>
+    <button class="rt" onclick="go(3)"><div class="pg-l">Next slide →</div><div class="pg-t">Step 1: RunnableLambda</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 3 · RUNNABLE LAMBDA ================= -->
+<section class="slide" data-title="Step 1: RunnableLambda">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">03</div>
+    <div>
+      <h2 class="stage-title">Step 1: RunnableLambda</h2>
+      <p class="stage-kicker">How to use your own custom Python functions inside a LangChain pipeline without rewriting them.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The Problem</h3>
+    <p>Real-world user input is messy. Users paste extra spaces: <code>"  My account is locked   "</code>, or they hit submit with an empty box <code>""</code>. Before sending text to an expensive LLM, we must clean it with standard Python logic.</p>
+
+    <h3>The Solution: Wrap it in <code>RunnableLambda</code></h3>
+    <p>Write standard Python code first. Then wrap it with <code>RunnableLambda()</code> so it earns the "Runnable badge" and can be piped with <code>|</code>:</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Cell from Notebook: Step 1</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> RunnableLambda
+
+<span class="cm"># 1. Standard Python function</span>
+<span class="kw">def</span> <span class="fn">clean_message</span>(message: str) -> dict:
+    message = message.strip()
+
+    <span class="kw">if not</span> message:
+        <span class="kw">raise</span> ValueError(<span class="str">"Ticket cannot be empty."</span>)
+
+    <span class="kw">return</span> {<span class="str">"ticket"</span>: message}
+
+<span class="cm"># 2. Turn it into a LangChain Runnable!</span>
+clean_step = RunnableLambda(clean_message)</code></pre>
+    </div>
+
+    <h3>What Just Happened?</h3>
+    <ul>
+      <li>Input to <code>clean_step</code>: A raw string <code>"  My billing failed  "</code></li>
+      <li>Output from <code>clean_step</code>: A dictionary <code>{"ticket": "My billing failed"}</code></li>
+      <li>Because it is now a Runnable, you can test it standalone anytime:
+        <br><code class="inl">clean_step.invoke("   Help me!   ") → {"ticket": "Help me!"}</code>
+      </li>
+    </ul>
+
+    <div class="callout co-win"><span class="co-tag">Golden Rule for Students</span>
+      <p>Whenever you need <strong>string stripping, regex parsing, database lookups, or if/else checks</strong> inside a chain, write a normal Python function and wrap it with <code>RunnableLambda</code>!</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(2)"><div class="pg-l">← Previous</div><div class="pg-t">The Pipe Operator (|)</div></button>
+    <button class="rt" onclick="go(4)"><div class="pg-l">Next slide →</div><div class="pg-t">The Micro-Chain</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 4 · THE MICRO CHAIN ================= -->
+<section class="slide" data-title="The Micro-Chain: Prompt → Model → Parser">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">04</div>
+    <div>
+      <h2 class="stage-title">The Micro-Chain Sequence</h2>
+      <p class="stage-kicker">The foundational 3-part formula used in almost every LangChain application.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The 3-Piece Assembly Line</h3>
+    <p>In our notebook, we create three analysis chains for the ticket: <code>summary_chain</code>, <code>category_chain</code>, and <code>urgency_chain</code>. Each one follows this exact formula:</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Anatomy of an LCEL Chain</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code>urgency_chain = (
+    ChatPromptTemplate.from_template(
+        <span class="str">"Return only one urgency: low, medium, or high.\nTicket: {ticket}"</span>
+    )
+    <span class="op">|</span> model
+    <span class="op">|</span> StrOutputParser()
+)</code></pre>
+    </div>
+
+    <h3>Let's Trace What Each Piece Does:</h3>
+
+    <div class="vocab-grid">
+      <div class="vocab">
+        <div class="vt">1. ChatPromptTemplate</div>
+        <div class="vd">Receives the dictionary <code>{"ticket": "..."}</code>. Finds the placeholder <code>{ticket}</code> in the template string and automatically injects the customer's text.</div>
+      </div>
+      <div class="vocab">
+        <div class="vt">2. model (ChatOpenAI)</div>
+        <div class="vd">Receives the completed prompt. Calls the OpenAI API and returns an <code>AIMessage</code> containing the text and metadata (tokens, finish reason).</div>
+      </div>
+    </div>
+
+    <div class="vocab-grid">
+      <div class="vocab" style="border-left-color:var(--amber);">
+        <div class="vt">3. StrOutputParser()</div>
+        <div class="vd">Unpacks the <code>AIMessage</code> by extracting <code>response.content</code> and stripping away the metadata, so the next step receives a clean Python string: <code>"high"</code>.</div>
+      </div>
+      <div class="vocab" style="border-left-color:var(--emerald);">
+        <div class="vt">The Whole Chain</div>
+        <div class="vd">Takes <code>{"ticket": "..."}</code> → returns <code>"high"</code>. It is a completely self-contained worker!</div>
+      </div>
+    </div>
+
+    <div class="callout co-note"><span class="co-tag">Did You Know?</span>
+      <p>You can test this individual chain by itself in your Jupyter notebook anytime:
+      <br><code class="inl">urgency_chain.invoke({"ticket": "Server room is on fire!"}) → "high"</code></p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(3)"><div class="pg-l">← Previous</div><div class="pg-t">Step 1: RunnableLambda</div></button>
+    <button class="rt" onclick="go(5)"><div class="pg-l">Next slide →</div><div class="pg-t">Step 2: RunnableParallel</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 5 · RUNNABLE PARALLEL ================= -->
+<section class="slide" data-title="Step 2: RunnableParallel">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">05</div>
+    <div>
+      <h2 class="stage-title">Step 2: RunnableParallel</h2>
+      <p class="stage-kicker">How to run independent AI tasks at the exact same millisecond to cut response latency by 3x.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The Problem: Sequential Waste</h3>
+    <p>We need three separate things from the ticket:</p>
+    <ol style="margin-left:24px;margin-bottom:18px;color:var(--ink-dim);font-size:16px;">
+      <li>A one-sentence <strong>summary</strong></li>
+      <li>The support <strong>category</strong> (billing, technical, or account)</li>
+      <li>The <strong>urgency</strong> level (low, medium, or high)</li>
+    </ol>
+    <p>None of these three tasks depend on each other! If you run them one after another in plain Python, you waste time waiting for network calls:</p>
+
+    <div class="diagram-box">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13.5px;color:var(--rose);margin-bottom:8px;">Sequential: 1.5s + 1.5s + 1.5s = 4.5 SECONDS TOTAL</div>
+      <div class="diag-flow" style="font-size:12px;">
+        <span class="diag-node">summary (1.5s)</span> <span class="diag-arr">→</span>
+        <span class="diag-node">category (1.5s)</span> <span class="diag-arr">→</span>
+        <span class="diag-node">urgency (1.5s)</span>
+      </div>
+      <div style="margin:16px 0 8px;font-family:'JetBrains Mono',monospace;font-size:13.5px;color:var(--emerald);">RunnableParallel: 1.5 SECONDS TOTAL (3x FASTER!)</div>
+      <div class="diag-flow" style="font-size:12px;">
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <span class="diag-node" style="border-color:var(--emerald);">summary (1.5s) ───┐</span>
+          <span class="diag-node" style="border-color:var(--emerald);">category (1.5s) ──┼──> Finished in 1.5s!</span>
+          <span class="diag-node" style="border-color:var(--emerald);">urgency (1.5s) ───┘</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>The Code in the Notebook</h3>
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">RunnableParallel Definition</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> RunnableParallel
+
+analyse_ticket = RunnableParallel(
+    summary=summary_chain,
+    category=category_chain,
+    urgency=urgency_chain,
+)</code></pre>
+    </div>
+
+    <h3>How It Works:</h3>
+    <ul>
+      <li>When <code>{"ticket": "..."}</code> arrives at <code>analyse_ticket</code>, LangChain <strong>broadcasts that exact same dictionary to all three workers simultaneously</strong> in background threads.</li>
+      <li>It collects the outputs and returns:
+        <br><code class="inl">{"summary": "...", "category": "...", "urgency": "..."}</code>
+      </li>
+    </ul>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(4)"><div class="pg-l">← Previous</div><div class="pg-t">The Micro-Chain</div></button>
+    <button class="rt" onclick="go(6)"><div class="pg-l">Next slide →</div><div class="pg-t">RunnablePassthrough</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 6 · RUNNABLE PASSTHROUGH ================= -->
+<section class="slide" data-title="RunnablePassthrough & State">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">06</div>
+    <div>
+      <h2 class="stage-title">RunnablePassthrough &amp; State</h2>
+      <p class="stage-kicker">Solving the "State Amnesia" problem: how to keep original user input while appending new fields.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The Problem: Pipeline Amnesia</h3>
+    <p>In a standard pipe <code>A | B</code>, the output of A replaces the input to B. If Step 1 produces <code>{"ticket": "..."}</code>, and Step 2 produces <code>{"summary": "..."}</code>, <strong>the original ticket message is lost!</strong></p>
+
+    <p>Later, when writing the customer reply in Step 4, how can the AI read the original customer message if it was dropped?</p>
+
+    <h3>The Solution: <code>RunnablePassthrough.assign()</code></h3>
+    <p>Think of <code>RunnablePassthrough</code> like a <strong>backpack</strong>. It carries your existing dictionary forward and simply unzips a new pocket to add the new field!</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Carrying State with .assign()</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code><span class="kw">from</span> langchain_core.runnables <span class="kw">import</span> RunnablePassthrough
+
+<span class="cm"># Keep the existing "ticket" key, and ADD an "analysis" key</span>
+keep_ticket_and_add_analysis = RunnablePassthrough.assign(
+    analysis=analyse_ticket
+)</code></pre>
+    </div>
+
+    <h3>Trace the Dictionary Growth:</h3>
+    <div class="diagram-box" style="text-align:left;">
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-faint);margin-bottom:8px;">INPUT:</p>
+      <code style="display:block;background:rgba(0,0,0,.4);padding:10px;border-radius:6px;font-size:13px;color:#c7f5ee;margin-bottom:12px;">
+      {"ticket": "My account is locked"}
+      </code>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--emerald);margin-bottom:8px;">AFTER keep_ticket_and_add_analysis:</p>
+      <code style="display:block;background:rgba(0,0,0,.4);padding:10px;border-radius:6px;font-size:13px;color:#98c379;">
+      {<br>
+      &nbsp;&nbsp;"ticket": "My account is locked",<br>
+      &nbsp;&nbsp;"analysis": {"summary": "User locked out", "category": "account", "urgency": "high"}<br>
+      }
+      </code>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">Memory Trick for Students</span>
+      <p>Whenever you hear <strong>"I want to add something new without deleting what I already have"</strong>, use <code>RunnablePassthrough.assign(...)</code>!</p>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(5)"><div class="pg-l">← Previous</div><div class="pg-t">Step 2: RunnableParallel</div></button>
+    <button class="rt" onclick="go(7)"><div class="pg-l">Next slide →</div><div class="pg-t">Decisions & Customer Reply</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 7 · DECISION & REPLY ================= -->
+<section class="slide" data-title="Steps 3 & 4: Decisions & Customer Reply">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">07</div>
+    <div>
+      <h2 class="stage-title">Steps 3 &amp; 4: Decisions &amp; Reply</h2>
+      <p class="stage-kicker">Reusing our state backpack to make business decisions and generate empathetic customer replies.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>Step 3: The Decision Chain (`add_decision`)</h3>
+    <p>Now that our dictionary contains both <code>{ticket}</code> and <code>{analysis}</code>, we pass them both into our decision prompt:</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Step 3 Code</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code>decision_prompt = ChatPromptTemplate.from_template(
+    """Review this ticket and the initial analysis:
+
+Ticket:
+{ticket}
+
+Analysis:
+{analysis}
+
+Give the final decision:
+1. Should this ticket be escalated to a human? (Yes/No)
+2. Brief reason why."""
+)
+
+decision_chain = decision_prompt | model | StrOutputParser()
+
+<span class="cm"># Add "decision" to our backpack!</span>
+add_decision = RunnablePassthrough.assign(
+    decision=decision_chain
+)</code></pre>
+    </div>
+
+    <h3>Step 4: The Customer Reply Chain (`add_reply`)</h3>
+    <p>Finally, we craft the customer reply. Notice how the prompt now has access to the customer's message AND the internal decision:</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Step 4 Code</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code>reply_prompt = ChatPromptTemplate.from_template(
+    """You are a customer-support assistant.
+
+Customer message:
+{ticket}
+
+Decision:
+{decision}
+
+Write a short and helpful reply to the customer.
+Do not mention prompts, AI, or internal system details."""
+)
+
+reply_chain = reply_prompt | model | StrOutputParser()
+
+<span class="cm"># Add "reply" to our backpack!</span>
+add_reply = RunnablePassthrough.assign(
+    reply=reply_chain
+)</code></pre>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(6)"><div class="pg-l">← Previous</div><div class="pg-t">RunnablePassthrough</div></button>
+    <button class="rt" onclick="go(8)"><div class="pg-l">Next slide →</div><div class="pg-t">Complete ticket_workflow</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 8 · COMPLETE WORKFLOW ================= -->
+<section class="slide" data-title="Step 5: The Complete ticket_workflow">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">08</div>
+    <div>
+      <h2 class="stage-title">Step 5: The Complete Pipeline</h2>
+      <p class="stage-kicker">Connecting all 4 modular Lego blocks together in one clean, readable cell.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The 4-Piece Symphony</h3>
+    <p>Look at how cleanly the entire multi-step AI application connects. Each step has a single, clear responsibility:</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Cell 16: The Entire Workflow Pipeline</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code>ticket_workflow = (
+    clean_step                      <span class="cm"># 1. RunnableLambda (clean whitespace)</span>
+    <span class="op">|</span> keep_ticket_and_add_analysis  <span class="cm"># 2. RunnableParallel + Passthrough</span>
+    <span class="op">|</span> add_decision                  <span class="cm"># 3. Decision Prompt + Passthrough</span>
+    <span class="op">|</span> add_reply                     <span class="cm"># 4. Customer Reply + Passthrough</span>
+)</code></pre>
+    </div>
+
+    <h3>The Runner Function: `solve_ticket()`</h3>
+    <p>To run the entire system, the user or student only calls <strong>ONE function</strong>:</p>
+
+    <div class="codeblock">
+      <div class="cb-head"><span class="cb-t">Running the Flow</span><span class="cb-lang">python</span></div>
+      <pre class="cb-body"><code>result = solve_ticket(<span class="str">"My account is locked and I have a meeting in 10 minutes!"</span>)</code></pre>
+    </div>
+
+    <div class="callout co-win"><span class="co-tag">Output Summary</span>
+      <p>The flow automatically executes all steps, fires 3 parallel requests, makes the escalation decision, writes the customer apology, and prints:</p>
+      <ul style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#c7f5ee;margin-top:10px;">
+        <li>• Message: My account is locked...</li>
+        <li>• Category: account | Urgency: high</li>
+        <li>• Decision: Escalate to human immediately (urgency is high).</li>
+        <li>• Reply: "Hello, we understand you have an urgent meeting. An agent is prioritizing your account unlock right now..."</li>
+      </ul>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(7)"><div class="pg-l">← Previous</div><div class="pg-t">Decisions & Customer Reply</div></button>
+    <button class="rt" onclick="go(9)"><div class="pg-l">Next slide →</div><div class="pg-t">Interactive Quiz</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 9 · INTERACTIVE QUIZ ================= -->
+<section class="slide" data-title="Interactive Quiz">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">09</div>
+    <div>
+      <h2 class="stage-title">Interactive Quiz: Check Your Understanding</h2>
+      <p class="stage-kicker">Test what you've learned! Click the best answer to see immediate feedback.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <!-- Quiz 1 -->
+    <div class="quiz">
+      <div class="q-title">1. Why do we wrap the <code>clean_message</code> function inside <code>RunnableLambda(clean_message)</code>?</div>
+      <div class="opts">
+        <button class="opt" onclick="qa(this,false)">A. Because Python functions cannot take string arguments in LangChain.</button>
+        <button class="opt" onclick="qa(this,true)">B. To give it the Runnable interface so it can be connected with the | pipe operator.</button>
+        <button class="opt" onclick="qa(this,false)">C. Because it makes the function run 10x faster in GPU memory.</button>
+      </div>
+      <div class="explain"><strong>Correct!</strong> In standard Python, functions don't support the <code>|</code> operator. Wrapping a function in <code>RunnableLambda</code> turns it into a first-class Runnable that snaps into any LCEL pipeline.</div>
+    </div>
+
+    <!-- Quiz 2 -->
+    <div class="quiz">
+      <div class="q-title">2. In Step 2, what is the main benefit of using <code>RunnableParallel</code> for summary, category, and urgency?</div>
+      <div class="opts">
+        <button class="opt" onclick="qa(this,false)">A. It reduces the OpenAI token cost to zero.</button>
+        <button class="opt" onclick="qa(this,true)">B. It runs all 3 API calls at the same time, cutting latency from ~4.5s down to ~1.5s.</button>
+        <button class="opt" onclick="qa(this,false)">C. It combines all 3 prompts into one single giant prompt.</button>
+      </div>
+      <div class="explain"><strong>Correct!</strong> Since summary, category, and urgency don't depend on each other, <code>RunnableParallel</code> executes them concurrently across separate threads.</div>
+    </div>
+
+    <!-- Quiz 3 -->
+    <div class="quiz">
+      <div class="q-title">3. What does <code>RunnablePassthrough.assign(analysis=analyse_ticket)</code> do?</div>
+      <div class="opts">
+        <button class="opt" onclick="qa(this,false)">A. It deletes the ticket text and replaces it with the analysis.</button>
+        <button class="opt" onclick="qa(this,true)">B. It keeps the original "ticket" key and attaches a new "analysis" key to the dictionary.</button>
+        <button class="opt" onclick="qa(this,false)">C. It prints the ticket to the console without returning anything.</button>
+      </div>
+      <div class="explain"><strong>Correct!</strong> <code>.assign()</code> solves pipeline amnesia by acting as a backpack: it preserves existing keys while appending new fields.</div>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(8)"><div class="pg-l">← Previous</div><div class="pg-t">Complete ticket_workflow</div></button>
+    <button class="rt" onclick="go(10)"><div class="pg-l">Next slide →</div><div class="pg-t">Summary & Cheat Sheet</div></button>
+  </div>
+</div></div>
+</section>
+
+<!-- ================= SLIDE 10 · SUMMARY & CHEAT SHEET ================= -->
+<section class="slide" data-title="The Decision Matrix & Cheat Sheet">
+<div class="container"><div class="stage">
+  <div class="stage-header">
+    <div class="stage-num-big">10</div>
+    <div>
+      <h2 class="stage-title">Summary &amp; Cheat Sheet</h2>
+      <p class="stage-kicker">When to use Pure Python, LCEL Pipes, or LangGraph in production.</p>
+    </div>
+  </div>
+  <div class="body-wrap"><div></div><div class="prose">
+
+    <h3>The 3 Approaches Compared</h3>
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Paradigm</th>
+          <th>Core Syntax</th>
+          <th>State Handling</th>
+          <th>When to Use</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:var(--emerald)">1. Pure Python</strong></td>
+          <td><code>model.invoke(prompt)</code></td>
+          <td>Standard variables &amp; dicts</td>
+          <td>Quick scripts, beginner lessons, simple one-off prompts. Zero framework lock-in.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--teal)">2. LangChain LCEL</strong></td>
+          <td><code>A | B | C</code></td>
+          <td><code>RunnablePassthrough.assign</code></td>
+          <td>Linear pipelines, streaming tokens, automatic parallel batches.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--violet)">3. LangGraph</strong></td>
+          <td><code>builder.add_edge()</code></td>
+          <td>Explicit <code>State</code> dictionary</td>
+          <td>Complex agents, loops, human-in-the-loop, multi-agent systems.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Your 4-Rule LCEL Cheatsheet</h3>
+    <ul>
+      <li><strong>Need to clean or validate input?</strong> → Use <code>RunnableLambda(my_func)</code>.</li>
+      <li><strong>Need to connect Prompt → Model → Parser?</strong> → Use <code>|</code> pipe.</li>
+      <li><strong>Need multiple tasks done at the same time?</strong> → Use <code>RunnableParallel()</code>.</li>
+      <li><strong>Need to add a field without losing existing data?</strong> → Use <code>RunnablePassthrough.assign()</code>.</li>
+    </ul>
+
+    <div class="callout co-note"><span class="co-tag">Companion Notebooks in lcel/</span>
+      <p>All three implementations are available side-by-side in your project repository:</p>
+      <ul>
+        <li><code>Simple_Pure_Python_Ticket_Solver.ipynb</code> (Functions &amp; Dicts)</li>
+        <li><code>Simple_LangChain_Ticket_Solver_Core_Only.ipynb</code> (LCEL Pipes)</li>
+        <li><code>Simple_LangGraph_Ticket_Solver.ipynb</code> (StateGraph &amp; Nodes)</li>
+      </ul>
+    </div>
+
+  </div></div>
+  <div class="pager">
+    <button onclick="go(9)"><div class="pg-l">← Previous</div><div class="pg-t">Interactive Quiz</div></button>
+    <button class="rt" onclick="go(0)"><div class="pg-l">Back to →</div><div class="pg-t">Session overview</div></button>
+  </div>
+</div></div>
+</section>
+
+<div class="foot">Generative &amp; Agentic AI Development · Boston Institute of Analytics</div>
+
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+
+/* build dropdown */
+const menu=document.getElementById('dropMenu');
+menu.innerHTML='<div class="part">Session Chapters</div>'+slides.map((s,i)=>
+  `<a data-i="${i}" onclick="go(${i});return false;"><span class="dn">${i===0?'··':String(i).padStart(2,'0')}</span><span class="dt">${s.dataset.title}</span></a>`
+).join('');
+
+function go(i){
+  if(i<0||i>=slides.length)return;
+  slides[cur].classList.remove('active');
+  cur=i;
+  slides[cur].classList.add('active');
+  [...menu.querySelectorAll('a')].forEach(a=>a.classList.toggle('cur',+a.dataset.i===i));
+  document.getElementById('btnPrev').classList.toggle('disabled',i===0);
+  document.getElementById('btnNext').classList.toggle('disabled',i===slides.length-1);
+  document.getElementById('railFill').style.width=((i)/(slides.length-1)*100)+'%';
+  drop.classList.remove('open');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* dropdown toggle */
+const drop=document.getElementById('chDrop');
+document.getElementById('chDropBtn').onclick=e=>{e.stopPropagation();drop.classList.toggle('open');};
+document.addEventListener('click',()=>drop.classList.remove('open'));
+
+/* keyboard navigation */
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight'||e.key===' ')go(cur+1);
+  if(e.key==='ArrowLeft')go(cur-1);
+});
+
+/* quiz handling */
+function qa(btn,correct){
+  const box=btn.closest('.quiz');
+  box.querySelectorAll('.opt').forEach(o=>o.disabled=true);
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct){
+    box.querySelectorAll('.opt').forEach(o=>{
+      if(o.getAttribute('onclick').includes(',true)'))o.classList.add('correct');
+    });
+  }
+  box.querySelector('.explain').classList.add('show');
+}
+
+go(0);
+</script>
+</body>
+</html>
