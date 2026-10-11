@@ -1,0 +1,1053 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>One ticket. Six approaches.</title><style>
+*{box-sizing:border-box}body{margin:0;background:#101813;color:#ecf0e5;font-family:Inter,system-ui,sans-serif}main{max-width:1400px;margin:auto;padding:48px 32px 64px}.eyebrow{font-size:11px;letter-spacing:.18em;color:#c9ed87;font-weight:700}h1{font-size:clamp(30px,4vw,52px);font-weight:550;letter-spacing:-.045em;margin:14px 0 10px}.sub{color:#aab9ae;font-size:15px;margin:0 0 32px}nav{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:28px}button{font:inherit;text-align:left;border:1px solid #38473c;background:#1a261e;color:#dbe4d5;border-radius:9px;padding:15px 12px;cursor:pointer;font-size:13px;font-weight:600}button span{display:block;font-size:10px;letter-spacing:.12em;color:#8c9d90;margin-bottom:8px}button:hover{border-color:#91b968}button[aria-selected=true]{background:#d6f59a;color:#162117;border-color:#d6f59a}button[aria-selected=true] span{color:#425638}button:focus-visible,a:focus-visible,pre:focus-visible{outline:3px solid #c9ed87;outline-offset:4px}.intro{display:flex;justify-content:space-between;gap:28px;align-items:center;margin-bottom:24px}h2{font-size:24px;font-weight:500;margin:0 0 10px}.intro p{font-size:14px;line-height:1.65;color:#b7c4b8;max-width:850px;margin:0}a{color:#c9ed87;font-size:12px;white-space:nowrap;text-underline-offset:4px}.codebar{display:flex;justify-content:space-between;gap:16px;background:#223027;border:1px solid #38473c;border-bottom:0;border-radius:10px 10px 0 0;padding:13px 20px;color:#adbeae;font-size:11px}pre{margin:0;background:#0c120f;border:1px solid #38473c;border-radius:0 0 10px 10px;padding:24px;overflow:auto;tab-size:4;line-height:1.7;font-size:13px;color:#dce6da}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.keyword{color:#c2adff}.string{color:#c9e79a}.comment{color:#8c9b90}.number{color:#efc58c}[hidden]{display:none!important}footer{font-size:11px;color:#8fa091;margin-top:22px}@media(max-width:850px){nav{grid-template-columns:repeat(3,1fr)}main{padding:30px 18px}.intro{display:block}.intro a{display:inline-block;margin-top:14px}.codebar{flex-direction:column;gap:6px}pre{padding:18px;font-size:12px}}@media(max-width:430px){nav{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><main><div class="eyebrow">SAME PROBLEM · SIX IMPLEMENTATIONS</div><h1>One ticket. Six approaches.</h1><p class="sub">Choose a version to see its complete Python code.</p><nav role="tablist" aria-label="Ticket solver implementations"><button role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0" data-index="0"><span>01</span>LangChain LCEL</button><button role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1" data-index="1"><span>02</span>LangGraph</button><button role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-index="2"><span>03</span>Microsoft</button><button role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-index="3"><span>04</span>CrewAI Flow</button><button role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-index="4"><span>05</span>CrewAI Crew</button><button role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1" data-index="5"><span>06</span>CrewAI Manager</button></nav><section role="tabpanel" id="panel-0" aria-labelledby="tab-0" ><div class="intro"><div><h2>LangChain LCEL</h2><p>Small runnable steps are joined into a pipeline. Each step passes its result to the next.</p></div></div><div class="codebar"><span>Simple_LangChain_Ticket_Solver_Core_Only.py</span><span>Complete Python · 229 lines</span></div><pre tabindex="0" aria-label="Complete LangChain LCEL Python code"><code><span class="string">&quot;&quot;&quot;LangChain LCEL ticket solver.
+Install: python -m pip install &quot;langchain-core==1.6.9&quot; &quot;langchain-openai==1.7.0&quot; &quot;python-dotenv==1.2.4&quot;
+Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
+&quot;&quot;&quot;</span>
+
+<span class="keyword">import</span> asyncio
+
+<span class="keyword">import</span> os
+
+<span class="keyword">def</span> read_openai_key():
+    <span class="comment"># In Colab, always use this notebook&#x27;s enabled secret.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> google.colab <span class="keyword">import</span> userdata
+    <span class="keyword">except</span> ImportError:
+        userdata = <span class="keyword">None</span>
+    <span class="keyword">if</span> userdata <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+        <span class="keyword">try</span>:
+            key = userdata.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>)
+        <span class="keyword">except</span> Exception:
+            <span class="keyword">raise</span> RuntimeError(
+                <span class="string">&quot;In Colab Secrets, add OPENAI_API_KEY and enable Notebook access, &quot;</span>
+                <span class="string">&quot;then rerun this cell.&quot;</span>
+            ) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> isinstance(key, str) <span class="keyword">or</span> <span class="keyword">not</span> key.strip():
+            <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;The OPENAI_API_KEY Colab secret is empty.&quot;</span>)
+        <span class="keyword">return</span> key.strip()
+
+    <span class="comment"># Local Python fallback; never overwrite an existing environment key.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+        load_dotenv(find_dotenv(usecwd=<span class="keyword">True</span>), override=<span class="keyword">False</span>)
+    <span class="keyword">except</span> ImportError:
+        <span class="keyword">pass</span>
+    key = os.environ.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>, <span class="string">&quot;&quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">from</span> getpass <span class="keyword">import</span> getpass
+        key = getpass(<span class="string">&quot;Enter OPENAI_API_KEY (hidden): &quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;OPENAI_API_KEY cannot be empty.&quot;</span>)
+    <span class="keyword">return</span> key
+
+os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>] = read_openai_key()
+
+print(<span class="string">&quot;✅ OpenAI API key is ready.&quot;</span>)
+
+<span class="keyword">from</span> langchain_openai <span class="keyword">import</span> ChatOpenAI
+<span class="keyword">from</span> langchain_core.prompts <span class="keyword">import</span> ChatPromptTemplate
+<span class="keyword">from</span> langchain_core.output_parsers <span class="keyword">import</span> StrOutputParser
+<span class="keyword">from</span> langchain_core.runnables <span class="keyword">import</span> (
+    RunnableLambda,
+    RunnableParallel,
+    RunnablePassthrough,
+)
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># MODEL</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+model = ChatOpenAI(
+    model=<span class="string">&quot;gpt-4o-mini&quot;</span>
+)
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># 1. RUNNABLE LAMBDA: clean_step</span>
+<span class="comment"># Problem: user input may contain spaces or may be empty.</span>
+<span class="comment"># Solution: use normal Python logic inside LangChain.</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+<span class="keyword">def</span> clean_message(message: str) -&gt; dict:
+    message = message.strip()
+
+    <span class="keyword">if</span> <span class="keyword">not</span> message:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;Ticket cannot be empty.&quot;</span>)
+
+    <span class="keyword">return</span> {<span class="string">&quot;ticket&quot;</span>: message}
+
+
+clean_step = RunnableLambda(clean_message)
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># 2. RUNNABLE PARALLEL &amp; RUNNABLE PASSTHROUGH: keep_ticket_and_add_analysis</span>
+<span class="comment"># Problem: summary, category, and urgency are independent.</span>
+<span class="comment"># Solution: run all three from the same ticket, then attach them.</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+summary_chain = (
+    ChatPromptTemplate.from_template(
+        <span class="string">&quot;Summarize this support ticket in one short sentence:\n{ticket}&quot;</span>
+    )
+    | model
+    | StrOutputParser()
+)
+
+category_chain = (
+    ChatPromptTemplate.from_template(
+        <span class="string">&quot;Return only one category: billing, technical, or account.\n&quot;</span>
+        <span class="string">&quot;Ticket: {ticket}&quot;</span>
+    )
+    | model
+    | StrOutputParser()
+)
+
+urgency_chain = (
+    ChatPromptTemplate.from_template(
+        <span class="string">&quot;Return only one urgency: low, medium, or high.\n&quot;</span>
+        <span class="string">&quot;Ticket: {ticket}&quot;</span>
+    )
+    | model
+    | StrOutputParser()
+)
+
+analyse_ticket = RunnableParallel(
+    summary=summary_chain,
+    category=category_chain,
+    urgency=urgency_chain,
+)
+
+keep_ticket_and_add_analysis = RunnablePassthrough.assign(
+    analysis=analyse_ticket
+)
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># 3. SIMPLE DECISION CHAIN: add_decision</span>
+<span class="comment"># Problem: review the analysis and make a final decision.</span>
+<span class="comment"># Solution: a simple prompt + model!</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+decision_prompt = ChatPromptTemplate.from_template(
+    <span class="string">&quot;&quot;&quot;
+Review this ticket and the initial analysis:
+
+Ticket:
+{ticket}
+
+Analysis:
+{analysis}
+
+Give the final decision:
+1. Should this ticket be escalated to a human? (Yes/No)
+2. Brief reason why.
+&quot;&quot;&quot;</span>
+)
+
+decision_chain = (
+    decision_prompt
+    | model
+    | StrOutputParser()
+)
+
+<span class="comment"># Keep ticket + analysis, and ADD the final decision.</span>
+add_decision = RunnablePassthrough.assign(
+    decision=decision_chain
+)
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># 4. CUSTOMER REPLY: add_reply</span>
+<span class="comment"># LCEL Sequence for reply + RunnablePassthrough.assign</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+reply_prompt = ChatPromptTemplate.from_template(
+    <span class="string">&quot;&quot;&quot;
+You are a customer-support assistant.
+
+Customer message:
+{ticket}
+
+Decision:
+{decision}
+
+Write a short and helpful reply to the customer.
+Do not mention prompts, AI, or internal system details.
+&quot;&quot;&quot;</span>
+)
+
+reply_chain = (
+    reply_prompt
+    | model
+    | StrOutputParser()
+)
+
+<span class="comment"># Keep previous state and ADD customer reply</span>
+add_reply = RunnablePassthrough.assign(
+    reply=reply_chain
+)
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># 5. COMPLETE WORKFLOW PIPELINE</span>
+<span class="comment"># Connect all 4 steps together with the | operator</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+ticket_workflow = (
+    clean_step
+    | keep_ticket_and_add_analysis
+    | add_decision
+    | add_reply
+)
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># 6. THE ONLY FUNCTION YOU NEED TO CALL</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+<span class="keyword">def</span> solve_ticket(message: str):
+    <span class="string">&quot;&quot;&quot;
+    Give this function one customer message.
+    It runs the entire LangChain flow and prints the result.
+    &quot;&quot;&quot;</span>
+
+    result = ticket_workflow.invoke(message)
+
+    print(<span class="string">&quot;\n========== TICKET RESULT ==========&quot;</span>)
+    print(<span class="string">&quot;Message  :&quot;</span>, result[<span class="string">&quot;ticket&quot;</span>])
+    print(<span class="string">&quot;\nAnalysis :&quot;</span>)
+    <span class="keyword">for</span> key, val <span class="keyword">in</span> result[<span class="string">&quot;analysis&quot;</span>].items():
+        print(<span class="string">f&quot;  - {key}: {val}&quot;</span>)
+    print(<span class="string">&quot;\nDecision :\n&quot;</span>, result[<span class="string">&quot;decision&quot;</span>])
+    print(<span class="string">&quot;\nReply to customer:\n&quot;</span>, result[<span class="string">&quot;reply&quot;</span>])
+    print(<span class="string">&quot;===================================&quot;</span>)
+
+    <span class="keyword">return</span> result
+
+
+print(<span class="string">&quot;✅ Ticket workflow is ready.&quot;</span>)
+print(<span class="string">&quot;Now call: solve_ticket(&#x27;your message&#x27;)&quot;</span>)
+
+<span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:
+    result = solve_ticket(
+        <span class="string">&quot;My account is locked and I have an important meeting in 10 minutes.&quot;</span>
+    )
+    print(result)
+</code></pre></section><section role="tabpanel" id="panel-1" aria-labelledby="tab-1" hidden><div class="intro"><div><h2>LangGraph</h2><p>Nodes read shared state and return updates. Edges decide which node runs next.</p></div></div><div class="codebar"><span>Simple_LangGraph_Ticket_Solver.py</span><span>Complete Python · 208 lines</span></div><pre tabindex="0" aria-label="Complete LangGraph Python code"><code><span class="string">&quot;&quot;&quot;LangGraph ticket solver.
+Install: python -m pip install &quot;langchain-core==1.6.9&quot; &quot;langchain-openai==1.7.0&quot; &quot;python-dotenv==1.2.4&quot; &quot;langgraph==1.2.14&quot;
+Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
+&quot;&quot;&quot;</span>
+
+<span class="keyword">import</span> asyncio
+
+<span class="keyword">import</span> os
+
+<span class="keyword">def</span> read_openai_key():
+    <span class="comment"># In Colab, always use this notebook&#x27;s enabled secret.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> google.colab <span class="keyword">import</span> userdata
+    <span class="keyword">except</span> ImportError:
+        userdata = <span class="keyword">None</span>
+    <span class="keyword">if</span> userdata <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+        <span class="keyword">try</span>:
+            key = userdata.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>)
+        <span class="keyword">except</span> Exception:
+            <span class="keyword">raise</span> RuntimeError(
+                <span class="string">&quot;In Colab Secrets, add OPENAI_API_KEY and enable Notebook access, &quot;</span>
+                <span class="string">&quot;then rerun this cell.&quot;</span>
+            ) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> isinstance(key, str) <span class="keyword">or</span> <span class="keyword">not</span> key.strip():
+            <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;The OPENAI_API_KEY Colab secret is empty.&quot;</span>)
+        <span class="keyword">return</span> key.strip()
+
+    <span class="comment"># Local Python fallback; never overwrite an existing environment key.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+        load_dotenv(find_dotenv(usecwd=<span class="keyword">True</span>), override=<span class="keyword">False</span>)
+    <span class="keyword">except</span> ImportError:
+        <span class="keyword">pass</span>
+    key = os.environ.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>, <span class="string">&quot;&quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">from</span> getpass <span class="keyword">import</span> getpass
+        key = getpass(<span class="string">&quot;Enter OPENAI_API_KEY (hidden): &quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;OPENAI_API_KEY cannot be empty.&quot;</span>)
+    <span class="keyword">return</span> key
+
+os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>] = read_openai_key()
+
+print(<span class="string">&quot;✅ OpenAI API key is ready.&quot;</span>)
+
+<span class="keyword">from</span> langchain_openai <span class="keyword">import</span> ChatOpenAI
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># MODEL</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+model = ChatOpenAI(
+    model=<span class="string">&quot;gpt-4o-mini&quot;</span>
+)
+
+print(<span class="string">&quot;✅ Model ready.&quot;</span>)
+
+<span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict, Optional
+
+<span class="keyword">class</span> TicketState(TypedDict):
+    ticket: str
+    analysis: Optional[dict]
+    decision: Optional[str]
+    reply: Optional[str]
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># NODE 1: clean_step</span>
+<span class="comment"># Problem: user input may contain spaces or may be empty.</span>
+<span class="comment"># Solution: standard Python logic to clean and validate.</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+<span class="keyword">def</span> clean_node(state: TicketState) -&gt; dict:
+    message = state[<span class="string">&quot;ticket&quot;</span>].strip()
+
+    <span class="keyword">if</span> <span class="keyword">not</span> message:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;Ticket cannot be empty.&quot;</span>)
+
+    <span class="keyword">return</span> {<span class="string">&quot;ticket&quot;</span>: message}
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># NODE 2: analyse_ticket</span>
+<span class="comment"># Problem: run summary, category, and urgency analysis.</span>
+<span class="comment"># Solution: direct model.invoke() calls with regular f-strings!</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+<span class="keyword">def</span> analyse_node(state: TicketState) -&gt; dict:
+    ticket = state[<span class="string">&quot;ticket&quot;</span>]
+
+    summary = model.invoke(
+        <span class="string">f&quot;Summarize this support ticket in one short sentence:\n{ticket}&quot;</span>
+    ).content.strip()
+
+    category = model.invoke(
+        <span class="string">f&quot;Return only one category: billing, technical, or account.\nTicket: {ticket}&quot;</span>
+    ).content.strip()
+
+    urgency = model.invoke(
+        <span class="string">f&quot;Return only one urgency: low, medium, or high.\nTicket: {ticket}&quot;</span>
+    ).content.strip()
+
+    <span class="keyword">return</span> {
+        <span class="string">&quot;analysis&quot;</span>: {
+            <span class="string">&quot;summary&quot;</span>: summary,
+            <span class="string">&quot;category&quot;</span>: category,
+            <span class="string">&quot;urgency&quot;</span>: urgency,
+        }
+    }
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># NODE 3: add_decision</span>
+<span class="comment"># Problem: decide if ticket needs urgent human escalation.</span>
+<span class="comment"># Solution: simple prompt string + model.invoke().</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+<span class="keyword">def</span> decision_node(state: TicketState) -&gt; dict:
+    prompt = <span class="string">f&quot;&quot;&quot;
+Review this ticket and the initial analysis:
+
+Ticket:
+{state[&#x27;ticket&#x27;]}
+
+Analysis:
+{state[&#x27;analysis&#x27;]}
+
+Give the final decision:
+1. Should this ticket be escalated to a human? (Yes/No)
+2. Brief reason why.
+&quot;&quot;&quot;</span>
+
+    decision = model.invoke(prompt).content.strip()
+
+    <span class="keyword">return</span> {<span class="string">&quot;decision&quot;</span>: decision}
+
+<span class="comment"># ---------------------------------------------------------</span>
+<span class="comment"># NODE 4: add_reply</span>
+<span class="comment"># Problem: write a friendly customer reply.</span>
+<span class="comment"># Solution: simple prompt string + model.invoke().</span>
+<span class="comment"># ---------------------------------------------------------</span>
+
+<span class="keyword">def</span> reply_node(state: TicketState) -&gt; dict:
+    prompt = <span class="string">f&quot;&quot;&quot;
+You are a customer-support assistant.
+
+Customer message:
+{state[&#x27;ticket&#x27;]}
+
+Decision:
+{state[&#x27;decision&#x27;]}
+
+Write a short and helpful reply to the customer.
+Do not mention prompts, AI, or internal system details.
+&quot;&quot;&quot;</span>
+
+    reply = model.invoke(prompt).content.strip()
+
+    <span class="keyword">return</span> {<span class="string">&quot;reply&quot;</span>: reply}
+
+<span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, START, END
+
+<span class="comment"># 1. Initialize graph with State</span>
+builder = StateGraph(TicketState)
+
+<span class="comment"># 2. Add each node (step)</span>
+builder.add_node(<span class="string">&quot;clean_step&quot;</span>, clean_node)
+builder.add_node(<span class="string">&quot;analyse_ticket&quot;</span>, analyse_node)
+builder.add_node(<span class="string">&quot;add_decision&quot;</span>, decision_node)
+builder.add_node(<span class="string">&quot;add_reply&quot;</span>, reply_node)
+
+<span class="comment"># 3. Connect nodes with edges (START -&gt; 1 -&gt; 2 -&gt; 3 -&gt; 4 -&gt; END)</span>
+builder.add_edge(START, <span class="string">&quot;clean_step&quot;</span>)
+builder.add_edge(<span class="string">&quot;clean_step&quot;</span>, <span class="string">&quot;analyse_ticket&quot;</span>)
+builder.add_edge(<span class="string">&quot;analyse_ticket&quot;</span>, <span class="string">&quot;add_decision&quot;</span>)
+builder.add_edge(<span class="string">&quot;add_decision&quot;</span>, <span class="string">&quot;add_reply&quot;</span>)
+builder.add_edge(<span class="string">&quot;add_reply&quot;</span>, END)
+
+<span class="comment"># 4. Compile into a runnable application</span>
+app = builder.compile()
+
+print(<span class="string">&quot;✅ LangGraph ticket workflow compiled successfully!&quot;</span>)
+
+<span class="keyword">def</span> solve_ticket(message: str):
+    <span class="string">&quot;&quot;&quot;
+    Give this function one customer message.
+    It runs the LangGraph application and prints the result.
+    &quot;&quot;&quot;</span>
+
+    result = app.invoke({<span class="string">&quot;ticket&quot;</span>: message})
+
+    print(<span class="string">&quot;\n========== TICKET RESULT (LangGraph) ==========&quot;</span>)
+    print(<span class="string">&quot;Message  :&quot;</span>, result[<span class="string">&quot;ticket&quot;</span>])
+    print(<span class="string">&quot;\nAnalysis :&quot;</span>)
+    <span class="keyword">for</span> key, val <span class="keyword">in</span> result[<span class="string">&quot;analysis&quot;</span>].items():
+        print(<span class="string">f&quot;  - {key}: {val}&quot;</span>)
+    print(<span class="string">&quot;\nDecision :\n&quot;</span>, result[<span class="string">&quot;decision&quot;</span>])
+    print(<span class="string">&quot;\nReply to customer:\n&quot;</span>, result[<span class="string">&quot;reply&quot;</span>])
+    print(<span class="string">&quot;===============================================&quot;</span>)
+
+    <span class="keyword">return</span> result
+
+
+print(<span class="string">&quot;✅ LangGraph runner function ready.&quot;</span>)
+print(<span class="string">&quot;Now call: solve_ticket(&#x27;your message&#x27;)&quot;</span>)
+
+<span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:
+    result = solve_ticket(
+        <span class="string">&quot;My account is locked and I have an important meeting in 10 minutes.&quot;</span>
+    )
+    print(result)
+</code></pre></section><section role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden><div class="intro"><div><h2>Microsoft</h2><p>Executors read and write state through their context. Sending a message along an edge starts the next step.</p></div></div><div class="codebar"><span>Simple_Microsoft_Agent_Framework_Ticket_Solver.py</span><span>Complete Python · 186 lines</span></div><pre tabindex="0" aria-label="Complete Microsoft Python code"><code><span class="string">&quot;&quot;&quot;Microsoft ticket solver.
+Install: python -m pip install &quot;agent-framework-core==1.21.0&quot; &quot;agent-framework-openai==1.16.0&quot; &quot;python-dotenv==1.2.4&quot;
+Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
+&quot;&quot;&quot;</span>
+
+<span class="keyword">import</span> asyncio
+
+MODEL_NAME = <span class="string">&quot;gpt-4o-mini&quot;</span>  <span class="comment"># Public OpenAI API model.</span>
+
+<span class="keyword">import</span> os
+<span class="keyword">import</span> getpass
+<span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+
+
+<span class="keyword">def</span> read_openai_key():
+    <span class="comment"># In Colab, always use this notebook&#x27;s enabled secret.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> google.colab <span class="keyword">import</span> userdata
+    <span class="keyword">except</span> ImportError:
+        userdata = <span class="keyword">None</span>
+    <span class="keyword">if</span> userdata <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+        <span class="keyword">try</span>:
+            key = userdata.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>)
+        <span class="keyword">except</span> Exception:
+            <span class="keyword">raise</span> RuntimeError(
+                <span class="string">&quot;In Colab Secrets, add OPENAI_API_KEY and enable Notebook access, &quot;</span>
+                <span class="string">&quot;then rerun this cell.&quot;</span>
+            ) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> isinstance(key, str) <span class="keyword">or</span> <span class="keyword">not</span> key.strip():
+            <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;The OPENAI_API_KEY Colab secret is empty.&quot;</span>)
+        <span class="keyword">return</span> key.strip()
+
+    <span class="comment"># Local Python fallback; never overwrite an existing environment key.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+        load_dotenv(find_dotenv(usecwd=<span class="keyword">True</span>), override=<span class="keyword">False</span>)
+    <span class="keyword">except</span> ImportError:
+        <span class="keyword">pass</span>
+    key = os.environ.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>, <span class="string">&quot;&quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">from</span> getpass <span class="keyword">import</span> getpass
+        key = getpass(<span class="string">&quot;Enter OPENAI_API_KEY (hidden): &quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;OPENAI_API_KEY cannot be empty.&quot;</span>)
+    <span class="keyword">return</span> key
+
+os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>] = read_openai_key()
+print(<span class="string">&quot;OpenAI key loaded securely; authentication has not yet been tested.&quot;</span>)
+
+<span class="keyword">import</span> os
+<span class="keyword">from</span> agent_framework <span class="keyword">import</span> Agent, WorkflowBuilder, WorkflowContext, executor
+<span class="keyword">from</span> agent_framework.openai <span class="keyword">import</span> OpenAIChatCompletionClient
+<span class="keyword">from</span> typing <span class="keyword">import</span> Never
+
+SAMPLE_TICKET = <span class="string">&quot;My account is locked and I have an important meeting in 10 minutes.&quot;</span>
+
+
+client = OpenAIChatCompletionClient(
+    model=MODEL_NAME,
+    api_key=os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>],
+    base_url=os.getenv(<span class="string">&quot;OPENAI_BASE_URL&quot;</span>) <span class="keyword">or</span> <span class="string">&quot;https://api.openai.com/v1&quot;</span>,
+)
+agent = Agent(client=client, name=<span class="string">&quot;TicketSupport&quot;</span>)
+print(<span class="string">f&quot;Agent configured for {MODEL_NAME}.&quot;</span>)
+
+<span class="keyword">from</span> typing <span class="keyword">import</span> TypedDict, Optional
+
+<span class="keyword">class</span> TicketState(TypedDict):
+    ticket: str
+    analysis: Optional[dict]
+    decision: Optional[str]
+    reply: Optional[str]
+
+@executor(id=<span class="string">&quot;clean_step&quot;</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> clean_step(message: str, ctx: WorkflowContext[str]) -&gt; <span class="keyword">None</span>:
+    ticket = message.strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> ticket:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;Ticket cannot be empty.&quot;</span>)
+    ctx.set_state(<span class="string">&quot;ticket&quot;</span>, ticket)
+    <span class="keyword">await</span> ctx.send_message(<span class="string">&quot;continue&quot;</span>)
+
+@executor(id=<span class="string">&quot;analyse_ticket&quot;</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> analyse_ticket(trigger: str, ctx: WorkflowContext[str]) -&gt; <span class="keyword">None</span>:
+    ticket = ctx.get_state(<span class="string">&quot;ticket&quot;</span>)
+
+    summary = (<span class="keyword">await</span> agent.run(
+        <span class="string">f&quot;Summarize this support ticket in one short sentence:\n{ticket}&quot;</span>
+    )).text.strip()
+
+    category = (<span class="keyword">await</span> agent.run(
+        <span class="string">f&quot;Return only one category: billing, technical, or account.\nTicket: {ticket}&quot;</span>
+    )).text.strip()
+
+    urgency = (<span class="keyword">await</span> agent.run(
+        <span class="string">f&quot;Return only one urgency: low, medium, or high.\nTicket: {ticket}&quot;</span>
+    )).text.strip()
+
+    analysis: dict = {
+        <span class="string">&quot;summary&quot;</span>: summary,
+        <span class="string">&quot;category&quot;</span>: category,
+        <span class="string">&quot;urgency&quot;</span>: urgency,
+    }
+    ctx.set_state(<span class="string">&quot;analysis&quot;</span>, analysis)
+    <span class="keyword">await</span> ctx.send_message(<span class="string">&quot;continue&quot;</span>)
+
+@executor(id=<span class="string">&quot;add_decision&quot;</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> add_decision(trigger: str, ctx: WorkflowContext[str]) -&gt; <span class="keyword">None</span>:
+    ticket = ctx.get_state(<span class="string">&quot;ticket&quot;</span>)
+    analysis = ctx.get_state(<span class="string">&quot;analysis&quot;</span>)
+    prompt = <span class="string">f&quot;&quot;&quot;
+Review this ticket and the initial analysis:
+
+Ticket:
+{ticket}
+
+Analysis:
+{analysis}
+
+Give the final decision:
+1. Should this ticket be escalated to a human? (Yes/No)
+2. Brief reason why.
+&quot;&quot;&quot;</span>
+
+    decision = (<span class="keyword">await</span> agent.run(prompt)).text.strip()
+
+    ctx.set_state(<span class="string">&quot;decision&quot;</span>, decision)
+    <span class="keyword">await</span> ctx.send_message(<span class="string">&quot;continue&quot;</span>)
+
+@executor(id=<span class="string">&quot;add_reply&quot;</span>)
+<span class="keyword">async</span> <span class="keyword">def</span> add_reply(trigger: str, ctx: WorkflowContext[Never, dict]) -&gt; <span class="keyword">None</span>:
+    ticket = ctx.get_state(<span class="string">&quot;ticket&quot;</span>)
+    decision = ctx.get_state(<span class="string">&quot;decision&quot;</span>)
+    prompt = <span class="string">f&quot;&quot;&quot;
+You are a customer-support assistant.
+
+Customer message:
+{ticket}
+
+Decision:
+{decision}
+
+Write a short and helpful reply to the customer.
+Do not mention prompts, AI, or internal system details.
+&quot;&quot;&quot;</span>
+
+    reply = (<span class="keyword">await</span> agent.run(prompt)).text.strip()
+
+    ctx.set_state(<span class="string">&quot;reply&quot;</span>, reply)
+    result: TicketState = {
+        <span class="string">&quot;ticket&quot;</span>: ctx.get_state(<span class="string">&quot;ticket&quot;</span>),
+        <span class="string">&quot;analysis&quot;</span>: ctx.get_state(<span class="string">&quot;analysis&quot;</span>),
+        <span class="string">&quot;decision&quot;</span>: ctx.get_state(<span class="string">&quot;decision&quot;</span>),
+        <span class="string">&quot;reply&quot;</span>: ctx.get_state(<span class="string">&quot;reply&quot;</span>),
+    }
+    <span class="keyword">await</span> ctx.yield_output(result)
+
+<span class="keyword">def</span> create_workflow():
+    <span class="keyword">return</span> (
+        WorkflowBuilder(start_executor=clean_step, output_from=[add_reply])
+        .add_edge(clean_step, analyse_ticket)
+        .add_edge(analyse_ticket, add_decision)
+        .add_edge(add_decision, add_reply)
+        .build()
+    )
+
+<span class="keyword">async</span> <span class="keyword">def</span> solve_ticket(message: str) -&gt; TicketState:
+    workflow = create_workflow()
+    run_result = <span class="keyword">await</span> workflow.run(message)
+    outputs = run_result.get_outputs()
+    <span class="keyword">if</span> len(outputs) != <span class="number">1</span>:
+        <span class="keyword">raise</span> RuntimeError(<span class="string">f&quot;Expected one final result; got {len(outputs)}.&quot;</span>)
+    result = outputs[<span class="number">0</span>]
+
+    print(<span class="string">&quot;\n========== TICKET RESULT (Microsoft Agent Framework) ==========&quot;</span>)
+    print(<span class="string">&quot;Message  :&quot;</span>, result[<span class="string">&quot;ticket&quot;</span>])
+    print(<span class="string">&quot;\nAnalysis :&quot;</span>)
+    <span class="keyword">for</span> key, val <span class="keyword">in</span> result[<span class="string">&quot;analysis&quot;</span>].items():
+        print(<span class="string">f&quot;  - {key}: {val}&quot;</span>)
+    print(<span class="string">&quot;\nDecision :\n&quot;</span>, result[<span class="string">&quot;decision&quot;</span>])
+    print(<span class="string">&quot;\nReply to customer:\n&quot;</span>, result[<span class="string">&quot;reply&quot;</span>])
+    print(<span class="string">&quot;===============================================================&quot;</span>)
+    <span class="keyword">return</span> result
+
+<span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:
+    result = asyncio.run(solve_ticket(SAMPLE_TICKET))
+    print(result)
+</code></pre></section><section role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden><div class="intro"><div><h2>CrewAI Flow</h2><p>The start method runs first. Listeners run after their previous method finishes. Steps update shared state and call the model directly.</p></div></div><div class="codebar"><span>Simple_CrewAI_Ticket_Solver.py</span><span>Complete Python · 148 lines</span></div><pre tabindex="0" aria-label="Complete CrewAI Flow Python code"><code><span class="string">&quot;&quot;&quot;CrewAI Flow ticket solver.
+Install: python -m pip install &quot;crewai==1.15.27&quot; &quot;python-dotenv==1.2.4&quot;
+Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
+&quot;&quot;&quot;</span>
+
+<span class="keyword">import</span> asyncio
+
+MODEL_NAME = <span class="string">&quot;gpt-4o-mini&quot;</span>  <span class="comment"># Public OpenAI API model.</span>
+
+<span class="keyword">import</span> os
+<span class="keyword">import</span> getpass
+<span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+
+
+<span class="keyword">def</span> read_openai_key():
+    <span class="comment"># In Colab, always use this notebook&#x27;s enabled secret.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> google.colab <span class="keyword">import</span> userdata
+    <span class="keyword">except</span> ImportError:
+        userdata = <span class="keyword">None</span>
+    <span class="keyword">if</span> userdata <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+        <span class="keyword">try</span>:
+            key = userdata.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>)
+        <span class="keyword">except</span> Exception:
+            <span class="keyword">raise</span> RuntimeError(
+                <span class="string">&quot;In Colab Secrets, add OPENAI_API_KEY and enable Notebook access, &quot;</span>
+                <span class="string">&quot;then rerun this cell.&quot;</span>
+            ) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> isinstance(key, str) <span class="keyword">or</span> <span class="keyword">not</span> key.strip():
+            <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;The OPENAI_API_KEY Colab secret is empty.&quot;</span>)
+        <span class="keyword">return</span> key.strip()
+
+    <span class="comment"># Local Python fallback; never overwrite an existing environment key.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+        load_dotenv(find_dotenv(usecwd=<span class="keyword">True</span>), override=<span class="keyword">False</span>)
+    <span class="keyword">except</span> ImportError:
+        <span class="keyword">pass</span>
+    key = os.environ.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>, <span class="string">&quot;&quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">from</span> getpass <span class="keyword">import</span> getpass
+        key = getpass(<span class="string">&quot;Enter OPENAI_API_KEY (hidden): &quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;OPENAI_API_KEY cannot be empty.&quot;</span>)
+    <span class="keyword">return</span> key
+
+os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>] = read_openai_key()
+print(<span class="string">&quot;OpenAI key loaded securely; authentication has not yet been tested.&quot;</span>)
+
+os.environ[<span class="string">&quot;CREWAI_TELEMETRY_DISABLED&quot;</span>] = <span class="string">&quot;true&quot;</span>
+os.environ[<span class="string">&quot;CREWAI_TRACING_ENABLED&quot;</span>] = <span class="string">&quot;false&quot;</span>
+<span class="keyword">from</span> crewai <span class="keyword">import</span> LLM
+<span class="keyword">from</span> crewai.flow.flow <span class="keyword">import</span> Flow, start, listen
+SAMPLE_TICKET = <span class="string">&quot;My account is locked and I have an important meeting in 10 minutes.&quot;</span>
+
+<span class="keyword">async</span> <span class="keyword">def</span> ask(prompt: str) -&gt; str:
+    llm = LLM(model=<span class="string">&quot;openai/&quot;</span> + MODEL_NAME,
+              base_url=os.getenv(<span class="string">&quot;OPENAI_BASE_URL&quot;</span>) <span class="keyword">or</span> <span class="string">&quot;https://api.openai.com/v1&quot;</span>)
+    <span class="keyword">return</span> (<span class="keyword">await</span> llm.acall(prompt)).strip()
+
+<span class="keyword">async</span> <span class="keyword">def</span> clean_step(state):
+    ticket = state[<span class="string">&#x27;message&#x27;</span>].strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> ticket:
+        <span class="keyword">raise</span> ValueError(<span class="string">&#x27;Ticket cannot be empty.&#x27;</span>)
+    state[<span class="string">&#x27;ticket&#x27;</span>] = ticket
+
+<span class="keyword">async</span> <span class="keyword">def</span> analyse_ticket(state):
+    ticket = state[<span class="string">&#x27;ticket&#x27;</span>]
+    summary = (<span class="keyword">await</span> ask(<span class="string">f&#x27;Summarize this support ticket in one short sentence:\n{ticket}&#x27;</span>)).strip()
+    category = (<span class="keyword">await</span> ask(<span class="string">f&#x27;Return only one category: billing, technical, or account.\nTicket: {ticket}&#x27;</span>)).strip()
+    urgency = (<span class="keyword">await</span> ask(<span class="string">f&#x27;Return only one urgency: low, medium, or high.\nTicket: {ticket}&#x27;</span>)).strip()
+    analysis: dict = {<span class="string">&#x27;summary&#x27;</span>: summary, <span class="string">&#x27;category&#x27;</span>: category, <span class="string">&#x27;urgency&#x27;</span>: urgency}
+    state[<span class="string">&#x27;analysis&#x27;</span>] = analysis
+
+<span class="keyword">async</span> <span class="keyword">def</span> add_decision(state):
+    ticket = state[<span class="string">&#x27;ticket&#x27;</span>]
+    analysis = state[<span class="string">&#x27;analysis&#x27;</span>]
+    prompt = <span class="string">f&quot;&quot;&quot;
+    Review this ticket and the initial analysis:
+
+    Ticket:
+    {ticket}
+
+    Analysis:
+    {analysis}
+
+    Give the final decision:
+    1. Should this ticket be escalated to a human? (Yes/No)
+    2. Brief reason why.
+    &quot;&quot;&quot;</span>
+    decision = (<span class="keyword">await</span> ask(prompt)).strip()
+    state[<span class="string">&#x27;decision&#x27;</span>] = decision
+
+<span class="keyword">async</span> <span class="keyword">def</span> add_reply(state):
+    ticket = state[<span class="string">&#x27;ticket&#x27;</span>]
+    decision = state[<span class="string">&#x27;decision&#x27;</span>]
+    prompt = <span class="string">f&quot;&quot;&quot;
+    You are a customer-support assistant.
+
+    Customer message:
+    {ticket}
+
+    Decision:
+    {decision}
+
+    Write a short and helpful reply to the customer.
+    Do not mention prompts, AI, or internal system details.
+    &quot;&quot;&quot;</span>
+    reply = (<span class="keyword">await</span> ask(prompt)).strip()
+    state[<span class="string">&#x27;reply&#x27;</span>] = reply
+    result = {<span class="string">&#x27;ticket&#x27;</span>: state[<span class="string">&#x27;ticket&#x27;</span>], <span class="string">&#x27;analysis&#x27;</span>: state[<span class="string">&#x27;analysis&#x27;</span>], <span class="string">&#x27;decision&#x27;</span>: state[<span class="string">&#x27;decision&#x27;</span>], <span class="string">&#x27;reply&#x27;</span>: state[<span class="string">&#x27;reply&#x27;</span>]}
+    <span class="keyword">return</span> result
+
+
+<span class="comment"># Only the workflow connections live here.</span>
+<span class="keyword">class</span> TicketFlow(Flow):
+    @start()
+    <span class="keyword">async</span> <span class="keyword">def</span> clean(self):
+        <span class="keyword">await</span> clean_step(self.state)
+
+    @listen(clean)
+    <span class="keyword">async</span> <span class="keyword">def</span> analyse(self):
+        <span class="keyword">await</span> analyse_ticket(self.state)
+
+    @listen(analyse)
+    <span class="keyword">async</span> <span class="keyword">def</span> decide(self):
+        <span class="keyword">await</span> add_decision(self.state)
+
+    @listen(decide)
+    <span class="keyword">async</span> <span class="keyword">def</span> reply(self):
+        <span class="keyword">return</span> <span class="keyword">await</span> add_reply(self.state)
+
+<span class="keyword">async</span> <span class="keyword">def</span> solve_ticket(message: str) -&gt; dict:
+    result = <span class="keyword">await</span> TicketFlow().kickoff_async(inputs={<span class="string">&quot;message&quot;</span>: message})
+
+    print(<span class="string">&quot;\n========== TICKET RESULT (CrewAI) ==========&quot;</span>)
+    print(<span class="string">&quot;Message  :&quot;</span>, result[<span class="string">&quot;ticket&quot;</span>])
+    print(<span class="string">&quot;\nAnalysis :&quot;</span>)
+    <span class="keyword">for</span> key, val <span class="keyword">in</span> result[<span class="string">&quot;analysis&quot;</span>].items():
+        print(<span class="string">f&quot;  - {key}: {val}&quot;</span>)
+    print(<span class="string">&quot;\nDecision :\n&quot;</span>, result[<span class="string">&quot;decision&quot;</span>])
+    print(<span class="string">&quot;\nReply to customer:\n&quot;</span>, result[<span class="string">&quot;reply&quot;</span>])
+    print(<span class="string">&quot;===============================================================&quot;</span>)
+    <span class="keyword">return</span> result
+
+<span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:
+    result = asyncio.run(solve_ticket(SAMPLE_TICKET))
+    print(result)
+</code></pre></section><section role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden><div class="intro"><div><h2>CrewAI Crew</h2><p>Each task is assigned to an agent. The Crew runs analysis, decision and reply in order, passing task results as context.</p></div></div><div class="codebar"><span>Simple_CrewAI_Ticket_Solver_Crew.py</span><span>Complete Python · 133 lines</span></div><pre tabindex="0" aria-label="Complete CrewAI Crew Python code"><code><span class="string">&quot;&quot;&quot;CrewAI Crew ticket solver.
+Install: python -m pip install &quot;crewai==1.15.27&quot; &quot;python-dotenv==1.2.4&quot;
+Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
+&quot;&quot;&quot;</span>
+
+<span class="keyword">import</span> asyncio
+
+<span class="keyword">import</span> os
+<span class="keyword">import</span> getpass
+<span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+
+
+<span class="keyword">def</span> read_openai_key():
+    <span class="comment"># In Colab, always use this notebook&#x27;s enabled secret.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> google.colab <span class="keyword">import</span> userdata
+    <span class="keyword">except</span> ImportError:
+        userdata = <span class="keyword">None</span>
+    <span class="keyword">if</span> userdata <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+        <span class="keyword">try</span>:
+            key = userdata.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>)
+        <span class="keyword">except</span> Exception:
+            <span class="keyword">raise</span> RuntimeError(
+                <span class="string">&quot;In Colab Secrets, add OPENAI_API_KEY and enable Notebook access, &quot;</span>
+                <span class="string">&quot;then rerun this cell.&quot;</span>
+            ) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> isinstance(key, str) <span class="keyword">or</span> <span class="keyword">not</span> key.strip():
+            <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;The OPENAI_API_KEY Colab secret is empty.&quot;</span>)
+        <span class="keyword">return</span> key.strip()
+
+    <span class="comment"># Local Python fallback; never overwrite an existing environment key.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+        load_dotenv(find_dotenv(usecwd=<span class="keyword">True</span>), override=<span class="keyword">False</span>)
+    <span class="keyword">except</span> ImportError:
+        <span class="keyword">pass</span>
+    key = os.environ.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>, <span class="string">&quot;&quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">from</span> getpass <span class="keyword">import</span> getpass
+        key = getpass(<span class="string">&quot;Enter OPENAI_API_KEY (hidden): &quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;OPENAI_API_KEY cannot be empty.&quot;</span>)
+    <span class="keyword">return</span> key
+
+os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>] = read_openai_key()
+os.environ[<span class="string">&quot;CREWAI_TELEMETRY_DISABLED&quot;</span>] = <span class="string">&quot;true&quot;</span>
+os.environ[<span class="string">&quot;CREWAI_TRACING_ENABLED&quot;</span>] = <span class="string">&quot;false&quot;</span>
+
+<span class="keyword">import</span> asyncio
+<span class="keyword">import</span> os
+<span class="keyword">from</span> crewai <span class="keyword">import</span> Agent, Task, Crew, Process, LLM
+<span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel
+
+MODEL_NAME = <span class="string">&quot;gpt-4o-mini&quot;</span>
+SAMPLE_TICKET = <span class="string">&quot;My account is locked and I have an important meeting in 10 minutes.&quot;</span>
+
+<span class="keyword">class</span> TicketAnalysis(BaseModel):
+    summary: str
+    category: str
+    urgency: str
+
+<span class="keyword">def</span> create_crew(ticket: str) -&gt; Crew:
+    llm = LLM(model=<span class="string">&quot;openai/&quot;</span> + MODEL_NAME,
+              base_url=os.getenv(<span class="string">&quot;OPENAI_BASE_URL&quot;</span>) <span class="keyword">or</span> <span class="string">&quot;https://api.openai.com/v1&quot;</span>)
+
+    analyst = Agent(
+        role=<span class="string">&quot;Ticket analyst&quot;</span>, goal=<span class="string">&quot;Summarize and classify support tickets.&quot;</span>,
+        backstory=<span class="string">&quot;You triage customer support requests.&quot;</span>,
+        llm=llm, allow_delegation=<span class="keyword">False</span>, max_iter=<span class="number">8</span>,
+    )
+    decision_maker = Agent(
+        role=<span class="string">&quot;Escalation reviewer&quot;</span>, goal=<span class="string">&quot;Decide whether human help is needed.&quot;</span>,
+        backstory=<span class="string">&quot;You review ticket urgency and support needs.&quot;</span>,
+        llm=llm, allow_delegation=<span class="keyword">False</span>, max_iter=<span class="number">8</span>,
+    )
+    reply_writer = Agent(
+        role=<span class="string">&quot;Support reply writer&quot;</span>, goal=<span class="string">&quot;Write short, helpful customer replies.&quot;</span>,
+        backstory=<span class="string">&quot;You explain the next support steps clearly.&quot;</span>,
+        llm=llm, allow_delegation=<span class="keyword">False</span>, max_iter=<span class="number">8</span>,
+    )
+
+    analyse = Task(
+        description=<span class="string">f&quot;Summarize this ticket in one sentence, choose category &quot;</span>
+                    <span class="string">f&quot;billing, technical or account, and urgency low, medium or high.\nTicket: {ticket}&quot;</span>,
+        expected_output=<span class="string">&quot;JSON with summary, category and urgency.&quot;</span>,
+        output_json=TicketAnalysis,
+        agent=analyst,
+    )
+    decide = Task(
+        description=<span class="string">f&quot;Review the ticket and analysis. Should it be escalated &quot;</span>
+                    <span class="string">f&quot;to a human? Answer Yes/No with a brief reason.\nTicket: {ticket}&quot;</span>,
+        expected_output=<span class="string">&quot;An escalation decision and brief reason.&quot;</span>,
+        agent=decision_maker,
+        context=[analyse],
+    )
+    reply = Task(
+        description=<span class="string">f&quot;Write a short helpful reply using the analysis and decision. &quot;</span>
+                    <span class="string">f&quot;Do not mention prompts, AI or internal system details. &quot;</span>
+                    <span class="string">f&quot;Do not claim any escalation action has already happened.\nTicket: {ticket}&quot;</span>,
+        expected_output=<span class="string">&quot;Only the customer-facing reply.&quot;</span>,
+        agent=reply_writer,
+        context=[analyse, decide],
+    )
+
+    <span class="comment"># The whole workflow is here: tasks run in this order.</span>
+    <span class="keyword">return</span> Crew(
+        agents=[analyst, decision_maker, reply_writer],
+        tasks=[analyse, decide, reply],
+        process=Process.sequential,
+        memory=<span class="keyword">False</span>, cache=<span class="keyword">False</span>, verbose=<span class="keyword">False</span>, tracing=<span class="keyword">False</span>,
+    )
+
+
+<span class="keyword">async</span> <span class="keyword">def</span> solve_ticket(message: str) -&gt; dict:
+    ticket = message.strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> ticket:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;Ticket cannot be empty.&quot;</span>)
+
+    crew = create_crew(ticket)
+    output = <span class="keyword">await</span> crew.kickoff_async()
+    analysis_output, decision_output, reply_output = output.tasks_output
+    <span class="keyword">if</span> analysis_output.json_dict <span class="keyword">is</span> <span class="keyword">None</span>:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;The analysis task did not return valid structured data.&quot;</span>)
+    <span class="keyword">return</span> {
+        <span class="string">&quot;ticket&quot;</span>: ticket,
+        <span class="string">&quot;analysis&quot;</span>: analysis_output.json_dict,
+        <span class="string">&quot;decision&quot;</span>: decision_output.raw.strip(),
+        <span class="string">&quot;reply&quot;</span>: reply_output.raw.strip(),
+    }
+
+<span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:
+    result = asyncio.run(solve_ticket(SAMPLE_TICKET))
+    print(result)
+</code></pre></section><section role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden><div class="intro"><div><h2>CrewAI Manager</h2><p>The manager oversees each task, delegates work to specialists and reviews their responses. The task list still runs analysis, decision and reply in order.</p></div></div><div class="codebar"><span>Simple_CrewAI_Ticket_Solver_Manager.py</span><span>Complete Python · 142 lines</span></div><pre tabindex="0" aria-label="Complete CrewAI Manager Python code"><code><span class="string">&quot;&quot;&quot;CrewAI Manager ticket solver.
+Install: python -m pip install &quot;crewai==1.15.27&quot; &quot;python-dotenv==1.2.4&quot;
+Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
+&quot;&quot;&quot;</span>
+
+<span class="keyword">import</span> asyncio
+
+<span class="keyword">import</span> os
+<span class="keyword">import</span> getpass
+<span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+
+
+<span class="keyword">def</span> read_openai_key():
+    <span class="comment"># In Colab, always use this notebook&#x27;s enabled secret.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> google.colab <span class="keyword">import</span> userdata
+    <span class="keyword">except</span> ImportError:
+        userdata = <span class="keyword">None</span>
+    <span class="keyword">if</span> userdata <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+        <span class="keyword">try</span>:
+            key = userdata.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>)
+        <span class="keyword">except</span> Exception:
+            <span class="keyword">raise</span> RuntimeError(
+                <span class="string">&quot;In Colab Secrets, add OPENAI_API_KEY and enable Notebook access, &quot;</span>
+                <span class="string">&quot;then rerun this cell.&quot;</span>
+            ) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> isinstance(key, str) <span class="keyword">or</span> <span class="keyword">not</span> key.strip():
+            <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;The OPENAI_API_KEY Colab secret is empty.&quot;</span>)
+        <span class="keyword">return</span> key.strip()
+
+    <span class="comment"># Local Python fallback; never overwrite an existing environment key.</span>
+    <span class="keyword">try</span>:
+        <span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+        load_dotenv(find_dotenv(usecwd=<span class="keyword">True</span>), override=<span class="keyword">False</span>)
+    <span class="keyword">except</span> ImportError:
+        <span class="keyword">pass</span>
+    key = os.environ.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>, <span class="string">&quot;&quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">from</span> getpass <span class="keyword">import</span> getpass
+        key = getpass(<span class="string">&quot;Enter OPENAI_API_KEY (hidden): &quot;</span>).strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> key:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;OPENAI_API_KEY cannot be empty.&quot;</span>)
+    <span class="keyword">return</span> key
+
+os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>] = read_openai_key()
+os.environ[<span class="string">&quot;CREWAI_TELEMETRY_DISABLED&quot;</span>] = <span class="string">&quot;true&quot;</span>
+os.environ[<span class="string">&quot;CREWAI_TRACING_ENABLED&quot;</span>] = <span class="string">&quot;false&quot;</span>
+
+<span class="keyword">import</span> asyncio
+<span class="keyword">import</span> os
+<span class="keyword">from</span> crewai <span class="keyword">import</span> Agent, Task, Crew, Process, LLM
+<span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel
+
+MODEL_NAME = <span class="string">&quot;gpt-4o-mini&quot;</span>
+SAMPLE_TICKET = <span class="string">&quot;My account is locked and I have an important meeting in 10 minutes.&quot;</span>
+
+<span class="keyword">class</span> TicketAnalysis(BaseModel):
+    summary: str
+    category: str
+    urgency: str
+
+<span class="keyword">def</span> create_crew(ticket: str) -&gt; Crew:
+    llm = LLM(model=<span class="string">&quot;openai/&quot;</span> + MODEL_NAME,
+              base_url=os.getenv(<span class="string">&quot;OPENAI_BASE_URL&quot;</span>) <span class="keyword">or</span> <span class="string">&quot;https://api.openai.com/v1&quot;</span>)
+
+    analyst = Agent(
+        role=<span class="string">&quot;Ticket analyst&quot;</span>, goal=<span class="string">&quot;Summarize and classify support tickets.&quot;</span>,
+        backstory=<span class="string">&quot;You triage customer support requests.&quot;</span>,
+        llm=llm, allow_delegation=<span class="keyword">False</span>, max_iter=<span class="number">8</span>,
+    )
+    decision_maker = Agent(
+        role=<span class="string">&quot;Escalation reviewer&quot;</span>, goal=<span class="string">&quot;Decide whether human help is needed.&quot;</span>,
+        backstory=<span class="string">&quot;You review ticket urgency and support needs.&quot;</span>,
+        llm=llm, allow_delegation=<span class="keyword">False</span>, max_iter=<span class="number">8</span>,
+    )
+    reply_writer = Agent(
+        role=<span class="string">&quot;Support reply writer&quot;</span>, goal=<span class="string">&quot;Write short, helpful customer replies.&quot;</span>,
+        backstory=<span class="string">&quot;You explain the next support steps clearly.&quot;</span>,
+        llm=llm, allow_delegation=<span class="keyword">False</span>, max_iter=<span class="number">8</span>,
+    )
+
+    manager = Agent(
+        role=<span class="string">&quot;Support team manager&quot;</span>,
+        goal=<span class="string">&quot;Delegate ticket analysis, escalation review and reply writing to &quot;</span>
+             <span class="string">&quot;the appropriate specialists, then review their responses.&quot;</span>,
+        backstory=<span class="string">&quot;You supervise a support team. Use the ticket analyst for &quot;</span>
+                  <span class="string">&quot;classification, escalation reviewer for the decision, and &quot;</span>
+                  <span class="string">&quot;support reply writer for the customer response. Preserve &quot;</span>
+                  <span class="string">&quot;the requested output format for each task.&quot;</span>,
+        llm=llm, allow_delegation=<span class="keyword">True</span>, max_iter=<span class="number">12</span>,
+    )
+
+    analyse = Task(
+        description=<span class="string">f&quot;Summarize this ticket in one sentence, choose category &quot;</span>
+                    <span class="string">f&quot;billing, technical or account, and urgency low, medium or high.\nTicket: {ticket}&quot;</span>,
+        expected_output=<span class="string">&quot;JSON with summary, category and urgency.&quot;</span>,
+        output_json=TicketAnalysis,
+    )
+    decide = Task(
+        description=<span class="string">f&quot;Review the ticket and analysis. Should it be escalated &quot;</span>
+                    <span class="string">f&quot;to a human? Answer Yes/No with a brief reason.\nTicket: {ticket}&quot;</span>,
+        expected_output=<span class="string">&quot;An escalation decision and brief reason.&quot;</span>,
+        context=[analyse],
+    )
+    reply = Task(
+        description=<span class="string">f&quot;Write a short helpful reply using the analysis and decision. &quot;</span>
+                    <span class="string">f&quot;Do not mention prompts, AI or internal system details. &quot;</span>
+                    <span class="string">f&quot;Do not claim any escalation action has already happened.\nTicket: {ticket}&quot;</span>,
+        expected_output=<span class="string">&quot;Only the customer-facing reply.&quot;</span>,
+        context=[analyse, decide],
+    )
+
+    <span class="comment"># Tasks still progress in order; the manager delegates work within each task.</span>
+    <span class="keyword">return</span> Crew(
+        agents=[analyst, decision_maker, reply_writer],
+        tasks=[analyse, decide, reply],
+        manager_agent=manager,
+        process=Process.hierarchical,
+        memory=<span class="keyword">False</span>, cache=<span class="keyword">False</span>, verbose=<span class="keyword">False</span>, tracing=<span class="keyword">False</span>,
+    )
+
+
+<span class="keyword">async</span> <span class="keyword">def</span> solve_ticket(message: str) -&gt; dict:
+    ticket = message.strip()
+    <span class="keyword">if</span> <span class="keyword">not</span> ticket:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;Ticket cannot be empty.&quot;</span>)
+
+    crew = create_crew(ticket)
+    output = <span class="keyword">await</span> crew.kickoff_async()
+    analysis_output, decision_output, reply_output = output.tasks_output
+    <span class="keyword">if</span> analysis_output.json_dict <span class="keyword">is</span> <span class="keyword">None</span>:
+        <span class="keyword">raise</span> ValueError(<span class="string">&quot;The analysis task did not return valid structured data.&quot;</span>)
+    <span class="keyword">return</span> {
+        <span class="string">&quot;ticket&quot;</span>: ticket,
+        <span class="string">&quot;analysis&quot;</span>: analysis_output.json_dict,
+        <span class="string">&quot;decision&quot;</span>: decision_output.raw.strip(),
+        <span class="string">&quot;reply&quot;</span>: reply_output.raw.strip(),
+    }
+
+<span class="keyword">if</span> __name__ == <span class="string">&quot;__main__&quot;</span>:
+    result = asyncio.run(solve_ticket(SAMPLE_TICKET))
+    print(result)
+</code></pre></section><footer>Each version uses OpenAI when run. Install instructions are at the top of each Python file.</footer></main><script>
+const tabs=[...document.querySelectorAll('[role=tab]')];
+function select(i,focus=false){tabs.forEach((t,j)=>{t.setAttribute('aria-selected',String(i===j));t.tabIndex=i===j?0:-1;document.getElementById('panel-'+j).hidden=i!==j});if(focus)tabs[i].focus()}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>select(i));t.addEventListener('keydown',e=>{let next;if(e.key==='ArrowRight')next=(i+1)%tabs.length;if(e.key==='ArrowLeft')next=(i+tabs.length-1)%tabs.length;if(e.key==='Home')next=0;if(e.key==='End')next=tabs.length-1;if(next!==undefined){e.preventDefault();select(next,true)}})});
+</script></body></html>
