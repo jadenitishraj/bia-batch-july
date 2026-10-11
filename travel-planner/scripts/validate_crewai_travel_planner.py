@@ -63,7 +63,7 @@ async def main():
     CRITIQUE='NO ISSUES FOUND';TRACE.clear()
     r=await travel['run_travel_state']('second trip')
     assert r['final_plan']==r['draft_plan'] and not any('Fix ONLY' in x for x in TRACE)
-    ticket=load(ROOT/'lcel/Simple_CrewAI_Ticket_Solver.ipynb');ticket['MODEL_NAME']='offline'
+    ticket=load(ROOT/'LCEL-CrewAI-MAF-LangGraph-Ticket-Solver/Simple_CrewAI_Ticket_Solver.ipynb');ticket['MODEL_NAME']='offline'
     TRACE.clear();r=await ticket['solve_ticket']('  locked account  ')
     assert set(r)=={'ticket','analysis','decision','reply'}
     assert r['ticket']=='locked account' and r['analysis']['category']=='account' and len(TRACE)==5

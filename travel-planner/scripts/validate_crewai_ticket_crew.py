@@ -5,7 +5,7 @@ os.environ['OPENAI_API_KEY']='offline-placeholder'
 from crewai import BaseLLM, Process
 from pathlib import Path
 import nbformat
-p=Path(__file__).resolve().parents[2] / 'lcel/Simple_CrewAI_Ticket_Solver_Crew.py'
+p=Path(__file__).resolve().parents[2] / 'LCEL-CrewAI-MAF-LangGraph-Ticket-Solver/Simple_CrewAI_Ticket_Solver_Crew.py'
 spec=importlib.util.spec_from_file_location('ticket_crew',p);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 trace=[]
 class Fixture(BaseLLM):

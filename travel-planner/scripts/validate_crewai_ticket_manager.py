@@ -3,7 +3,7 @@ from pathlib import Path
 import nbformat
 os.environ['CREWAI_TELEMETRY_DISABLED']='true';os.environ['CREWAI_TRACING_ENABLED']='false';os.environ['OPENAI_API_KEY']='offline-placeholder'
 from crewai import BaseLLM,Process
-p=Path(__file__).resolve().parents[2] / 'lcel/Google Colab working files/Simple_CrewAI_Ticket_Solver_Manager.ipynb'
+p=Path(__file__).resolve().parents[2] / 'LCEL-CrewAI-MAF-LangGraph-Ticket-Solver/Google Colab working files/Simple_CrewAI_Ticket_Solver_Manager.ipynb'
 n=nbformat.read(p,as_version=4);nbformat.validate(n)
 ns={}
 for c in n.cells:
