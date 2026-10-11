@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Travel Planner: LangGraph vs Microsoft Agent Framework</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Inter+Tight:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--teal:#2dd4bf;--cyan:#22d3ee;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 12% 45%, rgba(45,212,191,.07), transparent 26%),radial-gradient(circle at 88% 28%, rgba(139,92,246,.07), transparent 26%);
+  background-attachment:fixed;
+}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* sitenav */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--teal)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#c7f5ee;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:420px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--teal);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(40px,7.4vw,84px);margin-bottom:26px;background:linear-gradient(135deg,var(--teal),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:44px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide transitions */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:60px 0 80px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:34px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:56px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;line-height:1.08;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:880px}
+
+/* prose */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:940px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(45,212,191,.13);border:1px solid rgba(45,212,191,.24);border-radius:4px;padding:2px 6px;color:#b8f0e8}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+
+/* pairs (comparison) */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 12px}
+.pcard{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.bad{border-top:3px solid var(--rose)}
+.pcard.good{border-top:3px solid var(--emerald)}
+.p-head{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--card-border)}
+.p-sig{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px 'JetBrains Mono',monospace;flex:0 0 auto}
+.pcard.bad .p-sig{background:rgba(244,63,94,.16);border:1px solid rgba(244,63,94,.42);color:var(--rose)}
+.pcard.good .p-sig{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--emerald)}
+.p-lab{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.pcard.bad .p-lab{color:var(--rose)}
+.pcard.good .p-lab{color:var(--emerald)}
+.p-sub{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right}
+.p-prompt{margin:0;padding:16px 18px;background:rgba(255,255,255,.012);overflow-x:auto}
+.p-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.p-why{padding:14px 18px;border-top:1px solid var(--card-border);font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.p-why strong{color:var(--ink);font-weight:600}
+
+/* code cards & grids */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--teal);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--emerald)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--teal);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--emerald)}
+
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#b8f0e8;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* codeblock */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:20px 0;overflow:hidden}
+.cb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.02)}
+.cb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.cb-lang{font:600 10px 'JetBrains Mono',monospace;color:var(--ink-faint);text-transform:uppercase}
+.cb-body{padding:16px 18px;margin:0;overflow-x:auto}
+.cb-body code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;color:#d8deea;white-space:pre-wrap}
+.cb-body .kw{color:#c678dd;font-weight:600}
+.cb-body .fn{color:#61afef}
+.cb-body .str{color:#98c379}
+.cb-body .cm{color:#5c6370;font-style:italic}
+.cb-body .op{color:#56b6c2;font-weight:700}
+.cb-body .cls{color:#e5c07b}
+
+/* visual diagram box */
+.diagram-box{background:rgba(12,12,18,.8);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:22px 0;text-align:center}
+.diag-flow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+.diag-node{background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35);padding:10px 16px;border-radius:6px;font:600 13px 'JetBrains Mono',monospace;color:#c7f5ee}
+.diag-node.hl{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.45);color:#dcd6ff}
+.diag-arr{color:var(--accent);font-weight:700;font-size:18px}
+
+/* pager */
+.pager{display:flex;justify-content:space-between;gap:14px;margin-top:48px;padding-top:28px;border-top:1px solid var(--card-border)}
+.pager button{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 18px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;text-align:left;transition:all .18s}
+.pager button:hover:not(:disabled){background:rgba(255,255,255,.06);border-color:var(--accent)}
+.pager button.rt{margin-left:auto;text-align:right}
+.pager button:disabled{opacity:.25;cursor:default}
+.pager .pg-l{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px}
+.pager .pg-t{font-size:14px;font-weight:500}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:24px 0}
+.q-title{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:14px}
+.opts{display:grid;gap:9px}
+.opt{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:6px;padding:12px 16px;font-size:14.5px;color:var(--ink-dim);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
+.opt:hover:not(:disabled){background:rgba(255,255,255,.06);color:var(--ink)}
+.opt.correct{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.5)!important;color:#6ee7b7!important}
+.opt.wrong{background:rgba(244,63,94,.14)!important;border-color:rgba(244,63,94,.5)!important;color:#fda4af!important}
+.opt:disabled{cursor:default}
+.explain{margin-top:14px;font-size:14px;color:var(--ink-dim);display:none;line-height:1.6;border-top:1px dashed var(--card-border);padding-top:10px}
+.explain.show{display:block;animation:fadeIn .2s ease}
+
+/* table */
+.comp-table{width:100%;border-collapse:collapse;margin:22px 0;font-size:14.5px}
+.comp-table th,.comp-table td{border:1px solid var(--card-border);padding:12px 16px;text-align:left}
+.comp-table th{background:rgba(255,255,255,.04);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.comp-table tr:nth-child(even){background:rgba(255,255,255,.015)}
+
+.foot{text-align:center;padding:40px 0;color:var(--ink-faint);font-size:13px;border-top:1px solid var(--card-border);margin-top:40px}
+
+@media(max-width:820px){
+  .hero h1{font-size:38px}
+  .stage-header,.body-wrap{grid-template-columns:1fr;gap:12px}
+  .stage-num-big{font-size:36px}
+  .stats,.pair,.vocab-grid,.code-cards{grid-template-columns:1fr}
+  .container{padding:0 20px}
+  .sitenav-inner{padding:12px 20px}
+  .dropmenu{min-width:300px}
+}
+
+.prose{min-width:0;width:100%;overflow-x:auto}.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px}.compare>div{min-width:0}pre{background:#101019;border:1px solid var(--card-border);padding:22px;border-radius:8px;overflow:auto;font:13px/1.65 'JetBrains Mono',monospace;white-space:pre;margin:12px 0 24px}h3{color:var(--teal)}.sources a,a{color:var(--teal)}.flow{font-size:24px;line-height:2;padding:24px 0;color:var(--teal)}.reveal{margin:18px 0;padding:18px;border-left:2px solid var(--teal)}summary{cursor:pointer;color:var(--ink);font-weight:600}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:4px}table{width:100%;border-collapse:collapse}td,th{padding:14px;text-align:left;border-bottom:1px solid var(--card-border);vertical-align:top}.foot{padding:24px;text-align:center;color:var(--ink-faint)}@media(max-width:760px){.compare{grid-template-columns:1fr}.dropmenu{min-width:0;width:min(85vw,420px)}.brand{display:none}.body-wrap,.stage-header{grid-template-columns:1fr}.stage-num-big{font-size:32px}.container{padding:0 20px}}@media print{.slide{display:block!important;break-before:page}.sitenav,.pager,.foot{display:none}body{background:white;color:black}.prose p,.prose li{color:#222}pre{white-space:pre-wrap;color:black;background:#eee}.stage{padding:20px 0}}
+
+.body-wrap{grid-template-columns:1fr}.body-wrap>div:first-child:empty{display:none}.prose{max-width:none}pre{font-size:14px;line-height:1.7}.compare h3{font-size:22px}.stage-kicker{font-weight:400}.prose p,.prose li{font-weight:400} .pager button:disabled{opacity:.3;cursor:default}
+
+.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+
+.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+
+.flowgraph{max-width:940px;margin:28px auto;text-align:center}.flowgraph>div,.workergrid>div{padding:16px;border:1px solid var(--card-border);border-radius:6px;background:var(--card-bg)}.flowgraph>span{display:block;padding:8px;color:var(--teal)}.workergrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.workergrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+</style>
+</head><body><nav aria-label="Presentation" class="sitenav"><div class="sitenav-inner"><a class="brand" href="index.html">BIA <em>Teaching decks</em></a><a class="home-link" href="index.html">Home</a><div class="dropdown" id="chDrop"><button aria-expanded="false" class="dropbtn" id="chDropBtn">Chapters ▾</button><div class="dropmenu" id="dropMenu"></div></div><div class="nav-spacer"></div><div class="nav-prevnext"><button id="btnPrev">← Prev</button><button id="btnNext">Next →</button></div></div><div class="rail"><div class="rail-fill" id="railFill"></div></div></nav><section class="slide active" data-title="Travel Planner API entry point"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">01</div><div><h1 class="stage-title">Travel Planner API entry point</h1><p class="stage-kicker">A request calls an already-defined workflow, not the model directly</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>import asyncio
+
+# Illustrative adapter. travel_planner must already be compiled.
+async def handle_plan_request(payload: dict) -&gt; dict:
+    return await asyncio.to_thread(
+        travel_planner.invoke, {"request": payload["request"]}
+    )
+
+response = await handle_plan_request({"request": demo_request})
+print(response["final_plan"])
+</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code># Illustrative adapter. Notebook stage definitions must be loaded.
+async def handle_plan_request(payload: dict) -&gt; dict:
+    # run_travel_state builds the workflow BEFORE running it.
+    return await run_travel_state(payload["request"])
+
+response = await handle_plan_request({"request": demo_request})
+print(response["final_plan"])
+</code></pre></div></div><p>These are illustrative Python API adapters, not deployed HTTP endpoints. An actual server would validate its request body and serialize the returned dictionary. The notebook itself supplies the workflow.</p><p>Actual lifecycle: define agents and stages, build/compile the workflow, then run the request. The teaching slides reveal those definitions after the consumer entry point. Build never happens after the agents finish.</p><p>Graph invocation runs the complete team. The ask helper inside a stage performs an individual model/agent call.</p></div></div><div class="pager"><button disabled="" onclick="go(-1)">← Previous</button><button onclick="go(1)">Next →</button></div></div></div></section><section class="slide" data-title="Request and output contract"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">02</div><div><h1 class="stage-title">Request and output contract</h1><p class="stage-kicker">The business problem stays fixed</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>demo_request = """Plan a 4-day Singapore trip from Mumbai for two people.
+Mid-budget. Avoid red-eye flights.
+Prefer food, city views and cultural sites.
+Keep hotel budget under 45000 rupees."""</code></pre><div class="table-wrap"><table><thead><tr><th>Input</th><th>Interpretation</th></tr></thead><tbody><tr><td>4 days, 2 people</td><td>Dates, room sharing and return flights remain missing information.</td></tr><tr><td>Hotel budget under INR 45,000</td><td>This does not specify a total trip budget.</td></tr><tr><td>Food, city views, culture</td><td>Activity planning must reflect these interests.</td></tr><tr><td>Avoid red-eye flights</td><td>The flight specialist can apply avoid_red_eye=True.</td></tr></tbody></table></div><p>The output contains requirements, selected workers, selected reports, draft_plan, critique and final_plan. Static data supports classroom planning, not booking.</p></div></div><div class="pager"><button onclick="go(0)">← Previous</button><button onclick="go(2)">Next →</button></div></div></div></section><section class="slide" data-title="API response shape"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">03</div><div><h1 class="stage-title">API response shape</h1><p class="stage-kicker">The full-trip response is the workflow business-state dictionary</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>{
+  "request": "Plan a 4-day Singapore trip from Mumbai for two people...",
+  "requirements": "FROM: Mumbai ...",
+  "chosen_workers": [
+    "flight_agent",
+    "hotel_agent",
+    "activity_agent"
+  ],
+  "flight_report": "TOP 3 OPTIONS: ...",
+  "hotel_report": "TOP 3 OPTIONS: ...",
+  "activity_report": "DAY BY DAY: ...",
+  "draft_plan": "CHOSEN FLIGHT: ...",
+  "critique": "1. Clarify fare/stay assumptions.",
+  "final_plan": "CHOSEN FLIGHT: ... WHAT CHANGED: ..."
+}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>{
+  "request": "Plan a 4-day Singapore trip from Mumbai for two people...",
+  "requirements": "FROM: Mumbai ...",
+  "chosen_workers": [
+    "flight_agent",
+    "hotel_agent",
+    "activity_agent"
+  ],
+  "flight_report": "TOP 3 OPTIONS: ...",
+  "hotel_report": "TOP 3 OPTIONS: ...",
+  "activity_report": "DAY BY DAY: ...",
+  "draft_plan": "CHOSEN FLIGHT: ...",
+  "critique": "1. Clarify fare/stay assumptions.",
+  "final_plan": "CHOSEN FLIGHT: ... WHAT CHANGED: ..."
+}</code></pre></div></div><p>Values above are shortened illustrative excerpts. Every actual business field appears. A partial request omits unselected report keys. Clients read final_plan for the answer and other fields for the trace.</p><p>The adapter uses LangGraph graph.invoke directly, avoiding the original plan_trip return typo. Microsoft run_travel_state already returns the complete dictionary.</p></div></div><div class="pager"><button onclick="go(1)">← Previous</button><button onclick="go(3)">Next →</button></div></div></div></section><section class="slide" data-title="State schema"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">04</div><div><h1 class="stage-title">State schema</h1><p class="stage-kicker">Eventual state fields, not all supplied at the start</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>from typing import TypedDict, List
+
+
+class TravelState(TypedDict):
+    request: str            # what the user typed
+    requirements: str       # what the manager understood
+    chosen_workers: List[str]  # who the manager picked
+    flight_report: str      # written by the flight agent
+    hotel_report: str       # written by the hotel agent
+    activity_report: str    # written by the activity agent
+    draft_plan: str         # the manager's first attempt
+    critique: str           # the critic's list of problems
+    final_plan: str         # the fixed plan</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>from typing import TypedDict, List, cast
+from typing_extensions import NotRequired
+
+
+class TravelState(TypedDict):
+    request: str
+    requirements: NotRequired[str]
+    chosen_workers: NotRequired[List[str]]
+    flight_report: NotRequired[str]
+    hotel_report: NotRequired[str]
+    activity_report: NotRequired[str]
+    draft_plan: NotRequired[str]
+    critique: NotRequired[str]
+    final_plan: NotRequired[str]</code></pre></div></div><p>Both columns declare executable TypedDict schemas with the same nine fields. Microsoft marks derived fields NotRequired so only request is required initially. The snapshot helper and final result use TravelState annotations. This does not register a schema with the Microsoft runtime or enable automatic validation/reducers.</p></div></div><div class="pager"><button onclick="go(2)">← Previous</button><button onclick="go(4)">Next →</button></div></div></div></section><section class="slide" data-title="Initial state and defaults"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">05</div><div><h1 class="stage-title">Initial state and defaults</h1><p class="stage-kicker">Required input only; derived state starts empty</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>initial_state = {"request": demo_request}
+result = travel_planner.invoke(initial_state)</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>run_result = await create_workflow().run(demo_request)
+
+# Smallest required state assignment in manager_step:
+ctx.set_state("request", request)
+# Derived fields remain absent until their stages write them.</code></pre></div></div><h3>Business state after input is accepted</h3><pre><code>{
+  "request": "Plan a 4-day Singapore trip from Mumbai for two people. Mid-budget. Avoid red-eye flights. Prefer food, city views and cultural sites. Keep hotel budget under 45000 rupees."
+}</code></pre><p>The displayed request normalizes line breaks for readability. Neither framework invents defaults for requirements, workers or reports. This application initially supplies only request. Microsoft may also maintain internal runtime keys, outside the nine business fields.</p><div class="table-wrap"><table><thead><tr><th>Actual field</th><th>LangGraph initial state</th><th>Microsoft initial business state</th></tr></thead><tbody><tr><td>request</td><td>Concrete demo_request text</td><td>Concrete demo_request text</td></tr><tr><td>requirements</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr><tr><td>chosen_workers</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr><tr><td>flight_report</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr><tr><td>hotel_report</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr><tr><td>activity_report</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr><tr><td>draft_plan</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr><tr><td>critique</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr><tr><td>final_plan</td><td>Absent (not None, empty string or empty list)</td><td>Absent (not None, empty string or empty list)</td></tr></tbody></table></div><p>The schema contains nine fields. request is the only supplied value. All other fields are absent in both implementations. These are application choices, not automatically populated framework defaults.</p></div></div><div class="pager"><button onclick="go(3)">← Previous</button><button onclick="go(5)">Next →</button></div></div></div></section><section class="slide" data-title="Missing fields and application defaults"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">06</div><div><h1 class="stage-title">Missing fields and application defaults</h1><p class="stage-kicker">Absent reports must remain distinguishable from requested reports</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>state.get('flight_report', 'not requested')
+state.get('hotel_report', 'not requested')
+state.get('activity_report', 'not requested')</code></pre><p>These expressions read a fallback without creating a stored field. No None, empty string, empty list or empty dictionary is prefilled. There is no loop initializing the full schema. Each selected agent writes its result when it finishes.</p><div class="table-wrap"><table><thead><tr><th>Field</th><th>Initial value</th><th>Who supplies it</th></tr></thead><tbody><tr><td>request</td><td>User text</td><td>Caller / manager input adapter</td></tr><tr><td>requirements, chosen_workers</td><td>Absent</td><td>Manager</td></tr><tr><td>flight_report, hotel_report, activity_report</td><td>Absent</td><td>Only selected workers</td></tr><tr><td>draft_plan, critique, final_plan</td><td>Absent</td><td>Later stages</td></tr></tbody></table></div></div></div><div class="pager"><button onclick="go(4)">← Previous</button><button onclick="go(6)">Next →</button></div></div></div></section><section class="slide" data-title="Native state access"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">07</div><div><h1 class="stage-title">Native state access</h1><p class="stage-kicker">Shared state holds data while edges schedule execution</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def flight_node(state):
+    """The flight agent works on its part."""
+    report = ask(flight_agent, f"Find flights for this trip.\n\n{state['requirements']}")
+    return {"flight_report": report}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>def read_travel_state(ctx: WorkflowContext) -&gt; TravelState:
+    """Read a local snapshot from native workflow state, preserving absent keys."""
+    missing = object()
+    snapshot = {}
+    for key in TravelState.__annotations__:
+        value = ctx.get_state(key, missing)
+        if value is not missing:
+            snapshot[key] = value
+    return cast(TravelState, snapshot)
+
+def write_travel_update(ctx, update: dict) -&gt; None:
+    """Apply only changed fields. This is explicit assignment, not a reducer."""
+    for key, value in update.items():
+        ctx.set_state(key, value)</code></pre></div></div><p>LangGraph applies returned updates to graph state. Microsoft explicitly reads and writes its framework-owned store. read_travel_state makes a local copy for unchanged stage functions. It does not forward state to another executor or replace the native store.</p><p><a href="https://docs.langchain.com/oss/python/langgraph/graph-api">LangGraph state</a> · <a href="https://github.com/microsoft/agent-framework/blob/main/python/packages/core/agent_framework/_workflows/_workflow_context.py">WorkflowContext state APIs</a></p></div></div><div class="pager"><button onclick="go(5)">← Previous</button><button onclick="go(7)">Next →</button></div></div></div></section><section class="slide" data-title="Agent and executor roles"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">08</div><div><h1 class="stage-title">Agent and executor roles</h1><p class="stage-kicker">The workflow decides stages, specialists decide tool calls</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def ask(agent, question: str) -&gt; str:
+    """Send a question to an agent and get its final answer back as plain text."""
+    reply = agent.invoke({"messages": [{"role": "user", "content": question}]})
+    return reply["messages"][-1].content</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def ask(agent, question: str) -&gt; str:
+    """Fresh call, no shared AgentSession: same stateless semantics as source."""
+    return (await agent.run(question)).text</code></pre></div></div><p>The original uses create_agent with system_prompt. Microsoft uses Agent with instructions and an OpenAIChatCompletionClient. All five instruction strings match. Both use the source gpt-4o-mini model convention.</p><div class="table-wrap"><table><thead><tr><th>Role</th><th>Workflow responsibility</th><th>Model tools</th></tr></thead><tbody><tr><td>Manager</td><td>Requirements, selection, synthesis, revision</td><td>None</td></tr><tr><td>Flight / hotel / activity</td><td>One report per selected worker</td><td>Only tools from that worker’s registry</td></tr><tr><td>Critic</td><td>Problems in draft</td><td>None</td></tr></tbody></table></div></div></div><div class="pager"><button onclick="go(6)">← Previous</button><button onclick="go(8)">Next →</button></div></div></div></section><section class="slide" data-title="Tool permissions"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">09</div><div><h1 class="stage-title">Tool permissions</h1><p class="stage-kicker">The same registry in both notebooks</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>TOOL_REGISTRY = {
+    "flight_agent":   [search_flights, convert_currency],
+    "hotel_agent":    [search_hotels, convert_currency, get_travel_tips],
+    "activity_agent": [search_activities, search_restaurants, get_weather],
+    "critic_agent":   [],   # the critic only reads the plan, it does not search
+}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>TOOL_REGISTRY = {
+    "flight_agent":   [search_flights, convert_currency],
+    "hotel_agent":    [search_hotels, convert_currency, get_travel_tips],
+    "activity_agent": [search_activities, search_restaurants, get_weather],
+    "critic_agent":   [],   # the critic only reads the plan, it does not search
+}</code></pre></div></div><p>Eight functions are defined. Seven distinct tools are registered. The unused retriver function remains unregistered. Tool function bodies and descriptions match. Workflow executors are scheduled steps, not tools chosen by the model.</p></div></div><div class="pager"><button onclick="go(7)">← Previous</button><button onclick="go(9)">Next →</button></div></div></div></section><section class="slide" data-title="Manager stage"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">10</div><div><h1 class="stage-title">Manager stage</h1><p class="stage-kicker">Two calls capture requirements and select workers</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def manager_node(state):
+    """Read the request. Write down the requirements. Decide who should work."""
+    requirements = ask(manager_agent, f"""
+Read this travel request and list what you understood.
+
+REQUEST: {state['request']}
+
+List these lines only:
+FROM, TO, DAYS, TRAVELLERS, BUDGET, INTERESTS, HARD RULES, MISSING INFO
+""")
+
+    choice = ask(manager_agent, f"""
+Here are the requirements:
+{requirements}
+
+Which specialists are needed? Choose from: flight_agent, hotel_agent, activity_agent.
+Reply with the names separated by commas and nothing else.
+""")
+
+    # Keep only names we actually have. This protects us if the model adds something extra.
+    valid = ["flight_agent", "hotel_agent", "activity_agent"]
+    workers = [name for name in valid if name in choice.lower()]
+    if not workers:
+        workers = valid          # if unsure, use everyone
+
+    print("MANAGER understood the request.")
+    print("MANAGER picked:", ", ".join(workers))
+    return {"requirements": requirements, "chosen_workers": workers}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def manager_node(state):
+    """Read the request. Write down the requirements. Decide who should work."""
+    requirements = await ask(manager_agent, f"\nRead this travel request and list what you understood.\n\nREQUEST: {state['request']}\n\nList these lines only:\nFROM, TO, DAYS, TRAVELLERS, BUDGET, INTERESTS, HARD RULES, MISSING INFO\n")
+    choice = await ask(manager_agent, f'\nHere are the requirements:\n{requirements}\n\nWhich specialists are needed? Choose from: flight_agent, hotel_agent, activity_agent.\nReply with the names separated by commas and nothing else.\n')
+    valid = ['flight_agent', 'hotel_agent', 'activity_agent']
+    workers = [name for name in valid if name in choice.lower()]
+    if not workers:
+        workers = valid
+    print('MANAGER understood the request.')
+    print('MANAGER picked:', ', '.join(workers))
+    return {'requirements': requirements, 'chosen_workers': workers}</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Reads from workflow state</th><th>Writes to workflow state</th><th>Next step</th></tr></thead><tbody><tr><td>request</td><td>requirements, chosen_workers</td><td>Selected-worker dispatch</td></tr></tbody></table></div><p>The first prompt captures FROM, TO, DAYS, TRAVELLERS, BUDGET, INTERESTS, HARD RULES and MISSING INFO. The second asks for specialist names.</p></div></div><div class="pager"><button onclick="go(8)">← Previous</button><button onclick="go(10)">Next →</button></div></div></div></section><section class="slide" data-title="Manager state transition"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">11</div><div><h1 class="stage-title">Manager state transition</h1><p class="stage-kicker">A concrete sample after both manager calls</p></div></div><div class="body-wrap"><div></div><div class="prose"><h3>New business fields</h3><pre><code>{
+  "requirements": "FROM: Mumbai\nTO: Singapore\nDAYS: 4\nTRAVELLERS: 2\nBUDGET: mid; hotel under INR 45000\nINTERESTS: food, city views, culture\nHARD RULES: avoid red-eye\nMISSING INFO: dates, return flight, room sharing",
+  "chosen_workers": [
+    "flight_agent",
+    "hotel_agent",
+    "activity_agent"
+  ]
+}</code></pre><p>Retains: request.</p><div class="compare"><div><h3>LangGraph</h3><pre><code>return {'requirements': requirements, 'chosen_workers': workers}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>@executor(id="manager")
+async def manager_step(request: str, ctx: WorkflowContext[str]) -&gt; None:
+    ctx.set_state("request", request)
+    write_travel_update(ctx, await manager_node(read_travel_state(ctx)))
+    await ctx.send_message("continue")</code></pre></div></div><p>Snapshots illustrate one sample execution, checked by the separate developer validation script. Live wording and selections can vary. The Microsoft executor writes these fields to native state, then emits “continue”.</p></div></div><div class="pager"><button onclick="go(9)">← Previous</button><button onclick="go(11)">Next →</button></div></div></div></section><section class="slide" data-title="Selection and next-step routing"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">12</div><div><h1 class="stage-title">Selection and next-step routing</h1><p class="stage-kicker">One, two or three workers may run</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code># The manager's list of workers decides who runs. All of them start together.
+graph.add_conditional_edges(
+    "manager",
+    lambda state: state["chosen_workers"],
+    ["flight_agent", "hotel_agent", "activity_agent"],
+)</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>@executor(id="selected_workers")
+async def workers_step(signal: str, ctx: WorkflowContext[str]) -&gt; None:
+    nodes = {"flight_agent": flight_node, "hotel_agent": hotel_node, "activity_agent": activity_node}
+    state = read_travel_state(ctx)
+    # Workers read one snapshot and return disjoint updates. No shared mutable writes.
+    updates = await asyncio.gather(*(nodes[name](state) for name in state["chosen_workers"]))
+    for update in updates:
+        write_travel_update(ctx, update)
+    # Barrier: all selected reports now exist in native state before synthesis starts.
+    await ctx.send_message("continue")</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Manager text</th><th>Chosen workers</th><th>Absent report keys</th></tr></thead><tbody><tr><td>flight_agent</td><td>Flight only</td><td>hotel_report, activity_report</td></tr><tr><td>hotel_agent, activity_agent</td><td>Hotel and activity</td><td>flight_report</td></tr><tr><td>Unknown or empty selection</td><td>All three through fallback</td><td>None after workers finish</td></tr></tbody></table></div><p>The actual parser keeps known names using substring matches and a fixed ordering. It is not strict JSON/schema parsing. Microsoft preserves this behavior.</p></div></div><div class="pager"><button onclick="go(10)">← Previous</button><button onclick="go(12)">Next →</button></div></div></div></section><section class="slide" data-title="Parallel state updates"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">13</div><div><h1 class="stage-title">Parallel state updates</h1><p class="stage-kicker">All selected workers read the same requirements</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table><thead><tr><th>Worker task</th><th>Reads</th><th>Independent update</th></tr></thead><tbody><tr><td>Flight</td><td>requirements</td><td>flight_report = flight specialist answer</td></tr><tr><td>Hotel</td><td>requirements</td><td>hotel_report = hotel specialist answer</td></tr><tr><td>Activity</td><td>requirements</td><td>activity_report = activity specialist answer</td></tr></tbody></table></div><p>These tasks start concurrently. No ordering between their completions is guaranteed. Do not interpret the rows as a sequential flight-then-hotel-then-activity pipeline.</p><p>LangGraph places the selected worker nodes in one superstep. Microsoft uses asyncio.gather within selected_workers. It waits for every selected task, then writes their disjoint keys to native state.</p></div></div><div class="pager"><button onclick="go(11)">← Previous</button><button onclick="go(13)">Next →</button></div></div></div></section><section class="slide" data-title="Flight specialist"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">14</div><div><h1 class="stage-title">Flight specialist</h1><p class="stage-kicker">One independent branch of the parallel stage</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def flight_node(state):
+    """The flight agent works on its part."""
+    report = ask(flight_agent, f"Find flights for this trip.\n\n{state['requirements']}")
+    return {"flight_report": report}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def flight_node(state):
+    """The flight agent works on its part."""
+    report = await ask(flight_agent, f"Find flights for this trip.\n\n{state['requirements']}")
+    return {'flight_report': report}</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Reads from workflow state</th><th>Writes to workflow state</th><th>Next step</th></tr></thead><tbody><tr><td>requirements</td><td>flight_report</td><td>Barrier waits for all selected workers</td></tr></tbody></table></div><p>Uses search_flights and convert_currency. The exact report contract asks for top three options, recommendation, trade-offs and assumptions.</p><h3>This branch returns an independent update (excerpt)</h3><pre><code>{
+  "flight_report": "TOP 3 OPTIONS: ... 6E-1071 ...; RECOMMENDED: 6E-1071"
+}</code></pre><p>Retains: request, requirements, chosen_workers.</p><p>Other workers may still be running. Their reports become available at the barrier, not because this branch starts them or waits for them. This is a parallel branch view, not a sequential whole-state snapshot.</p></div></div><div class="pager"><button onclick="go(12)">← Previous</button><button onclick="go(14)">Next →</button></div></div></div></section><section class="slide" data-title="Hotel specialist"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">15</div><div><h1 class="stage-title">Hotel specialist</h1><p class="stage-kicker">One independent branch of the parallel stage</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def hotel_node(state):
+    """The hotel agent works on its part."""
+    report = ask(hotel_agent, f"Find hotels for this trip.\n\n{state['requirements']}")
+    return {"hotel_report": report}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def hotel_node(state):
+    """The hotel agent works on its part."""
+    report = await ask(hotel_agent, f"Find hotels for this trip.\n\n{state['requirements']}")
+    return {'hotel_report': report}</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Reads from workflow state</th><th>Writes to workflow state</th><th>Next step</th></tr></thead><tbody><tr><td>requirements</td><td>hotel_report</td><td>Barrier waits for all selected workers</td></tr></tbody></table></div><p>Uses search_hotels, convert_currency and get_travel_tips. The prompt requires the total stay cost, not only nightly price.</p><h3>This branch returns an independent update (excerpt)</h3><pre><code>{
+  "hotel_report": "TOP 3 OPTIONS: ... Hotel Mono ...; RECOMMENDED: Hotel Mono"
+}</code></pre><p>Retains: request, requirements, chosen_workers.</p><p>Other workers may still be running. Their reports become available at the barrier, not because this branch starts them or waits for them. This is a parallel branch view, not a sequential whole-state snapshot.</p></div></div><div class="pager"><button onclick="go(13)">← Previous</button><button onclick="go(15)">Next →</button></div></div></div></section><section class="slide" data-title="Activity specialist"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">16</div><div><h1 class="stage-title">Activity specialist</h1><p class="stage-kicker">One independent branch of the parallel stage</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def activity_node(state):
+    """The activity agent works on its part."""
+    report = ask(activity_agent, f"Plan the days for this trip.\n\n{state['requirements']}")
+    return {"activity_report": report}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def activity_node(state):
+    """The activity agent works on its part."""
+    report = await ask(activity_agent, f"Plan the days for this trip.\n\n{state['requirements']}")
+    return {'activity_report': report}</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Reads from workflow state</th><th>Writes to workflow state</th><th>Next step</th></tr></thead><tbody><tr><td>requirements</td><td>activity_report</td><td>Barrier waits for all selected workers</td></tr></tbody></table></div><p>Uses search_activities, search_restaurants and get_weather. The prompt asks for manageable day plans, meals, weather and assumptions.</p><h3>This branch returns an independent update (excerpt)</h3><pre><code>{
+  "activity_report": "DAY BY DAY: Day 1 Chinatown ...; WEATHER NOTE: afternoon rain"
+}</code></pre><p>Retains: request, requirements, chosen_workers.</p><p>Other workers may still be running. Their reports become available at the barrier, not because this branch starts them or waits for them. This is a parallel branch view, not a sequential whole-state snapshot.</p></div></div><div class="pager"><button onclick="go(14)">← Previous</button><button onclick="go(16)">Next →</button></div></div></div></section><section class="slide" data-title="Collector and synthesis barrier"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">17</div><div><h1 class="stage-title">Collector and synthesis barrier</h1><p class="stage-kicker">One continuation after all selected reports exist</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code># Whoever ran, they all meet at synthesis
+graph.add_edge("flight_agent", "synthesis")
+graph.add_edge("hotel_agent", "synthesis")
+graph.add_edge("activity_agent", "synthesis")</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>@executor(id="selected_workers")
+async def workers_step(signal: str, ctx: WorkflowContext[str]) -&gt; None:
+    nodes = {"flight_agent": flight_node, "hotel_agent": hotel_node, "activity_agent": activity_node}
+    state = read_travel_state(ctx)
+    # Workers read one snapshot and return disjoint updates. No shared mutable writes.
+    updates = await asyncio.gather(*(nodes[name](state) for name in state["chosen_workers"]))
+    for update in updates:
+        write_travel_update(ctx, update)
+    # Barrier: all selected reports now exist in native state before synthesis starts.
+    await ctx.send_message("continue")</code></pre></div></div><p>There is no separate collector agent or collector executor in either notebook. LangGraph’s superstep processing gathers selected updates. Microsoft’s selected_workers executor contains the explicit gather-and-write barrier.</p><p>No all-three counter is used. A flights-only request waits for one worker, writes flight_report and proceeds. Unselected report fields remain absent.</p></div></div><div class="pager"><button onclick="go(15)">← Previous</button><button onclick="go(17)">Next →</button></div></div></div></section><section class="slide" data-title="State after the worker barrier"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">18</div><div><h1 class="stage-title">State after the worker barrier</h1><p class="stage-kicker">Reports coexist before synthesis starts</p></div></div><div class="body-wrap"><div></div><div class="prose"><h3>New fields, with report excerpts</h3><pre><code>{
+  "flight_report": "TOP 3 OPTIONS: ... 6E-1071 ...\nRECOMMENDED: 6E-1071, cheapest nonstop daytime option.\nTRADE-OFFS: MH-199 costs less but has a stop.\nASSUMPTIONS: one-way per-person fares, return unavailable.",
+  "hotel_report": "TOP 3 OPTIONS: ... Hotel Mono ...\nRECOMMENDED: Hotel Mono for food and culture.\nASSUMPTIONS: three nights, one shared room.",
+  "activity_report": "DAY BY DAY: Day 1 Chinatown ... Day 2 Gardens by the Bay ...\nWEATHER NOTE: allow indoor breaks for afternoon rain.\nASSUMPTIONS: dates unconfirmed."
+}</code></pre><p>Retains: request, requirements, chosen_workers.</p><p>These are labeled excerpts, not complete reports. Reports may finish in any order. Synthesis sees all selected reports together. For flights only, omit the hotel_report and activity_report keys entirely.</p></div></div><div class="pager"><button onclick="go(16)">← Previous</button><button onclick="go(18)">Next →</button></div></div></div></section><section class="slide" data-title="State conflict semantics"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">19</div><div><h1 class="stage-title">State conflict semantics</h1><p class="stage-kicker">Disjoint worker keys avoid competing writes</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table><thead><tr><th>Concern</th><th>LangGraph here</th><th>Microsoft here</th></tr></thead><tbody><tr><td>Worker updates</td><td>Separate report keys</td><td>Separate report keys</td></tr><tr><td>Update application</td><td>Graph channel updates, default overwrite reducer</td><td>Explicit ctx.set_state assignments</td></tr><tr><td>Same-key concurrent updates</td><td>May require an appropriate reducer or raise a conflict</td><td>Pinned State implementation uses last write to that key</td></tr><tr><td>Read copies</td><td>Stage reads graph state</td><td>get_state returns copies</td></tr><tr><td>Barrier</td><td>End of worker superstep</td><td>gather completes before signal</td></tr></tbody></table></div><p>Microsoft stages native state writes until superstep commit. No code calls commit manually. The application does not rely on two workers overwriting the same key.</p><p><a href="https://github.com/microsoft/agent-framework/blob/main/python/packages/core/agent_framework/_workflows/_state.py">Pinned API’s State implementation semantics</a> · <a href="https://docs.langchain.com/oss/python/langgraph/graph-api">LangGraph reducers</a></p></div></div><div class="pager"><button onclick="go(17)">← Previous</button><button onclick="go(19)">Next →</button></div></div></div></section><section class="slide" data-title="Synthesis stage"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">20</div><div><h1 class="stage-title">Synthesis stage</h1><p class="stage-kicker">The manager creates the first plan from reports</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def synthesis_node(state):
+    """The manager joins the three reports into one travel plan."""
+    draft = ask(manager_agent, f"""
+Write the first version of the travel plan using ONLY the reports below.
+
+REQUIREMENTS:
+{state['requirements']}
+
+FLIGHT REPORT:
+{state.get('flight_report', 'not requested')}
+
+HOTEL REPORT:
+{state.get('hotel_report', 'not requested')}
+
+ACTIVITY REPORT:
+{state.get('activity_report', 'not requested')}
+
+Use these headings:
+CHOSEN FLIGHT, CHOSEN HOTEL, DAY BY DAY PLAN, TOTAL COST, WHY THESE CHOICES, ASSUMPTIONS
+""")
+    print("MANAGER wrote the first plan.")
+    return {"draft_plan": draft}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def synthesis_node(state):
+    """The manager joins the three reports into one travel plan."""
+    draft = await ask(manager_agent, f"\nWrite the first version of the travel plan using ONLY the reports below.\n\nREQUIREMENTS:\n{state['requirements']}\n\nFLIGHT REPORT:\n{state.get('flight_report', 'not requested')}\n\nHOTEL REPORT:\n{state.get('hotel_report', 'not requested')}\n\nACTIVITY REPORT:\n{state.get('activity_report', 'not requested')}\n\nUse these headings:\nCHOSEN FLIGHT, CHOSEN HOTEL, DAY BY DAY PLAN, TOTAL COST, WHY THESE CHOICES, ASSUMPTIONS\n")
+    print('MANAGER wrote the first plan.')
+    return {'draft_plan': draft}</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Reads from workflow state</th><th>Writes to workflow state</th><th>Next step</th></tr></thead><tbody><tr><td>requirements and selected reports</td><td>draft_plan</td><td>Critic</td></tr></tbody></table></div><p>The source prompt permits only worker reports and substitutes “not requested” for absent reports. It requires the same six plan headings in both implementations.</p></div></div><div class="pager"><button onclick="go(18)">← Previous</button><button onclick="go(20)">Next →</button></div></div></div></section><section class="slide" data-title="Synthesis executor and resulting state"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">21</div><div><h1 class="stage-title">Synthesis executor and resulting state</h1><p class="stage-kicker">The first draft becomes a shared-state field</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>return {'draft_plan': draft}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>@executor(id="synthesis")
+async def synthesis_step(signal: str, ctx: WorkflowContext[str]) -&gt; None:
+    write_travel_update(ctx, await synthesis_node(read_travel_state(ctx)))
+    await ctx.send_message("continue")</code></pre></div></div><h3>New field, excerpt</h3><pre><code>{
+  "draft_plan": "CHOSEN FLIGHT: 6E-1071, INR 43800 for two one-way tickets.\nCHOSEN HOTEL: Hotel Mono, INR 31500 for three nights.\nDAY BY DAY PLAN: ...\nTOTAL COST: INR 75300 flights + hotel; exclusions stated.\nWHY THESE CHOICES: ...\nASSUMPTIONS: dates unconfirmed."
+}</code></pre><p>Retains: request, requirements, chosen_workers and all selected reports.</p><p>The complete draft text is stored. This slide abbreviates it. Next, only the critic reads and evaluates it.</p></div></div><div class="pager"><button onclick="go(19)">← Previous</button><button onclick="go(21)">Next →</button></div></div></div></section><section class="slide" data-title="Critic stage"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">22</div><div><h1 class="stage-title">Critic stage</h1><p class="stage-kicker">The reviewer lists specific problems without rewriting</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def critic_node(state):
+    """The critic looks for problems. It does not fix them."""
+    issues = ask(critic_agent, f"""
+Review this plan against the requirements.
+
+REQUIREMENTS:
+{state['requirements']}
+
+PLAN:
+{state['draft_plan']}
+""")
+    print("CRITIC finished the review.")
+    return {"critique": issues}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def critic_node(state):
+    """The critic looks for problems. It does not fix them."""
+    issues = await ask(critic_agent, f"\nReview this plan against the requirements.\n\nREQUIREMENTS:\n{state['requirements']}\n\nPLAN:\n{state['draft_plan']}\n")
+    print('CRITIC finished the review.')
+    return {'critique': issues}</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Reads from workflow state</th><th>Writes to workflow state</th><th>Next step</th></tr></thead><tbody><tr><td>requirements, draft_plan</td><td>critique</td><td>Revision stage</td></tr></tbody></table></div><div class="compare"><div><h3>LangGraph</h3><pre><code>return {'critique': issues}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>@executor(id="critic")
+async def critic_step(signal: str, ctx: WorkflowContext[str]) -&gt; None:
+    write_travel_update(ctx, await critic_node(read_travel_state(ctx)))
+    await ctx.send_message("continue")</code></pre></div></div></div></div><div class="pager"><button onclick="go(20)">← Previous</button><button onclick="go(22)">Next →</button></div></div></div></section><section class="slide" data-title="Critique state and branch condition"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">23</div><div><h1 class="stage-title">Critique state and branch condition</h1><p class="stage-kicker">The text determines whether another model call occurs</p></div></div><div class="body-wrap"><div></div><div class="prose"><h3>Issue case</h3><pre><code>{
+  "critique": "1. Clarify that flight prices are one-way per person and hotel totals assume three nights."
+}</code></pre><p>Retains: all previous fields.</p><h3>No-issue case</h3><pre><code>{
+  "critique": "NO ISSUES FOUND."
+}</code></pre><p>Retains: all previous fields.</p><p>The revision stage checks whether NO ISSUES FOUND appears anywhere in critique.upper(). It copies the draft in that case. Otherwise it asks the manager to fix only the listed problems. This is one critic pass, not an iterative review loop.</p></div></div><div class="pager"><button onclick="go(21)">← Previous</button><button onclick="go(23)">Next →</button></div></div></div></section><section class="slide" data-title="Revision stage"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">24</div><div><h1 class="stage-title">Revision stage</h1><p class="stage-kicker">Same branch and repair prompt</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>def revision_node(state):
+    """The manager fixes only what the critic listed. Everything else stays as it was."""
+    if "NO ISSUES FOUND" in state["critique"].upper():
+        print("No changes needed.")
+        return {"final_plan": state["draft_plan"]}
+
+    fixed = ask(manager_agent, f"""
+Fix ONLY the problems listed below. Do not rewrite the parts that are fine.
+
+PLAN:
+{state['draft_plan']}
+
+PROBLEMS TO FIX:
+{state['critique']}
+
+Return the full corrected plan, then a short section called WHAT CHANGED.
+""")
+    print("MANAGER fixed the plan.")
+    return {"final_plan": fixed}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def revision_node(state):
+    """The manager fixes only what the critic listed. Everything else stays as it was."""
+    if 'NO ISSUES FOUND' in state['critique'].upper():
+        print('No changes needed.')
+        return {'final_plan': state['draft_plan']}
+    fixed = await ask(manager_agent, f"\nFix ONLY the problems listed below. Do not rewrite the parts that are fine.\n\nPLAN:\n{state['draft_plan']}\n\nPROBLEMS TO FIX:\n{state['critique']}\n\nReturn the full corrected plan, then a short section called WHAT CHANGED.\n")
+    print('MANAGER fixed the plan.')
+    return {'final_plan': fixed}</code></pre></div></div><div class="table-wrap"><table><thead><tr><th>Reads from workflow state</th><th>Writes to workflow state</th><th>Next step</th></tr></thead><tbody><tr><td>draft_plan, critique</td><td>final_plan</td><td>End / yield final state</td></tr></tbody></table></div></div></div><div class="pager"><button onclick="go(22)">← Previous</button><button onclick="go(24)">Next →</button></div></div></div></section><section class="slide" data-title="Final state and output boundary"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">25</div><div><h1 class="stage-title">Final state and output boundary</h1><p class="stage-kicker">The caller receives all business fields</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>return {'final_plan': fixed}
+# LangGraph merges this into the graph state.</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>@executor(id="revision")
+async def revision_step(signal: str, ctx: WorkflowContext[Never, dict]) -&gt; None:
+    write_travel_update(ctx, await revision_node(read_travel_state(ctx)))
+    await ctx.yield_output(read_travel_state(ctx))</code></pre></div></div><h3>New field, excerpt</h3><pre><code>{
+  "final_plan": "CHOSEN FLIGHT: 6E-1071 ...\nCHOSEN HOTEL: Hotel Mono ...\nDAY BY DAY PLAN: ...\nTOTAL COST: ...\nWHY THESE CHOICES: ...\nASSUMPTIONS: ...\nWHAT CHANGED: Explicitly state one-way fares per person; three nights in a shared room."
+}</code></pre><p>Retains: request, requirements, chosen_workers, selected reports, draft_plan, critique.</p><p>For the no-issues branch, final_plan equals draft_plan exactly. Microsoft reads its native state for the final yielded snapshot. It does not send this dictionary to another executor.</p></div></div><div class="pager"><button onclick="go(23)">← Previous</button><button onclick="go(25)">Next →</button></div></div></div></section><section class="slide" data-title="Complete workflow graph"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">26</div><div><h1 class="stage-title">Complete workflow graph</h1><p class="stage-kicker">Same branching and barrier, different graph representation</p></div></div><div class="body-wrap"><div></div><div class="prose"><div aria-label="Travel workflow topology" class="flowgraph"><div>API request / START</div><span>↓</span><div>Manager: requirements + worker selection</div><span>↓ selected subset, or all on fallback</span><section class="workergrid"><div>Flight<br/>flight_report</div><div>Hotel<br/>hotel_report</div><div>Activity<br/>activity_report</div></section><span>↓ concurrent selected branches meet</span><div>Barrier: all selected reports ready</div><span>↓</span><div>Synthesis: draft_plan</div><span>↓</span><div>Critic: critique</div><span>↓</span><section class="workergrid two"><div>NO ISSUES FOUND<br/>final_plan = draft_plan</div><div>Issues found<br/>Manager repairs once</div></section><span>↓</span><div>Final state / API response</div></div><div class="table-wrap"><table><thead><tr><th>Runtime stage</th><th>Successors and conditions</th></tr></thead><tbody><tr><td>Input / START</td><td>Manager</td></tr><tr><td>Manager</td><td>Select any nonempty subset of flight, hotel and activity; unknown selection falls back to all</td></tr><tr><td>Flight / Hotel / Activity</td><td>Concurrent selected branches, each writes its own report</td></tr><tr><td>Collector / barrier</td><td>Wait only for selected branches; continue once to synthesis</td></tr><tr><td>Synthesis</td><td>Critic</td></tr><tr><td>Critic</td><td>Revision stage</td></tr><tr><td>Revision: NO ISSUES FOUND</td><td>Copy draft to final_plan, then end</td></tr><tr><td>Revision: issues found</td><td>One manager repair call, write final_plan, then end</td></tr><tr><td>END / output</td><td>Return the complete business-state dictionary</td></tr></tbody></table></div><p>LangGraph has separate flight, hotel and activity vertices. Microsoft combines their concurrent tasks and collector barrier inside selected_workers. The same business flow therefore has seven LangGraph nodes and five Microsoft executors.</p><p>The revision decision occurs inside its stage function. There is no edge back to the critic. Checkpoints are an optional extension shown after the main execution.</p></div></div><div class="pager"><button onclick="go(24)">← Previous</button><button onclick="go(26)">Next →</button></div></div></div></section><section class="slide" data-title="Graph and workflow construction"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">27</div><div><h1 class="stage-title">Graph and workflow construction</h1><p class="stage-kicker">The code expresses the same business-stage order</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>from langgraph.graph import StateGraph, START, END
+
+graph = StateGraph(TravelState)
+
+# Add every step
+graph.add_node("manager", manager_node)
+graph.add_node("flight_agent", flight_node)
+graph.add_node("hotel_agent", hotel_node)
+graph.add_node("activity_agent", activity_node)
+graph.add_node("synthesis", synthesis_node)
+graph.add_node("critic", critic_node)
+graph.add_node("revision", revision_node)
+
+# Start at the manager
+graph.add_edge(START, "manager")
+
+# The manager's list of workers decides who runs. All of them start together.
+graph.add_conditional_edges(
+    "manager",
+    lambda state: state["chosen_workers"],
+    ["flight_agent", "hotel_agent", "activity_agent"],
+)
+
+# Whoever ran, they all meet at synthesis
+graph.add_edge("flight_agent", "synthesis")
+graph.add_edge("hotel_agent", "synthesis")
+graph.add_edge("activity_agent", "synthesis")
+
+# Then the quality loop
+graph.add_edge("synthesis", "critic")
+graph.add_edge("critic", "revision")
+graph.add_edge("revision", END)
+
+travel_planner = graph.compile()
+print("Graph built.")</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>def create_workflow():
+    return (WorkflowBuilder(start_executor=manager_step, output_from=[revision_step])
+        .add_edge(manager_step, workers_step)
+        .add_edge(workers_step, synthesis_step)
+        .add_edge(synthesis_step, critic_step)
+        .add_edge(critic_step, revision_step).build())</code></pre></div></div><p>The Microsoft graph has five executors. Three business workers live inside the selected-workers executor. Edges carry “continue”. Both notebooks omit checkpoint configuration in their normal build functions.</p></div></div><div class="pager"><button onclick="go(25)">← Previous</button><button onclick="go(27)">Next →</button></div></div></div></section><section class="slide" data-title="Invocation and final result"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">28</div><div><h1 class="stage-title">Invocation and final result</h1><p class="stage-kicker">The execution APIs differ, the result fields match</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>graph_result = travel_planner.invoke({"request": demo_request})
+plan_text = graph_result["final_plan"]</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def run_travel_state(request: str) -&gt; TravelState:
+    # Fresh workflow =&gt; fresh framework-owned shared state for this request.
+    run_result = await create_workflow().run(request)
+    outputs = run_result.get_outputs()
+    if len(outputs) != 1:
+        raise RuntimeError(f"Expected one final state, got {len(outputs)}")
+    return cast(TravelState, outputs[0])
+
+result = await plan_trip(demo_request)
+plan_text = result["final_plan"]</code></pre></div></div><p>The original graph.invoke returns the state correctly. Its plan_trip wrapper then accesses result["fina"], a typo. The replica repairs only that return contract by returning the complete dictionary. The original notebook remains unchanged.</p><p>Use top-level await in Colab/Jupyter. The Microsoft wrapper builds a fresh workflow for each request, isolating native state between runs.</p><h3>The same API adapter returns the final answer</h3><div class="compare"><div><h3>LangGraph</h3><pre><code>response = await handle_plan_request({"request": demo_request})
+answer = response["final_plan"]</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>response = await handle_plan_request({"request": demo_request})
+answer = response["final_plan"]</code></pre></div></div><p>In the issue branch, answer includes the full corrected travel plan and WHAT CHANGED. In the no-issues branch it equals the original draft. The API consumer never calls each specialist individually.</p></div></div><div class="pager"><button onclick="go(26)">← Previous</button><button onclick="go(28)">Next →</button></div></div></div></section><section class="slide" data-title="State, checkpoints and chat history"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">29</div><div><h1 class="stage-title">State, checkpoints and chat history</h1><p class="stage-kicker">Three different objects with different lifetimes</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table><thead><tr><th>Object</th><th>What it contains</th><th>Current notebooks</th></tr></thead><tbody><tr><td>Workflow state</td><td>Business request, requirements, reports, draft, critique, final plan</td><td>Both frameworks use it during execution.</td></tr><tr><td>Persisted checkpoint</td><td>Workflow state plus runtime progress required to continue</td><td>Neither normal notebook build enables it.</td></tr><tr><td>Agent chat history</td><td>User/system messages, tool calls/results and model responses</td><td>Each ask starts without a shared AgentSession. No conversation history store is configured.</td></tr></tbody></table></div><p>Saving workflow fields does not automatically save an agent’s complete chat transcript. Reports are model outputs stored in workflow state, not a replacement for the internal tool conversation.</p></div></div><div class="pager"><button onclick="go(27)">← Previous</button><button onclick="go(29)">Next →</button></div></div></div></section><section class="slide" data-title="Checkpoint configuration"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">30</div><div><h1 class="stage-title">Checkpoint configuration</h1><p class="stage-kicker">Optional extension, separate from the normal notebooks</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>from langgraph.checkpoint.memory import InMemorySaver
+
+# OPTIONAL EXTENSION: original notebook compiles without a checkpointer.
+checkpointer = InMemorySaver()
+checkpoint_app = graph.compile(
+    checkpointer=checkpointer,
+    interrupt_before=["synthesis"],
+)
+config = {"configurable": {"thread_id": "travel-demo-1"}}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>from agent_framework import InMemoryCheckpointStorage, WorkflowBuilder
+
+# OPTIONAL EXTENSION: current notebook does not enable checkpoint storage.
+checkpoint_storage = InMemoryCheckpointStorage()
+
+def create_checkpoint_workflow():
+    return (WorkflowBuilder(
+        name="travel-checkpoint-demo",
+        start_executor=manager_step,
+        output_from=[revision_step],
+        checkpoint_storage=checkpoint_storage,
+    ).add_edge(manager_step, workers_step)
+     .add_edge(workers_step, synthesis_step)
+     .add_edge(synthesis_step, critic_step)
+     .add_edge(critic_step, revision_step).build())
+</code></pre></div></div><p>These examples reuse the notebook graph/stages but build new checkpoint-enabled applications. The notebooks themselves remain unchanged. InMemorySaver and InMemoryCheckpointStorage retain snapshots in RAM only. They do not survive a process/Colab session restart.</p><p>API checks: LangGraph 1.2.11 and agent-framework-core 1.21.0. The original LangGraph notebook installs unpinned dependencies, so future versions may require revalidation.</p></div></div><div class="pager"><button onclick="go(28)">← Previous</button><button onclick="go(30)">Next →</button></div></div></div></section><section class="slide" data-title="Checkpoint save points and contents"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">31</div><div><h1 class="stage-title">Checkpoint save points and contents</h1><p class="stage-kicker">The selected-worker barrier is a useful comparison boundary</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table><thead><tr><th>Boundary</th><th>LangGraph optional extension</th><th>Microsoft optional extension</th></tr></thead><tbody><tr><td>When saving happens</td><td>Checkpointer records graph progress at step boundaries</td><td>Storage records entry input and each completed superstep</td></tr><tr><td>After selected workers</td><td>State has reports, next is synthesis</td><td>State has reports and pending continue from selected_workers</td></tr><tr><td>Stored progress</td><td>State values, checkpoint metadata and pending tasks</td><td>Native state, queued workflow messages, executor/runtime state, iteration and graph signature</td></tr><tr><td>Before draft</td><td>draft_plan remains absent</td><td>draft_plan remains absent</td></tr></tbody></table></div><p>Neither example checkpoints inside an individual specialist’s model/tool loop. Because Microsoft gathers workers inside one executor, it has no separate workflow checkpoint for a single worker’s completion. The original LangGraph has distinct worker tasks, but this example resumes at their shared barrier.</p><p><a href="https://docs.langchain.com/oss/python/langgraph/use-checkpointers">LangGraph checkpointers</a> · <a href="https://github.com/microsoft/agent-framework/blob/main/python/packages/core/agent_framework/_workflows/_checkpoint.py">Microsoft checkpoint record</a></p></div></div><div class="pager"><button onclick="go(29)">← Previous</button><button onclick="go(31)">Next →</button></div></div></div></section><section class="slide" data-title="LangGraph checkpoint and resume"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">32</div><div><h1 class="stage-title">LangGraph checkpoint and resume</h1><p class="stage-kicker">Optional pause before synthesis, then continue the same thread</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>from langgraph.checkpoint.memory import InMemorySaver
+
+# OPTIONAL EXTENSION: original notebook compiles without a checkpointer.
+checkpointer = InMemorySaver()
+checkpoint_app = graph.compile(
+    checkpointer=checkpointer,
+    interrupt_before=["synthesis"],
+)
+config = {"configurable": {"thread_id": "travel-demo-1"}}
+
+# Pause after all selected workers finish, before synthesis.
+checkpoint_app.invoke({"request": demo_request}, config)
+saved = checkpoint_app.get_state(config)
+assert saved.next == ("synthesis",)
+assert "activity_report" in saved.values
+assert "draft_plan" not in saved.values
+
+# Resume the paused thread without supplying a new request.
+final_state = checkpoint_app.invoke(None, config)
+print(final_state["final_plan"])
+</code></pre><p>The checkpoint includes the request, requirements, chosen_workers and selected reports. saved.next identifies synthesis as pending. invoke(None, config) resumes the paused thread instead of sending a new request. The test confirmed that manager and workers did not run again.</p></div></div><div class="pager"><button onclick="go(30)">← Previous</button><button onclick="go(32)">Next →</button></div></div></div></section><section class="slide" data-title="Microsoft checkpoint replay"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">33</div><div><h1 class="stage-title">Microsoft checkpoint replay</h1><p class="stage-kicker">Optional replay from an earlier recorded barrier</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>from agent_framework import InMemoryCheckpointStorage, WorkflowBuilder
+
+# OPTIONAL EXTENSION: current notebook does not enable checkpoint storage.
+checkpoint_storage = InMemoryCheckpointStorage()
+
+def create_checkpoint_workflow():
+    return (WorkflowBuilder(
+        name="travel-checkpoint-demo",
+        start_executor=manager_step,
+        output_from=[revision_step],
+        checkpoint_storage=checkpoint_storage,
+    ).add_edge(manager_step, workers_step)
+     .add_edge(workers_step, synthesis_step)
+     .add_edge(synthesis_step, critic_step)
+     .add_edge(critic_step, revision_step).build())
+
+# Optional live extension with notebook definitions loaded.
+# Developer tests intercept HTTP externally; notebook has no offline mode.
+recording = create_checkpoint_workflow()
+recorded = await recording.run(demo_request)
+checkpoints = await checkpoint_storage.list_checkpoints(
+    workflow_name="travel-checkpoint-demo")
+worker_checkpoint = next(cp for cp in checkpoints
+    if "activity_report" in cp.state and "draft_plan" not in cp.state)
+
+# Replay from the recorded barrier, using the same graph and storage.
+# This is a completed-run replay, not an intentional pause mechanism.
+restored = create_checkpoint_workflow()
+resumed = await restored.run(checkpoint_id=str(worker_checkpoint.checkpoint_id))
+final_state = resumed.get_outputs()[0]
+assert final_state == recorded.get_outputs()[0]
+</code></pre><p>This example first completes a recording run, selects the saved worker boundary, then replays downstream stages from it. It demonstrates restore, not an intentional pause API. Same graph structure and storage are required. External tests with intercepted provider HTTP confirmed that only synthesis, critic and revision ran on replay.</p></div></div><div class="pager"><button onclick="go(31)">← Previous</button><button onclick="go(33)">Next →</button></div></div></div></section><section class="slide" data-title="Checkpoint limits"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">34</div><div><h1 class="stage-title">Checkpoint limits</h1><p class="stage-kicker">Saved progress does not guarantee exactly-once effects</p></div></div><div class="body-wrap"><div></div><div class="prose"><ul><li>The examples use in-memory storage. A persistent backend and a stable graph/version strategy are separate deployment decisions. Colab runtime deletion loses these examples’ checkpoints.</li><li>Restoring an earlier checkpoint can rerun downstream calls and side effects. Replayed live model calls can cost money and return different wording. The separate validation script uses deterministic intercepted responses to check equality without paid calls.</li><li>No checkpoint is enabled by default. No hosted Colab restart, external database durability or process-crash recovery test is claimed.</li><li>Workflow state snapshots do not contain API keys in this project. Agent clients, model availability and credentials must be configured again in a new process.</li></ul><p>Choose a new LangGraph thread_id for a new trip. Microsoft’s normal wrapper creates a fresh workflow for a new trip. Use the matching persisted identity only when you intend to continue or replay that execution.</p></div></div><div class="pager"><button onclick="go(32)">← Previous</button><button onclick="go(34)">Next →</button></div></div></div></section><section class="slide" data-title="Execution checks"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">35</div><div><h1 class="stage-title">Execution checks</h1><p class="stage-kicker">Validate behavior at each boundary</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table><thead><tr><th>Check</th><th>Observed result</th></tr></thead><tbody><tr><td>State and routing</td><td>Native Microsoft reads/writes all nine fields. Downstream payloads are only control strings.</td></tr><tr><td>Workers</td><td>1/2/3 workers, invalid-selection fallback, disjoint reports and concurrent overlap pass.</td></tr><tr><td>Quality branch</td><td>Issue case repairs once. No-issues case returns draft without a revision call.</td></tr><tr><td>Isolation</td><td>Repeated and overlapping requests retain their own state. Sparse next runs do not inherit old reports.</td></tr><tr><td>Checkpoint extensions</td><td>Real runtimes restore worker-boundary checkpoints without rerunning manager/workers.</td></tr><tr><td>Presentation</td><td>Actual code excerpts, responsive layout and keyboard/menu navigation checked.</td></tr></tbody></table></div><p>Tests use intercepted provider responses or deterministic agent stand-ins. No paid calls or hosted Colab execution occurred.</p></div></div><div class="pager"><button onclick="go(33)">← Previous</button><button onclick="go(35)">Next →</button></div></div></div></section><section class="slide" data-title="Companion notebooks and references"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">36</div><div><h1 class="stage-title">Companion notebooks and references</h1><p class="stage-kicker">Run the exact project behind the slides</p></div></div><div class="body-wrap"><div></div><div class="prose"><ul><li><a href="../travel-planner/notebooks/travel_planner_langgraph_(1)%20(2).ipynb">Original LangGraph travel planner</a></li><li><a href="../travel-planner/notebooks/travel_planner_microsoft_agent_framework.ipynb">Microsoft Agent Framework travel planner</a></li><li><a href="https://docs.langchain.com/oss/python/langgraph/graph-api">LangGraph Graph API</a></li><li><a href="https://docs.langchain.com/oss/python/langgraph/use-checkpointers">LangGraph checkpointers and resume</a></li><li><a href="https://github.com/microsoft/agent-framework/blob/main/python/packages/core/agent_framework/_workflows/_workflow_context.py">Microsoft workflow context source</a></li><li><a href="https://github.com/microsoft/agent-framework/blob/main/python/packages/core/agent_framework/_workflows/_state.py">Microsoft native state semantics</a></li></ul><p>The Microsoft notebook directly uses OpenAI with Colab Secrets. Enable Notebook access for OPENAI_API_KEY in this notebook. Mocked developer validation is separate in travel-planner/scripts/validate_microsoft_travel_planner.py. The teaching notebook has no mode switch or test fixtures.</p><p>Teaching exercise: predict which fields exist after a flights-only request, then identify the first checkpoint from which synthesis can resume. Explain why state, checkpoint and chat history are different.</p></div></div><div class="pager"><button onclick="go(34)">← Previous</button><button onclick="go(0)">Back to start</button></div></div></div></section><div class="foot">Generative &amp; Agentic AI Development · Boston Institute of Analytics</div><script>
+const slides=[...document.querySelectorAll('.slide')],menu=document.getElementById('dropMenu'),drop=document.getElementById('chDrop'),toggle=document.getElementById('chDropBtn');let cur=0;
+slides.forEach((s,i)=>{const a=document.createElement('a');a.href='#chapter-'+(i+1);a.textContent=String(i+1).padStart(2,'0')+'  '+s.dataset.title;a.onclick=e=>{e.preventDefault();go(i)};menu.append(a)});
+function go(i){if(i<0||i>=slides.length)return;slides[cur].classList.remove('active');cur=i;slides[cur].classList.add('active');[...menu.children].forEach((a,n)=>{a.classList.toggle('cur',n===i);a.setAttribute('aria-current',n===i?'page':'false')});document.getElementById('btnPrev').disabled=i===0;document.getElementById('btnNext').disabled=i===slides.length-1;document.getElementById('railFill').style.width=(i/(slides.length-1)*100)+'%';drop.classList.remove('open');toggle.setAttribute('aria-expanded','false');window.scrollTo(0,0)}
+document.getElementById('btnPrev').onclick=()=>go(cur-1);document.getElementById('btnNext').onclick=()=>go(cur+1);toggle.onclick=e=>{e.stopPropagation();drop.classList.toggle('open');toggle.setAttribute('aria-expanded',drop.classList.contains('open'))};document.addEventListener('click',()=>{drop.classList.remove('open');toggle.setAttribute('aria-expanded','false')});document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.key===' '&&['BUTTON','SUMMARY','A'].includes(e.target.tagName))return;if(['ArrowRight','ArrowLeft',' '].includes(e.key)){e.preventDefault();go(cur+(e.key==='ArrowLeft'?-1:1))}});go(0);
+</script></body></html>

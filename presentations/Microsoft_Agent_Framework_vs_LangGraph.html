@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Microsoft Agent Framework vs LangGraph — Same Ticket Solver</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Inter+Tight:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--teal:#2dd4bf;--cyan:#22d3ee;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 12% 45%, rgba(45,212,191,.07), transparent 26%),radial-gradient(circle at 88% 28%, rgba(139,92,246,.07), transparent 26%);
+  background-attachment:fixed;
+}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* sitenav */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--teal)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#c7f5ee;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:420px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--teal);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(40px,7.4vw,84px);margin-bottom:26px;background:linear-gradient(135deg,var(--teal),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:44px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide transitions */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:60px 0 80px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:34px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:56px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;line-height:1.08;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:880px}
+
+/* prose */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:940px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(45,212,191,.13);border:1px solid rgba(45,212,191,.24);border-radius:4px;padding:2px 6px;color:#b8f0e8}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+
+/* pairs (comparison) */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 12px}
+.pcard{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.bad{border-top:3px solid var(--rose)}
+.pcard.good{border-top:3px solid var(--emerald)}
+.p-head{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--card-border)}
+.p-sig{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px 'JetBrains Mono',monospace;flex:0 0 auto}
+.pcard.bad .p-sig{background:rgba(244,63,94,.16);border:1px solid rgba(244,63,94,.42);color:var(--rose)}
+.pcard.good .p-sig{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--emerald)}
+.p-lab{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.pcard.bad .p-lab{color:var(--rose)}
+.pcard.good .p-lab{color:var(--emerald)}
+.p-sub{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right}
+.p-prompt{margin:0;padding:16px 18px;background:rgba(255,255,255,.012);overflow-x:auto}
+.p-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.p-why{padding:14px 18px;border-top:1px solid var(--card-border);font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.p-why strong{color:var(--ink);font-weight:600}
+
+/* code cards & grids */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--teal);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--emerald)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--teal);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--emerald)}
+
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#b8f0e8;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* codeblock */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:20px 0;overflow:hidden}
+.cb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.02)}
+.cb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.cb-lang{font:600 10px 'JetBrains Mono',monospace;color:var(--ink-faint);text-transform:uppercase}
+.cb-body{padding:16px 18px;margin:0;overflow-x:auto}
+.cb-body code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;color:#d8deea;white-space:pre-wrap}
+.cb-body .kw{color:#c678dd;font-weight:600}
+.cb-body .fn{color:#61afef}
+.cb-body .str{color:#98c379}
+.cb-body .cm{color:#5c6370;font-style:italic}
+.cb-body .op{color:#56b6c2;font-weight:700}
+.cb-body .cls{color:#e5c07b}
+
+/* visual diagram box */
+.diagram-box{background:rgba(12,12,18,.8);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:22px 0;text-align:center}
+.diag-flow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+.diag-node{background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35);padding:10px 16px;border-radius:6px;font:600 13px 'JetBrains Mono',monospace;color:#c7f5ee}
+.diag-node.hl{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.45);color:#dcd6ff}
+.diag-arr{color:var(--accent);font-weight:700;font-size:18px}
+
+/* pager */
+.pager{display:flex;justify-content:space-between;gap:14px;margin-top:48px;padding-top:28px;border-top:1px solid var(--card-border)}
+.pager button{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 18px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;text-align:left;transition:all .18s}
+.pager button:hover:not(:disabled){background:rgba(255,255,255,.06);border-color:var(--accent)}
+.pager button.rt{margin-left:auto;text-align:right}
+.pager button:disabled{opacity:.25;cursor:default}
+.pager .pg-l{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px}
+.pager .pg-t{font-size:14px;font-weight:500}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:24px 0}
+.q-title{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:14px}
+.opts{display:grid;gap:9px}
+.opt{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:6px;padding:12px 16px;font-size:14.5px;color:var(--ink-dim);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
+.opt:hover:not(:disabled){background:rgba(255,255,255,.06);color:var(--ink)}
+.opt.correct{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.5)!important;color:#6ee7b7!important}
+.opt.wrong{background:rgba(244,63,94,.14)!important;border-color:rgba(244,63,94,.5)!important;color:#fda4af!important}
+.opt:disabled{cursor:default}
+.explain{margin-top:14px;font-size:14px;color:var(--ink-dim);display:none;line-height:1.6;border-top:1px dashed var(--card-border);padding-top:10px}
+.explain.show{display:block;animation:fadeIn .2s ease}
+
+/* table */
+.comp-table{width:100%;border-collapse:collapse;margin:22px 0;font-size:14.5px}
+.comp-table th,.comp-table td{border:1px solid var(--card-border);padding:12px 16px;text-align:left}
+.comp-table th{background:rgba(255,255,255,.04);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.comp-table tr:nth-child(even){background:rgba(255,255,255,.015)}
+
+.foot{text-align:center;padding:40px 0;color:var(--ink-faint);font-size:13px;border-top:1px solid var(--card-border);margin-top:40px}
+
+@media(max-width:820px){
+  .hero h1{font-size:38px}
+  .stage-header,.body-wrap{grid-template-columns:1fr;gap:12px}
+  .stage-num-big{font-size:36px}
+  .stats,.pair,.vocab-grid,.code-cards{grid-template-columns:1fr}
+  .container{padding:0 20px}
+  .sitenav-inner{padding:12px 20px}
+  .dropmenu{min-width:300px}
+}
+
+.prose{min-width:0;width:100%;overflow-x:auto}.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px}.compare>div{min-width:0}pre{background:#101019;border:1px solid var(--card-border);padding:22px;border-radius:8px;overflow:auto;font:13px/1.65 'JetBrains Mono',monospace;white-space:pre;margin:12px 0 24px}h3{color:var(--teal)}.sources a,a{color:var(--teal)}.flow{font-size:24px;line-height:2;padding:24px 0;color:var(--teal)}.reveal{margin:18px 0;padding:18px;border-left:2px solid var(--teal)}summary{cursor:pointer;color:var(--ink);font-weight:600}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:4px}table{width:100%;border-collapse:collapse}td,th{padding:14px;text-align:left;border-bottom:1px solid var(--card-border);vertical-align:top}.foot{padding:24px;text-align:center;color:var(--ink-faint)}@media(max-width:760px){.compare{grid-template-columns:1fr}.dropmenu{min-width:0;width:min(85vw,420px)}.brand{display:none}.body-wrap,.stage-header{grid-template-columns:1fr}.stage-num-big{font-size:32px}.container{padding:0 20px}}@media print{.slide{display:block!important;break-before:page}.sitenav,.pager,.foot{display:none}body{background:white;color:black}.prose p,.prose li{color:#222}pre{white-space:pre-wrap;color:black;background:#eee}.stage{padding:20px 0}}
+
+pre{white-space:pre-wrap;overflow-wrap:anywhere} .stage-title{overflow-wrap:anywhere}
+</style>
+</head><body><nav aria-label="Presentation" class="sitenav"><div class="sitenav-inner"><a class="brand" href="index.html">BIA <em>Teaching decks</em></a><a class="home-link" href="index.html">Home</a><div class="dropdown" id="chDrop"><button aria-expanded="false" class="dropbtn" id="chDropBtn">Chapters ▾</button><div class="dropmenu" id="dropMenu"></div></div><div class="nav-spacer"></div><div class="nav-prevnext"><button id="btnPrev">← Prev</button><button id="btnNext">Next →</button></div></div><div class="rail"><div class="rail-fill" id="railFill"></div></div></nav><section class="slide active" data-title="The API entry point"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">01</div><div><h1 class="stage-title">The API entry point</h1><p class="stage-kicker">A customer request invokes the graph or workflow</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code># Illustrative API adapter; app is already compiled.
+# Request body: {"message": "My account is locked..."}
+def handle_ticket(payload: dict) -&gt; dict:
+    return app.invoke({"ticket": payload["message"]})</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code># Illustrative API adapter; functions are already defined.
+# Build an isolated workflow before executing this request.
+async def handle_ticket(payload: dict) -&gt; dict:
+    workflow = create_workflow()
+    run = await workflow.run(payload["message"])
+    return run.get_outputs()[0]</code></pre></div></div><p><strong>These adapters are illustrative Python functions, not a deployed HTTP service.</strong> A web framework would map a request body to <code>payload</code> and serialize the returned dictionary. They invoke the orchestrator; they do not call the LLM directly.</p><pre><code>{
+  "message": "My account is locked and I have an important meeting in 10 minutes."
+}</code></pre><p>Response fields: <code>ticket</code>, <code>analysis</code> (summary/category/urgency), <code>decision</code>, <code>reply</code>. We will trace those exact fields through the implementation.</p></div></div><div class="pager"><button onclick="go(-1)">← Previous</button><button onclick="go(1)">Next →</button></div></div></div></section><section class="slide" data-title="Teaching order and runtime order"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">02</div><div><h1 class="stage-title">Teaching order and runtime order</h1><p class="stage-kicker">We reveal the internals after seeing the entry point</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="flow">Define steps → Build / compile → Invoke → Execute steps → Return output</div><p>That is the actual lifecycle. This presentation first shows an already-prepared handler, then opens the implementation one part at a time. Compilation does not occur after the agents finish.</p><table><thead><tr><th>At build time</th><th>At request time</th></tr></thead><tbody><tr><td>LangGraph: define nodes/state, add edges, call <code>compile()</code>.</td><td>Call <code>app.invoke(...)</code>; the runtime schedules nodes.</td></tr><tr><td>Microsoft: define step functions; <code>create_workflow()</code> wraps fresh executors and calls <code>build()</code>.</td><td>The handler builds an isolated instance before <code>workflow.run(...)</code>; the runtime schedules executors.</td></tr></tbody></table><p>A graph invocation starts the whole process. A model call happens later inside analysis, decision, or reply. The four steps are not four autonomous agents.</p></div></div><div class="pager"><button onclick="go(0)">← Previous</button><button onclick="go(2)">Next →</button></div></div></div></section><section class="slide" data-title="The complete ticket state schema"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">03</div><div><h1 class="stage-title">The eventual ticket state schema</h1><p class="stage-kicker">Eventual state fields; only the ticket input is supplied at the start</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>from typing import TypedDict, Optional
+
+class TicketState(TypedDict):
+    ticket: str
+    analysis: Optional[dict]
+    decision: Optional[str]
+    reply: Optional[str]</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>from typing import TypedDict, Optional
+
+class TicketState(TypedDict):
+    ticket: str
+    analysis: Optional[dict]
+    decision: Optional[str]
+    reply: Optional[str]</code></pre></div></div><table><thead><tr><th>Field</th><th>Written by</th><th>Expected value</th></tr></thead><tbody><tr><td>ticket</td><td>clean step</td><td>Cleaned customer message</td></tr><tr><td>analysis.summary / category / urgency</td><td>analysis step</td><td>Three model text responses</td></tr><tr><td>decision</td><td>decision step</td><td>Yes/No plus a reason, as free text</td></tr><tr><td>reply</td><td>reply step</td><td>Customer-facing free text</td></tr></tbody></table><p><strong>Both implementations use the same executable TicketState declaration and the same eventual fields.</strong> This describes application types, not supplied initial values. Both start with only the ticket input; analysis, decision, and reply are written by their steps.</p><p><code>Optional</code> allows None in the annotation but does not populate a default. Microsoft uses <code>TicketState</code> for the final result and runner return annotations. Native state is accessed with <code>WorkflowContext.get_state()</code> and <code>set_state()</code>.</p><p>LangGraph passes the schema to <code>StateGraph(TicketState)</code>; Microsoft connects executors with <code>WorkflowBuilder</code> and does not register this TypedDict as a schema argument. The same declaration does not imply identical update, reducer, or runtime-validation semantics.</p></div></div><div class="pager"><button onclick="go(1)">← Previous</button><button onclick="go(3)">Next →</button></div></div></div></section><section class="slide" data-title="Concrete initial state"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">04</div><div><h1 class="stage-title">Concrete initial state</h1><p class="stage-kicker">Missing keys are not automatic None values</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>message = "  My account is locked and I have an important meeting in 10 minutes.  "
+initial_input = {"ticket": message}
+# app.invoke(initial_input)
+# analysis, decision, reply are not supplied.</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>message = "  My account is locked and I have an important meeting in 10 minutes.  "
+workflow = create_workflow()
+# workflow.run(message)
+# Initial user state is empty; message is the initial input.</code></pre></div></div><table><thead><tr><th>Field</th><th>LangGraph before clean</th><th>Microsoft before clean</th></tr></thead><tbody><tr><td>ticket</td><td>Raw input string, including outside spaces</td><td>Not written; raw string is the executor input</td></tr><tr><td>analysis</td><td>Not supplied</td><td>Not written</td></tr><tr><td>decision</td><td>Not supplied</td><td>Not written</td></tr><tr><td>reply</td><td>Not supplied</td><td>Not written</td></tr></tbody></table><p><strong>Application choices:</strong> we pass only the original ticket and leave generated fields unset. For display, “not written” means an absent user key, not a stored string or JSON null. The current notebooks do not initialise generated fields to <code>None</code>. Calling <code>ctx.get_state(key)</code> for a missing key returns its default <code>None</code>; it does not create the key.</p></div></div><div class="pager"><button onclick="go(2)">← Previous</button><button onclick="go(4)">Next →</button></div></div></div></section><section class="slide" data-title="Model access"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">05</div><div><h1 class="stage-title">Model access</h1><p class="stage-kicker">Same provider family, different client abstraction</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>from langchain_openai import ChatOpenAI
+model = ChatOpenAI(model="gpt-5.6-luna")
+text = model.invoke(prompt).content.strip()</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>from agent_framework import Agent
+from agent_framework.openai import OpenAIChatCompletionClient
+
+client = OpenAIChatCompletionClient(
+    model=MODEL_NAME,
+    api_key=os.environ["OPENAI_API_KEY"],
+    base_url=os.getenv("OPENAI_BASE_URL") or None,
+)
+agent = Agent(client=client, name="TicketSupport")
+text = (await agent.run(prompt)).text.strip()</code></pre></div></div><p>These are excerpts inside their respective execution contexts. Both notebooks use gpt-5.6-luna, the original model name. Provider access must be available; neither API access nor model availability is assumed to have been tested.</p></div></div><div class="pager"><button onclick="go(3)">← Previous</button><button onclick="go(5)">Next →</button></div></div></div></section><section class="slide" data-title="One model agent, four workflow steps"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">06</div><div><h1 class="stage-title">One model agent, four workflow steps</h1><p class="stage-kicker">Model calls and orchestrator calls have different jobs</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Step</th><th>Model calls</th><th>Responsibility</th></tr></thead><tbody><tr><td>clean_step</td><td>0</td><td>Trim and validate input</td></tr><tr><td>analyse_ticket</td><td>3</td><td>Summary, category, urgency</td></tr><tr><td>add_decision</td><td>1</td><td>Recommend escalation</td></tr><tr><td>add_reply</td><td>1</td><td>Write the reply</td></tr></tbody></table><p>Microsoft reuses one configured <code>TicketSupport</code> Agent without a shared AgentSession. LangGraph calls a configured <code>ChatOpenAI</code> wrapper inside its Python nodes. The workflow order is fixed by the application; neither model chooses the next step.</p><p>In Microsoft, every executor reads and writes native workflow state. The string <code>"continue"</code> is a routing trigger only. In LangGraph, nodes return state updates and graph edges select the next node.</p></div></div><div class="pager"><button onclick="go(4)">← Previous</button><button onclick="go(6)">Next →</button></div></div></div></section><section class="slide" data-title="Step 1 · Clean input"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">07</div><div><h1 class="stage-title">Step 1 · Clean input</h1><p class="stage-kicker">Return a state update versus write native shared state</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><strong>Reads:</strong> Raw customer input. <strong>Writes:</strong> ticket. This is the actual companion notebook implementation.</p><div class="compare"><div><h3>LangGraph</h3><pre><code>def clean_node(state: TicketState) -&gt; dict:
+    message = state["ticket"].strip()
+
+    if not message:
+        raise ValueError("Ticket cannot be empty.")
+
+    return {"ticket": message}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def clean_step(message: str, ctx: WorkflowContext[str]) -&gt; None:
+    ticket = message.strip()
+    if not ticket:
+        raise ValueError("Ticket cannot be empty.")
+    ctx.set_state("ticket", ticket)
+    await ctx.send_message("continue")</code></pre></div></div><p>Both strip whitespace and reject empty tickets before any model call. LangGraph applies the returned update; Microsoft writes the ticket with <code>ctx.set_state</code>. The <code>"continue"</code> message activates the next executor and carries no ticket data.</p></div></div><div class="pager"><button onclick="go(5)">← Previous</button><button onclick="go(7)">Next →</button></div></div></div></section><section class="slide" data-title="State after clean"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">08</div><div><h1 class="stage-title">State after clean</h1><p class="stage-kicker">Concrete shared state after the step completes</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Field</th><th>LangGraph state</th><th>Microsoft workflow state</th></tr></thead><tbody><tr><td>ticket</td><td>"My account is locked and I have an important meeting in 10 minutes."</td><td>"My account is locked and I have an important meeting in 10 minutes."</td></tr><tr><td>analysis</td><td><em>Not written</em></td><td><em>Not written</em></td></tr><tr><td>decision</td><td><em>Not written</em></td><td><em>Not written</em></td></tr><tr><td>reply</td><td><em>Not written</em></td><td><em>Not written</em></td></tr></tbody></table><table><thead><tr><th>Runtime</th><th>Next routing action</th></tr></thead><tbody><tr><td>LangGraph</td><td>Node returns its update; edge schedules <code>analyse_ticket</code>.</td></tr><tr><td>Microsoft</td><td><code>ctx.send_message("continue")</code> activates <code>analyse_ticket</code>; all ticket data stays in shared state.</td></tr></tbody></table><p>These text values use the separate validation fixture, so the trace is reproducible. Live model wording can vary. The original input and generated fields remain in framework-managed shared state.</p></div></div><div class="pager"><button onclick="go(6)">← Previous</button><button onclick="go(8)">Next →</button></div></div></div></section><section class="slide" data-title="Step 2 · Analyse the ticket"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">09</div><div><h1 class="stage-title">Step 2 · Analyse the ticket</h1><p class="stage-kicker">Three identical prompts, executed sequentially</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><strong>Reads:</strong> ticket. <strong>Writes:</strong> analysis. This is the actual companion notebook implementation.</p><div class="compare"><div><h3>LangGraph</h3><pre><code>def analyse_node(state: TicketState) -&gt; dict:
+    ticket = state["ticket"]
+
+    summary = model.invoke(
+        f"Summarize this support ticket in one short sentence:\n{ticket}"
+    ).content.strip()
+
+    category = model.invoke(
+        f"Return only one category: billing, technical, or account.\nTicket: {ticket}"
+    ).content.strip()
+
+    urgency = model.invoke(
+        f"Return only one urgency: low, medium, or high.\nTicket: {ticket}"
+    ).content.strip()
+
+    return {
+        "analysis": {
+            "summary": summary,
+            "category": category,
+            "urgency": urgency,
+        }
+    }</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def analyse_ticket(trigger: str, ctx: WorkflowContext[str]) -&gt; None:
+    ticket = ctx.get_state("ticket")
+
+    summary = (await agent.run(
+        f"Summarize this support ticket in one short sentence:\n{ticket}"
+    )).text.strip()
+
+    category = (await agent.run(
+        f"Return only one category: billing, technical, or account.\nTicket: {ticket}"
+    )).text.strip()
+
+    urgency = (await agent.run(
+        f"Return only one urgency: low, medium, or high.\nTicket: {ticket}"
+    )).text.strip()
+
+    analysis: dict = {
+        "summary": summary,
+        "category": category,
+        "urgency": urgency,
+    }
+    ctx.set_state("analysis", analysis)
+    await ctx.send_message("continue")</code></pre></div></div><p>In both implementations, summary, category, and urgency run in order. The LCEL notebook runs them concurrently with <code>RunnableParallel</code>. Async functions alone do not create parallel analysis.</p></div></div><div class="pager"><button onclick="go(7)">← Previous</button><button onclick="go(9)">Next →</button></div></div></div></section><section class="slide" data-title="State after analysis"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">10</div><div><h1 class="stage-title">State after analysis</h1><p class="stage-kicker">Concrete shared state after the step completes</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Field</th><th>LangGraph state</th><th>Microsoft workflow state</th></tr></thead><tbody><tr><td>ticket</td><td>"My account is locked and I have an important meeting in 10 minutes."</td><td>"My account is locked and I have an important meeting in 10 minutes."</td></tr><tr><td>analysis</td><td>{"summary": "The customer needs urgent access to a locked account before a meeting.", "category": "account", "urgency": "high"}</td><td>{"summary": "The customer needs urgent access to a locked account before a meeting.", "category": "account", "urgency": "high"}</td></tr><tr><td>decision</td><td><em>Not written</em></td><td><em>Not written</em></td></tr><tr><td>reply</td><td><em>Not written</em></td><td><em>Not written</em></td></tr></tbody></table><table><thead><tr><th>Runtime</th><th>Next routing action</th></tr></thead><tbody><tr><td>LangGraph</td><td>Node returns its update; edge schedules <code>add_decision</code>.</td></tr><tr><td>Microsoft</td><td><code>ctx.send_message("continue")</code> activates <code>add_decision</code>; all ticket data stays in shared state.</td></tr></tbody></table><p>These text values use the separate validation fixture, so the trace is reproducible. Live model wording can vary. The original input and generated fields remain in framework-managed shared state.</p></div></div><div class="pager"><button onclick="go(8)">← Previous</button><button onclick="go(10)">Next →</button></div></div></div></section><section class="slide" data-title="Step 3 · Decide escalation"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">11</div><div><h1 class="stage-title">Step 3 · Decide escalation</h1><p class="stage-kicker">The same review prompt receives ticket + analysis</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><strong>Reads:</strong> ticket, analysis. <strong>Writes:</strong> decision. This is the actual companion notebook implementation.</p><div class="compare"><div><h3>LangGraph</h3><pre><code>def decision_node(state: TicketState) -&gt; dict:
+    prompt = f"""
+Review this ticket and the initial analysis:
+
+Ticket:
+{state['ticket']}
+
+Analysis:
+{state['analysis']}
+
+Give the final decision:
+1. Should this ticket be escalated to a human? (Yes/No)
+2. Brief reason why.
+"""
+
+    decision = model.invoke(prompt).content.strip()
+
+    return {"decision": decision}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def add_decision(trigger: str, ctx: WorkflowContext[str]) -&gt; None:
+    ticket = ctx.get_state("ticket")
+    analysis = ctx.get_state("analysis")
+    prompt = f"""
+Review this ticket and the initial analysis:
+
+Ticket:
+{ticket}
+
+Analysis:
+{analysis}
+
+Give the final decision:
+1. Should this ticket be escalated to a human? (Yes/No)
+2. Brief reason why.
+"""
+
+    decision = (await agent.run(prompt)).text.strip()
+
+    ctx.set_state("decision", decision)
+    await ctx.send_message("continue")</code></pre></div></div><p>Both preserve ticket data in framework-managed shared state. LangGraph returns only the decision update; Microsoft reads ticket and analysis with <code>get_state</code>, writes decision with <code>set_state</code>, and sends a control trigger. Neither version enforces a structured decision schema.</p></div></div><div class="pager"><button onclick="go(9)">← Previous</button><button onclick="go(11)">Next →</button></div></div></div></section><section class="slide" data-title="State after decision"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">12</div><div><h1 class="stage-title">State after decision</h1><p class="stage-kicker">Concrete shared state after the step completes</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Field</th><th>LangGraph state</th><th>Microsoft workflow state</th></tr></thead><tbody><tr><td>ticket</td><td>"My account is locked and I have an important meeting in 10 minutes."</td><td>"My account is locked and I have an important meeting in 10 minutes."</td></tr><tr><td>analysis</td><td>{"summary": "The customer needs urgent access to a locked account before a meeting.", "category": "account", "urgency": "high"}</td><td>{"summary": "The customer needs urgent access to a locked account before a meeting.", "category": "account", "urgency": "high"}</td></tr><tr><td>decision</td><td>"Yes. Escalate to a human because account access is time-sensitive."</td><td>"Yes. Escalate to a human because account access is time-sensitive."</td></tr><tr><td>reply</td><td><em>Not written</em></td><td><em>Not written</em></td></tr></tbody></table><table><thead><tr><th>Runtime</th><th>Next routing action</th></tr></thead><tbody><tr><td>LangGraph</td><td>Node returns its update; edge schedules <code>add_reply</code>.</td></tr><tr><td>Microsoft</td><td><code>ctx.send_message("continue")</code> activates <code>add_reply</code>; all ticket data stays in shared state.</td></tr></tbody></table><p>These text values use the separate validation fixture, so the trace is reproducible. Live model wording can vary. The original input and generated fields remain in framework-managed shared state.</p></div></div><div class="pager"><button onclick="go(10)">← Previous</button><button onclick="go(12)">Next →</button></div></div></div></section><section class="slide" data-title="Step 4 · Write the reply"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">13</div><div><h1 class="stage-title">Step 4 · Write the reply</h1><p class="stage-kicker">The same customer-facing prompt, different output mechanism</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><strong>Reads:</strong> ticket, decision. <strong>Writes:</strong> reply. This is the actual companion notebook implementation.</p><div class="compare"><div><h3>LangGraph</h3><pre><code>def reply_node(state: TicketState) -&gt; dict:
+    prompt = f"""
+You are a customer-support assistant.
+
+Customer message:
+{state['ticket']}
+
+Decision:
+{state['decision']}
+
+Write a short and helpful reply to the customer.
+Do not mention prompts, AI, or internal system details.
+"""
+
+    reply = model.invoke(prompt).content.strip()
+
+    return {"reply": reply}</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>async def add_reply(trigger: str, ctx: WorkflowContext[Never, dict]) -&gt; None:
+    ticket = ctx.get_state("ticket")
+    decision = ctx.get_state("decision")
+    prompt = f"""
+You are a customer-support assistant.
+
+Customer message:
+{ticket}
+
+Decision:
+{decision}
+
+Write a short and helpful reply to the customer.
+Do not mention prompts, AI, or internal system details.
+"""
+
+    reply = (await agent.run(prompt)).text.strip()
+
+    ctx.set_state("reply", reply)
+    result: TicketState = {
+        "ticket": ctx.get_state("ticket"),
+        "analysis": ctx.get_state("analysis"),
+        "decision": ctx.get_state("decision"),
+        "reply": ctx.get_state("reply"),
+    }
+    await ctx.yield_output(result)</code></pre></div></div><p>Microsoft stores the reply in native state, then yields a snapshot of all four fields. <code>send_message("continue")</code> activates another executor; <code>yield_output</code> exposes the final result to the caller. The final executor declares <code>WorkflowContext[Never, dict]</code>.</p></div></div><div class="pager"><button onclick="go(11)">← Previous</button><button onclick="go(13)">Next →</button></div></div></div></section><section class="slide" data-title="State after reply"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">14</div><div><h1 class="stage-title">State after reply</h1><p class="stage-kicker">Concrete shared state after the step completes</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Field</th><th>LangGraph state</th><th>Microsoft workflow state</th></tr></thead><tbody><tr><td>ticket</td><td>"My account is locked and I have an important meeting in 10 minutes."</td><td>"My account is locked and I have an important meeting in 10 minutes."</td></tr><tr><td>analysis</td><td>{"summary": "The customer needs urgent access to a locked account before a meeting.", "category": "account", "urgency": "high"}</td><td>{"summary": "The customer needs urgent access to a locked account before a meeting.", "category": "account", "urgency": "high"}</td></tr><tr><td>decision</td><td>"Yes. Escalate to a human because account access is time-sensitive."</td><td>"Yes. Escalate to a human because account access is time-sensitive."</td></tr><tr><td>reply</td><td>"I'm sorry your account is locked. Please try the account recovery option; our support team can help urgently before your meeting."</td><td>"I'm sorry your account is locked. Please try the account recovery option; our support team can help urgently before your meeting."</td></tr></tbody></table><table><thead><tr><th>Runtime</th><th>Next routing action</th></tr></thead><tbody><tr><td>LangGraph</td><td>Reply node returns its update; edge reaches END.</td></tr><tr><td>Microsoft</td><td>Write reply, then <code>yield_output(result)</code>; no downstream control message.</td></tr></tbody></table><p>These text values use the separate validation fixture, so the trace is reproducible. Live model wording can vary. The original input and generated fields remain in framework-managed shared state.</p></div></div><div class="pager"><button onclick="go(12)">← Previous</button><button onclick="go(14)">Next →</button></div></div></div></section><section class="slide" data-title="The complete workflow graph"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">15</div><div><h1 class="stage-title">The complete workflow graph</h1><p class="stage-kicker">The same four stages, with no branch or barrier in this project</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>START
+  ↓
+clean_step
+  ↓
+analyse_ticket     # three sequential model calls
+  ↓
+add_decision
+  ↓
+add_reply
+  ↓
+END</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>initial message
+  ↓
+clean_step        → shared state: ticket
+  ↓ "continue"
+analyse_ticket    → shared state: analysis
+  ↓ "continue"
+add_decision      → shared state: decision
+  ↓ "continue"
+add_reply         → shared state: reply
+  ↓ yield_output
+final dictionary</code></pre></div></div><p>There is no conditional routing, parallel branch, fan-in barrier, retry loop, or human-approval pause here. “Escalate: Yes” is text, not a branch. The LCEL notebook separately runs its three analyses concurrently; that is not the graph topology shown here.</p></div></div><div class="pager"><button onclick="go(13)">← Previous</button><button onclick="go(15)">Next →</button></div></div></div></section><section class="slide" data-title="Connect and run"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">16</div><div><h1 class="stage-title">Connect and run</h1><p class="stage-kicker">The edges encode the same linear process</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code>from langgraph.graph import StateGraph, START, END
+
+builder = StateGraph(TicketState)
+builder.add_node("clean_step", clean_node)
+builder.add_node("analyse_ticket", analyse_node)
+builder.add_node("add_decision", decision_node)
+builder.add_node("add_reply", reply_node)
+builder.add_edge(START, "clean_step")
+builder.add_edge("clean_step", "analyse_ticket")
+builder.add_edge("analyse_ticket", "add_decision")
+builder.add_edge("add_decision", "add_reply")
+builder.add_edge("add_reply", END)
+app = builder.compile()
+result = app.invoke({"ticket": message})</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code>def create_workflow():
+    clean = executor(id="clean_step")(clean_step)
+    analyse = executor(id="analyse_ticket")(analyse_ticket)
+    decide = executor(id="add_decision")(add_decision)
+    reply = executor(id="add_reply")(add_reply)
+    return (
+        WorkflowBuilder(start_executor=clean, output_from=[reply])
+        .add_edge(clean, analyse)
+        .add_edge(analyse, decide)
+        .add_edge(decide, reply)
+        .build()
+    )
+
+workflow = create_workflow()
+run_result = await workflow.run(message)
+result = run_result.get_outputs()[0]</code></pre></div></div><p>Microsoft gets fresh executor instances and a fresh workflow with isolated native state per ticket. The factory wraps each function with <code>executor(id=...)(function)</code>, equivalent to decorator syntax. In Jupyter use <code>await solve_ticket(message)</code>; its event loop is already running. The code above is an orchestration excerpt; full runnable setup is in the companion notebooks.</p></div></div><div class="pager"><button onclick="go(14)">← Previous</button><button onclick="go(16)">Next →</button></div></div></div></section><section class="slide" data-title="Close the loop: invoke and return"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">17</div><div><h1 class="stage-title">Close the loop: invoke and return</h1><p class="stage-kicker">The same entry point now has visible internals</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code># Illustrative API adapter; app is already compiled.
+# Request body: {"message": "My account is locked..."}
+def handle_ticket(payload: dict) -&gt; dict:
+    return app.invoke({"ticket": payload["message"]})
+
+response = handle_ticket({"message": message})</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code># Illustrative API adapter; functions are already defined.
+# Build an isolated workflow before executing this request.
+async def handle_ticket(payload: dict) -&gt; dict:
+    workflow = create_workflow()
+    run = await workflow.run(payload["message"])
+    return run.get_outputs()[0]
+
+response = await handle_ticket({"message": message})</code></pre></div></div><pre><code>{
+  "ticket": "My account is locked and I have an important meeting in 10 minutes.",
+  "analysis": {
+    "summary": "The customer needs urgent access to a locked account before a meeting.",
+    "category": "account",
+    "urgency": "high"
+  },
+  "decision": "Yes. Escalate to a human because account access is time-sensitive.",
+  "reply": "I'm sorry your account is locked. Please try the account recovery option; our support team can help urgently before your meeting."
+}</code></pre><p>This is a representative response from the separate validation fixture. The adapters return the exact four-field result; the notebook runners additionally print it. <code>workflow.run()</code> returns a run result object, so Microsoft extracts <code>get_outputs()[0]</code>. LangGraph <code>app.invoke()</code> directly returns final state.</p></div></div><div class="pager"><button onclick="go(15)">← Previous</button><button onclick="go(17)">Next →</button></div></div></div></section><section class="slide" data-title="State, checkpoint, and chat history"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">18</div><div><h1 class="stage-title">State, checkpoint, and chat history</h1><p class="stage-kicker">Three different things, with different lifetimes</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Concept</th><th>Purpose</th><th>Current ticket notebooks</th></tr></thead><tbody><tr><td>Workflow state</td><td>Current ticket fields used by steps</td><td>Enabled in both; native shared state</td></tr><tr><td>Checkpoint</td><td>Saved execution state plus progress information for replay/recovery</td><td>Not configured in either notebook</td></tr><tr><td>Agent chat history</td><td>Messages supplied to later model turns</td><td>No Microsoft AgentSession is passed; LangGraph state has no messages field</td></tr></tbody></table><p><strong>The next slides are an optional extension.</strong> The current notebooks run from clean to reply without saving checkpoints or pausing. The extension reuses the same nodes/executors and uses fixed responses to avoid paid calls.</p><p>Saving the ticket dictionary alone does not tell a runtime which step should run next. A checkpoint also preserves scheduling/progress information. Restoring workflow state does not automatically give the model conversational memory.</p></div></div><div class="pager"><button onclick="go(16)">← Previous</button><button onclick="go(18)">Next →</button></div></div></div></section><section class="slide" data-title="Optional fixture setup"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">19</div><div><h1 class="stage-title">Optional fixture setup</h1><p class="stage-kicker">Use identical fixed responses to compare checkpoint behaviour</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code># Run this BEFORE the LangGraph checkpoint cell.
+from types import SimpleNamespace
+
+class FixedModel:
+    def __init__(self):
+        self.calls = 0
+
+    def invoke(self, prompt):
+        self.calls += 1
+        if prompt.startswith("Summarize"):
+            text = "The customer needs urgent access to a locked account before a meeting."
+        elif prompt.startswith("Return only one category"):
+            text = "account"
+        elif prompt.startswith("Return only one urgency"):
+            text = "high"
+        elif "Give the final decision:" in prompt:
+            text = "Yes. Escalate to a human because account access is time-sensitive."
+        else:
+            text = "I'm sorry your account is locked. Please try the account recovery option; our support team can help urgently before your meeting."
+        return SimpleNamespace(content=text)
+
+model = FixedModel()
+
+message = (
+    "My account is locked and I have an important "
+    "meeting in 10 minutes."
+)</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code># OPTIONAL checkpoint test only; outside the live notebook.
+# Run from lcel/ with the validation support file available.
+from validation.test_microsoft_ticket_solver import FixedAgent
+agent = FixedAgent()
+message = (
+    "My account is locked and I have an important "
+    "meeting in 10 minutes."
+)</code></pre></div></div><p>Run the LangGraph definitions/build cell first, but skip its paid sample execution; replacing the global <code>model</code> makes its existing nodes use this fixture. Load the Microsoft notebook definitions and skip its sample execution when testing without paid calls. Then run this setup, checkpoint configuration, and restore cells in that order. No prompts, ticket processing steps, or output fields are changed.</p><p><a href="../lcel/validation/test_microsoft_ticket_solver.py">Separate validation support file</a>. It contains the fixtures and intercepted-request tests; the teaching notebook contains only live setup and project logic.</p></div></div><div class="pager"><button onclick="go(17)">← Previous</button><button onclick="go(19)">Next →</button></div></div></div></section><section class="slide" data-title="Optional checkpoint configuration"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">20</div><div><h1 class="stage-title">Optional checkpoint configuration</h1><p class="stage-kicker">Enable saving, run the same logic, select the analysis boundary</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code># OPTIONAL: after loading the LangGraph notebook definitions.
+# Use a deterministic model fixture instead of paid calls.
+from langgraph.checkpoint.memory import InMemorySaver
+
+checkpointer = InMemorySaver()
+graph = builder.compile(checkpointer=checkpointer)
+config = {"configurable": {"thread_id": "ticket-demo-1"}}
+first = graph.invoke({"ticket": message}, config)
+
+# Select the saved boundary BEFORE add_decision.
+saved = next(
+    s for s in graph.get_state_history(config)
+    if s.next == ("add_decision",)
+)</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code># OPTIONAL: after loading the Microsoft notebook definitions.
+# Use the separate validation fixture for a free checkpoint test.
+from agent_framework import InMemoryCheckpointStorage
+
+storage = InMemoryCheckpointStorage()
+workflow = create_workflow()
+first_run = await workflow.run(
+    message, checkpoint_storage=storage
+)
+checkpoints = await storage.list_checkpoints(
+    workflow_name=workflow.name
+)
+saved = next(
+    c for c in checkpoints
+    if "analysis" in c.state and "decision" not in c.state
+)</code></pre></div></div><p>In this separate demo we let the first run finish, then select its earlier checkpoint after analysis. This is replay from a saved boundary, not a demonstration of an automatic pause. Fresh workflows and the same executor identities/topology are required for Microsoft restore.</p><p>Validated with <code>agent-framework-core 1.21.0</code>, <code>agent-framework-openai 1.16.0</code>, <code>langgraph 1.2.14</code>, and <code>langgraph-checkpoint 4.2.0</code>. Use the companion definitions and deterministic fixture described next; these are extension cells, not standalone scripts.</p></div></div><div class="pager"><button onclick="go(18)">← Previous</button><button onclick="go(20)">Next →</button></div></div></div></section><section class="slide" data-title="Checkpoint after analysis"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">21</div><div><h1 class="stage-title">Checkpoint after analysis</h1><p class="stage-kicker">The saved boundary contains data and the next scheduled work</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Saved component</th><th>LangGraph snapshot</th><th>Microsoft checkpoint</th></tr></thead><tbody><tr><td>User fields</td><td>ticket + analysis</td><td>ticket + analysis in <code>saved.state</code></td></tr><tr><td>Not produced yet</td><td>decision and reply</td><td>decision and reply</td></tr><tr><td>Next work</td><td><code>saved.next == ("add_decision",)</code></td><td>Pending <code>"continue"</code> message for downstream decision executor</td></tr><tr><td>Identity / progress</td><td>thread config, checkpoint ID, metadata / tasks</td><td>workflow name, graph signature, checkpoint ID, iteration / messages</td></tr><tr><td>Chat history in this example</td><td>No messages channel</td><td>No AgentSession history stored by this custom executor</td></tr></tbody></table><pre><code>after clean → [checkpoint]
+after analysis → [SELECTED CHECKPOINT] → decision pending
+after decision → [checkpoint]
+after reply → [final checkpoint]</code></pre><p>Checkpoint counts and internal fields are framework-specific; do not assume their formats are interchangeable. Microsoft also records an entry checkpoint. The selected boundary is found by state/next work, not by assuming a fixed list position.</p><p><a href="https://learn.microsoft.com/en-us/agent-framework/workflows/checkpoints">Microsoft checkpoints</a> · <a href="https://docs.langchain.com/oss/python/langgraph/checkpointers">LangGraph checkpointers</a></p></div></div><div class="pager"><button onclick="go(19)">← Previous</button><button onclick="go(21)">Next →</button></div></div></div></section><section class="slide" data-title="Restore the analysis checkpoint"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">22</div><div><h1 class="stage-title">Restore the analysis checkpoint</h1><p class="stage-kicker">Resume with decision and reply, without repeating analysis</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="compare"><div><h3>LangGraph</h3><pre><code># Same graph definition and InMemorySaver still exist.
+before = model.calls
+response = graph.invoke(None, saved.config)
+assert model.calls - before == 2
+assert response == first
+# None means continue from the selected checkpoint;
+# this is not a new ticket input.</code></pre></div><div><h3>Microsoft Agent Framework</h3><pre><code># Rebuild the same topology and stable executor IDs.
+restored = create_workflow()
+before = len(agent.prompts)
+run = await restored.run(
+    checkpoint_id=saved.checkpoint_id,
+    checkpoint_storage=storage,
+)
+response = run.get_outputs()[0]
+assert len(agent.prompts) - before == 2
+assert response == first_run.get_outputs()[0]
+# Do not also pass a fresh message when restoring.</code></pre></div></div><p>Validation used the actual runtimes: five fixture model calls on the first run, two more after restoring the analysis checkpoint, and the same final dictionary in both frameworks. Restoring an earlier point re-executes later work; a live replay can produce different text and additional API cost.</p><p>Both storage choices here are in memory: restarting the Colab session loses them. Persistent storage and restart recovery are not implemented or tested in this demo. Keep compatible definitions and appropriate durable storage for recovery across process restarts.</p></div></div><div class="pager"><button onclick="go(20)">← Previous</button><button onclick="go(22)">Next →</button></div></div></div></section><section class="slide" data-title="What Microsoft Agent Framework provides"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">23</div><div><h1 class="stage-title">What Microsoft Agent Framework provides</h1><p class="stage-kicker">Agents and explicit workflows in one framework</p></div></div><div class="body-wrap"><div></div><div class="prose"><ul><li><strong>Agent:</strong> wraps a model client, instructions, optional tools, and optional conversation session.</li><li><strong>Workflow:</strong> controls an explicit path through functions or agents.</li><li><strong>Executor:</strong> one unit of work; shared state stores ticket data, and edges route messages that activate the next executor.</li><li>Python and .NET support can matter when your organisation builds services in both languages.</li></ul><p>It succeeds the AutoGen and Semantic Kernel line of work. This lesson uses current <code>agent_framework</code> APIs, not <code>autogen</code>.</p><p><a href="https://learn.microsoft.com/en-us/agent-framework/overview/">Official overview</a></p></div></div><div class="pager"><button onclick="go(21)">← Previous</button><button onclick="go(23)">Next →</button></div></div></div></section><section class="slide" data-title="What LangGraph provides"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">24</div><div><h1 class="stage-title">What LangGraph provides</h1><p class="stage-kicker">A runtime for explicit, stateful graph execution</p></div></div><div class="body-wrap"><div></div><div class="prose"><p>LangGraph centres the graph and its shared state. Nodes read state and return updates. Edges control the next step. You can mix ordinary code and model calls.</p><ul><li>Useful when state transitions, loops, branching, and resumable workflows are the main design problem.</li><li>Persistence and human review require the appropriate runtime configuration; a simple graph is not automatically durable.</li><li>LangChain components are optional; this project happens to use <code>ChatOpenAI</code>.</li></ul><p><a href="https://docs.langchain.com/oss/python/langgraph/overview">Official LangGraph overview</a></p></div></div><div class="pager"><button onclick="go(22)">← Previous</button><button onclick="go(24)">Next →</button></div></div></div></section><section class="slide" data-title="Overlap and differences"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">25</div><div><h1 class="stage-title">Overlap and differences</h1><p class="stage-kicker">Similar capabilities do not mean interchangeable APIs</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><thead><tr><th>Concern</th><th>LangGraph here</th><th>Microsoft here</th></tr></thead><tbody><tr><td>Composition</td><td>StateGraph + nodes</td><td>WorkflowBuilder + executors</td></tr><tr><td>Shared-state updates</td><td>Shared state: returned partial updates</td><td>Native shared state: get_state / set_state</td></tr><tr><td>Model integration</td><td>ChatOpenAI wrapper</td><td>Agent + provider client</td></tr><tr><td>Result</td><td>Final state dict</td><td>Selected yielded output</td></tr><tr><td>History / persistence</td><td>No checkpointer configured</td><td>No session or checkpoint configured</td></tr><tr><td>Advanced options</td><td>Loops, persistence, human review available</td><td>Orchestration patterns, checkpoints, human input available</td></tr></tbody></table><p>Both support shared state and can orchestrate agents. Microsoft state writes do not schedule executors: edges still deliver a minimal control message. Its pinned runtime stages key writes at superstep boundaries; this is not LangGraph reducer behaviour. Both need deliberate persistence, error handling, and observability setup for a production service. Those capabilities are outside this small lesson.</p><p><a href="https://learn.microsoft.com/en-us/agent-framework/concepts/workflows/state">Microsoft shared state</a> · <a href="https://learn.microsoft.com/en-us/agent-framework/workflows/">Microsoft workflow capabilities</a> · <a href="https://docs.langchain.com/oss/python/langgraph/overview">LangGraph capabilities</a></p></div></div><div class="pager"><button onclick="go(23)">← Previous</button><button onclick="go(25)">Next →</button></div></div></div></section><section class="slide" data-title="Concrete reasons to choose Microsoft"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">26</div><div><h1 class="stage-title">Concrete reasons to choose Microsoft</h1><p class="stage-kicker">Choose it when these needs match your team</p></div></div><div class="body-wrap"><div></div><div class="prose"><ul><li><strong>Python + .NET organisation:</strong> use the same framework family and shared agent/workflow vocabulary across services; APIs still differ by language.</li><li><strong>Agent abstraction is central:</strong> model clients, tools, sessions, and middleware live alongside workflow orchestration.</li><li><strong>Existing Microsoft agent investment:</strong> evaluate it when modernising AutoGen / Semantic Kernel or integrating with Foundry.</li><li><strong>Reusable agent coordination:</strong> its built-in sequential, concurrent, handoff, and group-chat patterns may reduce custom orchestration.</li></ul><p>These are selection criteria, not proof of higher accuracy, lower cost, or faster execution. The ticket demo itself needs none of those integrations.</p><p><a href="https://learn.microsoft.com/en-us/agent-framework/overview/">Overview</a> · <a href="https://learn.microsoft.com/en-us/agent-framework/workflows/">Orchestration patterns</a></p></div></div><div class="pager"><button onclick="go(24)">← Previous</button><button onclick="go(26)">Next →</button></div></div></div></section><section class="slide" data-title="When LangGraph fits better"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">27</div><div><h1 class="stage-title">When LangGraph fits better</h1><p class="stage-kicker">Keep the graph and state as the main abstraction</p></div></div><div class="body-wrap"><div></div><div class="prose"><ul><li>Your Python team already understands and operates LangGraph successfully.</li><li>You need detailed control of custom state transitions, loops, and human review points.</li><li>Your existing LangChain integrations and LangSmith workflow are useful to the team.</li><li>The current system meets requirements: changing frameworks would create work without a demonstrated benefit.</li></ul><p>LangGraph can use Azure models too. Microsoft Agent Framework can use non-Microsoft providers. Azure usage alone does not require migration.</p><p><a href="https://docs.langchain.com/oss/python/langgraph/overview">Official architecture and ecosystem</a></p></div></div><div class="pager"><button onclick="go(25)">← Previous</button><button onclick="go(27)">Next →</button></div></div></div></section><section class="slide" data-title="Should this ticket solver migrate?"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">28</div><div><h1 class="stage-title">Should this ticket solver migrate?</h1><p class="stage-kicker">For this small pipeline, migration is a learning choice</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><strong>No operational requirement here forces migration.</strong> All four notebooks solve the same small problem. Pure Python may already be sufficient.</p><ul><li>Name one unmet need: shared .NET framework, agent integration, checkpoint behaviour, or reusable coordination.</li><li>Port the same prompts and compare output contract, failures, latency, and cost with a representative ticket set.</li><li>Check persistence, session isolation, tool behaviour, and monitoring before replacing a running system.</li><li>Keep the working implementation until the replacement meets measurable requirements.</li></ul><p>The new notebook demonstrates a different programming model; it does not claim a quality or performance improvement.</p></div></div><div class="pager"><button onclick="go(26)">← Previous</button><button onclick="go(28)">Next →</button></div></div></div></section><section class="slide" data-title="Classroom check"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">29</div><div><h1 class="stage-title">Classroom check</h1><p class="stage-kicker">Predict what the code actually does</p></div></div><div class="body-wrap"><div></div><div class="prose"><details class="reveal"><summary>Does async make the three analyses run together?</summary><p>No. Each await finishes before the next call starts. Concurrent execution needs an explicit concurrency design.</p></details><details class="reveal"><summary>Is an executor a tool the LLM decides to call?</summary><p>No. Workflow edges schedule these executors. There are no model-selected tools in this project.</p></details><details class="reveal"><summary>Where is conversation memory enabled?</summary><p>Nowhere in these examples. Microsoft calls omit a shared AgentSession, and LangGraph has no checkpointer configured.</p></details><details class="reveal"><summary>Will the same framework guarantee a better reply?</summary><p>No. Model, prompts, context, tools, and evaluation matter. Orchestration alone does not establish better answer quality.</p></details></div></div><div class="pager"><button onclick="go(27)">← Previous</button><button onclick="go(29)">Next →</button></div></div></div></section><section class="slide" data-title="Run the companion notebooks"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">30</div><div><h1 class="stage-title">Run the companion notebooks</h1><p class="stage-kicker">Live Colab setup</p></div></div><div class="body-wrap"><div></div><div class="prose"><ul><li><a href="../lcel/Simple_Microsoft_Agent_Framework_Ticket_Solver.ipynb">Microsoft Agent Framework notebook</a> — direct live Agent and native shared-state workflow.</li><li><a href="../lcel/Simple_LangGraph_Ticket_Solver.ipynb">LangGraph notebook</a> — original state graph implementation.</li><li><a href="../lcel/Simple_LangChain_Ticket_Solver_Core_Only.ipynb">LCEL notebook</a> · <a href="../lcel/Simple_Pure_Python_Ticket_Solver.ipynb">Pure Python notebook</a>.</li></ul><p>Microsoft environment: Python 3.11+; validated on Python 3.12 and 3.13 with <code>agent-framework-core==1.21.0</code> and <code>agent-framework-openai==1.16.0</code>. Colab live mode prefers the OPENAI_API_KEY Secret, then environment / .env; outside Colab a secure prompt is available. Enable Notebook access in Secrets. No credentials are stored in the notebook.</p><p>Current Python naming: <code>OpenAIChatClient</code> uses Responses; <code>OpenAIChatCompletionClient</code> uses Chat Completions. This lesson uses Chat Completions for parity.</p><p>Sources checked 10 October 2026: <a href="https://learn.microsoft.com/en-us/agent-framework/integrations/by-component/model-providers/openai">Provider documentation</a> · <a href="https://github.com/microsoft/agent-framework/blob/main/python/samples/03-workflows/_start-here/step1_executors_and_edges.py">Executor example</a>.</p></div></div><div class="pager"><button onclick="go(28)">← Previous</button><button onclick="go(0)">Back to start</button></div></div></div></section><div class="foot">Generative &amp; Agentic AI Development · Boston Institute of Analytics</div><script>
+const slides=[...document.querySelectorAll('.slide')],menu=document.getElementById('dropMenu'),drop=document.getElementById('chDrop'),toggle=document.getElementById('chDropBtn');let cur=0;
+slides.forEach((s,i)=>{const a=document.createElement('a');a.href='#chapter-'+(i+1);a.textContent=String(i+1).padStart(2,'0')+'  '+s.dataset.title;a.onclick=e=>{e.preventDefault();go(i)};menu.append(a)});
+function go(i){if(i<0||i>=slides.length)return;slides[cur].classList.remove('active');cur=i;slides[cur].classList.add('active');[...menu.children].forEach((a,n)=>{a.classList.toggle('cur',n===i);a.setAttribute('aria-current',n===i?'page':'false')});document.getElementById('btnPrev').disabled=i===0;document.getElementById('btnNext').disabled=i===slides.length-1;document.getElementById('railFill').style.width=(i/(slides.length-1)*100)+'%';drop.classList.remove('open');toggle.setAttribute('aria-expanded','false');window.scrollTo(0,0)}
+document.getElementById('btnPrev').onclick=()=>go(cur-1);document.getElementById('btnNext').onclick=()=>go(cur+1);toggle.onclick=e=>{e.stopPropagation();drop.classList.toggle('open');toggle.setAttribute('aria-expanded',drop.classList.contains('open'))};document.addEventListener('click',()=>{drop.classList.remove('open');toggle.setAttribute('aria-expanded','false')});document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.key===' '&&['BUTTON','SUMMARY','A'].includes(e.target.tagName))return;if(['ArrowRight','ArrowLeft',' '].includes(e.key)){e.preventDefault();go(cur+(e.key==='ArrowLeft'?-1:1))}});go(0);
+</script></body></html>

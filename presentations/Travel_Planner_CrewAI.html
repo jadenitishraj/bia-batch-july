@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Travel Planner with CrewAI</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Inter+Tight:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--teal:#2dd4bf;--cyan:#22d3ee;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 12% 45%, rgba(45,212,191,.07), transparent 26%),radial-gradient(circle at 88% 28%, rgba(139,92,246,.07), transparent 26%);
+  background-attachment:fixed;
+}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* sitenav */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--teal)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#c7f5ee;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:420px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--teal);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(40px,7.4vw,84px);margin-bottom:26px;background:linear-gradient(135deg,var(--teal),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:44px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide transitions */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:60px 0 80px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:34px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:56px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;line-height:1.08;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:880px}
+
+/* prose */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:940px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(45,212,191,.13);border:1px solid rgba(45,212,191,.24);border-radius:4px;padding:2px 6px;color:#b8f0e8}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+
+/* pairs (comparison) */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 12px}
+.pcard{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.bad{border-top:3px solid var(--rose)}
+.pcard.good{border-top:3px solid var(--emerald)}
+.p-head{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--card-border)}
+.p-sig{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px 'JetBrains Mono',monospace;flex:0 0 auto}
+.pcard.bad .p-sig{background:rgba(244,63,94,.16);border:1px solid rgba(244,63,94,.42);color:var(--rose)}
+.pcard.good .p-sig{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--emerald)}
+.p-lab{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.pcard.bad .p-lab{color:var(--rose)}
+.pcard.good .p-lab{color:var(--emerald)}
+.p-sub{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right}
+.p-prompt{margin:0;padding:16px 18px;background:rgba(255,255,255,.012);overflow-x:auto}
+.p-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.p-why{padding:14px 18px;border-top:1px solid var(--card-border);font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.p-why strong{color:var(--ink);font-weight:600}
+
+/* code cards & grids */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--teal);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--emerald)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--teal);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--emerald)}
+
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#b8f0e8;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* codeblock */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:20px 0;overflow:hidden}
+.cb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.02)}
+.cb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.cb-lang{font:600 10px 'JetBrains Mono',monospace;color:var(--ink-faint);text-transform:uppercase}
+.cb-body{padding:16px 18px;margin:0;overflow-x:auto}
+.cb-body code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;color:#d8deea;white-space:pre-wrap}
+.cb-body .kw{color:#c678dd;font-weight:600}
+.cb-body .fn{color:#61afef}
+.cb-body .str{color:#98c379}
+.cb-body .cm{color:#5c6370;font-style:italic}
+.cb-body .op{color:#56b6c2;font-weight:700}
+.cb-body .cls{color:#e5c07b}
+
+/* visual diagram box */
+.diagram-box{background:rgba(12,12,18,.8);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:22px 0;text-align:center}
+.diag-flow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+.diag-node{background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35);padding:10px 16px;border-radius:6px;font:600 13px 'JetBrains Mono',monospace;color:#c7f5ee}
+.diag-node.hl{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.45);color:#dcd6ff}
+.diag-arr{color:var(--accent);font-weight:700;font-size:18px}
+
+/* pager */
+.pager{display:flex;justify-content:space-between;gap:14px;margin-top:48px;padding-top:28px;border-top:1px solid var(--card-border)}
+.pager button{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 18px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;text-align:left;transition:all .18s}
+.pager button:hover:not(:disabled){background:rgba(255,255,255,.06);border-color:var(--accent)}
+.pager button.rt{margin-left:auto;text-align:right}
+.pager button:disabled{opacity:.25;cursor:default}
+.pager .pg-l{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px}
+.pager .pg-t{font-size:14px;font-weight:500}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:24px 0}
+.q-title{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:14px}
+.opts{display:grid;gap:9px}
+.opt{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:6px;padding:12px 16px;font-size:14.5px;color:var(--ink-dim);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
+.opt:hover:not(:disabled){background:rgba(255,255,255,.06);color:var(--ink)}
+.opt.correct{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.5)!important;color:#6ee7b7!important}
+.opt.wrong{background:rgba(244,63,94,.14)!important;border-color:rgba(244,63,94,.5)!important;color:#fda4af!important}
+.opt:disabled{cursor:default}
+.explain{margin-top:14px;font-size:14px;color:var(--ink-dim);display:none;line-height:1.6;border-top:1px dashed var(--card-border);padding-top:10px}
+.explain.show{display:block;animation:fadeIn .2s ease}
+
+/* table */
+.comp-table{width:100%;border-collapse:collapse;margin:22px 0;font-size:14.5px}
+.comp-table th,.comp-table td{border:1px solid var(--card-border);padding:12px 16px;text-align:left}
+.comp-table th{background:rgba(255,255,255,.04);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.comp-table tr:nth-child(even){background:rgba(255,255,255,.015)}
+
+.foot{text-align:center;padding:40px 0;color:var(--ink-faint);font-size:13px;border-top:1px solid var(--card-border);margin-top:40px}
+
+@media(max-width:820px){
+  .hero h1{font-size:38px}
+  .stage-header,.body-wrap{grid-template-columns:1fr;gap:12px}
+  .stage-num-big{font-size:36px}
+  .stats,.pair,.vocab-grid,.code-cards{grid-template-columns:1fr}
+  .container{padding:0 20px}
+  .sitenav-inner{padding:12px 20px}
+  .dropmenu{min-width:300px}
+}
+
+.prose{min-width:0;width:100%;overflow-x:auto}.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px}.compare>div{min-width:0}pre{background:#101019;border:1px solid var(--card-border);padding:22px;border-radius:8px;overflow:auto;font:13px/1.65 'JetBrains Mono',monospace;white-space:pre;margin:12px 0 24px}h3{color:var(--teal)}.sources a,a{color:var(--teal)}.flow{font-size:24px;line-height:2;padding:24px 0;color:var(--teal)}.reveal{margin:18px 0;padding:18px;border-left:2px solid var(--teal)}summary{cursor:pointer;color:var(--ink);font-weight:600}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:4px}table{width:100%;border-collapse:collapse}td,th{padding:14px;text-align:left;border-bottom:1px solid var(--card-border);vertical-align:top}.foot{padding:24px;text-align:center;color:var(--ink-faint)}@media(max-width:760px){.compare{grid-template-columns:1fr}.dropmenu{min-width:0;width:min(85vw,420px)}.brand{display:none}.body-wrap,.stage-header{grid-template-columns:1fr}.stage-num-big{font-size:32px}.container{padding:0 20px}}@media print{.slide{display:block!important;break-before:page}.sitenav,.pager,.foot{display:none}body{background:white;color:black}.prose p,.prose li{color:#222}pre{white-space:pre-wrap;color:black;background:#eee}.stage{padding:20px 0}}
+
+.body-wrap{grid-template-columns:1fr}.body-wrap>div:first-child:empty{display:none}.prose{max-width:none}pre{font-size:14px;line-height:1.7}.compare h3{font-size:22px}.stage-kicker{font-weight:400}.prose p,.prose li{font-weight:400} .pager button:disabled{opacity:.3;cursor:default}
+
+.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+
+.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+
+.flowgraph{max-width:940px;margin:28px auto;text-align:center}.flowgraph>div,.workergrid>div{padding:16px;border:1px solid var(--card-border);border-radius:6px;background:var(--card-bg)}.flowgraph>span{display:block;padding:8px;color:var(--teal)}.workergrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.workergrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+</style>
+</head><body><nav aria-label="Presentation" class="sitenav"><div class="sitenav-inner"><a class="brand" href="index.html">BIA <em>Teaching decks</em></a><a class="home-link" href="index.html">Home</a><div class="dropdown" id="chDrop"><button aria-expanded="false" class="dropbtn" id="chDropBtn">Chapters ▾</button><div class="dropmenu" id="dropMenu"></div></div><div class="nav-spacer"></div><div class="nav-prevnext"><button id="btnPrev">← Prev</button><button id="btnNext">Next →</button></div></div><div class="rail"><div class="rail-fill" id="railFill"></div></div></nav><section class="slide active" data-title="Travel Planner with CrewAI"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">01</div><div><h1 class="stage-title">Travel Planner with CrewAI</h1><p class="stage-kicker">The same classroom project, a new framework</p></div></div><div class="body-wrap"><div></div><div class="prose"><p>One request becomes specialist reports, a reviewed draft and a final travel plan. This lesson follows the runnable companion notebook.</p><p><a href="../travel-planner/notebooks/travel_planner_crewai.ipynb">Open the CrewAI notebook</a></p></div></div></div></div></section><section class="slide" data-title="The sample request"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">02</div><div><h1 class="stage-title">The sample request</h1><p class="stage-kicker">Mumbai to Singapore for two people</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>Plan a 4-day Singapore trip from Mumbai for two people.
+Mid-budget. Avoid red-eye flights.
+Prefer food, city views and cultural sites.
+Keep hotel budget under 45000 rupees.</code></pre><p>Dates, return flights and room occupancy are missing. The manager must preserve these uncertainties.</p></div></div></div></div></section><section class="slide" data-title="The business workflow"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">03</div><div><h1 class="stage-title">The business workflow</h1><p class="stage-kicker">Five Flow methods coordinate seven business functions</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><tr><td>Stage</td><td>Work</td></tr><tr><td>Manager</td><td>Extract requirements and choose specialists</td></tr><tr><td>Selected workers</td><td>Run flight, hotel and activity work as selected</td></tr><tr><td>Synthesis</td><td>Write the draft using reports</td></tr><tr><td>Critic</td><td>List specific problems</td></tr><tr><td>Revision</td><td>Skip when clear, otherwise repair once</td></tr></table></div></div></div></div></section><section class="slide" data-title="CrewAI building blocks"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">04</div><div><h1 class="stage-title">CrewAI building blocks</h1><p class="stage-kicker">Roles, work units and orchestration</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><tr><td>Object</td><td>Responsibility</td></tr><tr><td>Agent</td><td>Role, goal, backstory, model and allowed tools</td></tr><tr><td>Task</td><td>Concrete instruction and expected output</td></tr><tr><td>Crew</td><td>Execute tasks with a chosen process</td></tr><tr><td>Flow</td><td>Schedule stages and own business state</td></tr><tr><td>LLM</td><td>Configure the model provider</td></tr></table></div></div></div></div></section><section class="slide" data-title="Runnable setup"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">05</div><div><h1 class="stage-title">Runnable setup</h1><p class="stage-kicker">CrewAI 1.15.27 and Python 3.10–3.13</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code> %pip install &quot;crewai==1.15.27&quot;
+MODEL = &quot;gpt-4o-mini&quot;
+# Enable OPENAI_API_KEY in Colab Secrets</code></pre><p>Use a CPU runtime. Restart after installation if requested. The notebook loads Secrets, environment or a hidden prompt. The demo needs API billing and model access.</p></div></div></div></div></section><section class="slide" data-title="Static travel inventory"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">06</div><div><h1 class="stage-title">Static travel inventory</h1><p class="stage-kicker">The same fixture data as the other frameworks</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><tr><td>Fixture</td><td>Contents</td></tr><tr><td>Flights</td><td>6 options with INR prices and red-eye flags</td></tr><tr><td>Hotels</td><td>6 hotels with nightly prices and ratings</td></tr><tr><td>Activities</td><td>8 activities with area and duration</td></tr><tr><td>Restaurants</td><td>6 choices with meal costs</td></tr><tr><td>Other</td><td>Weather, local tips and fixed currency rates</td></tr></table><p>These are classroom fixtures. Dates, availability, current visa rules and admission costs require separate verification.</p></div></div></div></div></section><section class="slide" data-title="Tools and permissions"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">07</div><div><h1 class="stage-title">Tools and permissions</h1><p class="stage-kicker">Each specialist receives only its tools</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>TOOL_REGISTRY = {
+    &quot;flight_agent&quot;:   [search_flights, convert_currency],
+    &quot;hotel_agent&quot;:    [search_hotels, convert_currency, get_travel_tips],
+    &quot;activity_agent&quot;: [search_activities, search_restaurants, get_weather],
+    &quot;critic_agent&quot;:   [],   # the critic only reads the plan, it does not search
+}
+
+# Show the registry as a small table
+for agent_name, tools in TOOL_REGISTRY.items():
+    tool_names = [t.name for t in tools] or [&quot;(no tools)&quot;]
+    print(f&quot;{agent_name:16} -&gt; {&#x27;, &#x27;.join(tool_names)}&quot;)</code></pre><p>The unused retriver alias remains in the definitions for source fidelity. It is absent from the registry.</p></div></div></div></div></section><section class="slide" data-title="A tool in isolation"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">08</div><div><h1 class="stage-title">A tool in isolation</h1><p class="stage-kicker">CrewAI exposes run for direct checks</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>search_flights.run(
+    origin=&quot;Mumbai&quot;, destination=&quot;Singapore&quot;,
+    avoid_red_eye=True
+)</code></pre><p>Expected flight IDs, sorted by price: MH-199, 6E-1071, SQ-421. The cheapest has one stop. The cheapest nonstop daytime option is 6E-1071.</p></div></div></div></div></section><section class="slide" data-title="The Agent definition"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">09</div><div><h1 class="stage-title">The Agent definition</h1><p class="stage-kicker">A fresh Agent for every business call</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>async def ask(agent_name: str, question: str) -&gt; str:
+    &quot;&quot;&quot;Run one fresh CrewAI task and return its raw text.&quot;&quot;&quot;
+    agent = Agent(
+        role=AGENT_ROLES[agent_name],
+        goal=AGENT_INSTRUCTIONS[agent_name],
+        backstory=&quot;You are part of the classroom travel planning team. Follow your task contract.&quot;,
+        tools=TOOL_REGISTRY.get(agent_name, []),
+        llm=LLM(model=&quot;openai/&quot; + MODEL),
+        allow_delegation=False, verbose=False, max_iter=12,
+    )
+</code></pre><p>The retained specialist instructions become the goal. CrewAI adds its own role framing. That can change generated wording.</p></div></div></div></div></section><section class="slide" data-title="Task and Crew execution"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">10</div><div><h1 class="stage-title">Task and Crew execution</h1><p class="stage-kicker">One business call becomes one task in a small Crew</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>    task = Task(description=question,
+                expected_output=AGENT_INSTRUCTIONS[agent_name], agent=agent)
+    crew = Crew(agents=[agent], tasks=[task], process=Process.sequential,
+                memory=False, cache=False, verbose=False, tracing=False)
+    return (await crew.kickoff_async()).raw
+</code></pre><p>CrewOutput.raw supplies text. New instances avoid sharing an Agent between concurrent workers. Memory, delegation, tracing and cache stay off.</p></div></div></div></div></section><section class="slide" data-title="Manager requirements and selection"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">11</div><div><h1 class="stage-title">Manager requirements and selection</h1><p class="stage-kicker">The source prompts and fallback stay intact</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>async def manager_node(state):
+    &quot;&quot;&quot;Read the request. Write down the requirements. Decide who should work.&quot;&quot;&quot;
+    requirements = await ask(&#x27;manager_agent&#x27;, f&quot;\nRead this travel request and list what you understood.\n\nREQUEST: {state[&#x27;request&#x27;]}\n\nList these lines only:\nFROM, TO, DAYS, TRAVELLERS, BUDGET, INTERESTS, HARD RULES, MISSING INFO\n&quot;)
+    choice = await ask(&#x27;manager_agent&#x27;, f&#x27;\nHere are the requirements:\n{requirements}\n\nWhich specialists are needed? Choose from: flight_agent, hotel_agent, activity_agent.\nReply with the names separated by commas and nothing else.\n&#x27;)
+    valid = [&#x27;flight_agent&#x27;, &#x27;hotel_agent&#x27;, &#x27;activity_agent&#x27;]
+    workers = [name for name in valid if name in choice.lower()]
+    if not workers:
+        workers = valid
+    print(&#x27;MANAGER understood the request.&#x27;)
+    print(&#x27;MANAGER picked:&#x27;, &#x27;, &#x27;.join(workers))
+    return {&#x27;requirements&#x27;: requirements, &#x27;chosen_workers&#x27;: workers}
+
+</code></pre><p>Name matching selects valid workers. No valid match falls back to all three. This is the original policy, without schema-enforced selection.</p></div></div></div></div></section><section class="slide" data-title="Specialist report contracts"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">12</div><div><h1 class="stage-title">Specialist report contracts</h1><p class="stage-kicker">Consistent headings simplify synthesis</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><tr><td>Specialist</td><td>Output contract</td></tr><tr><td>Flight</td><td>TOP 3 OPTIONS, RECOMMENDED, TRADE-OFFS, ASSUMPTIONS</td></tr><tr><td>Hotel</td><td>Same headings plus nightly and whole-stay prices</td></tr><tr><td>Activity</td><td>DAY BY DAY, WEATHER NOTE, ASSUMPTIONS</td></tr></table><p>Tools provide grounding. A clear prompt reduces invention but does not prove every claim correct.</p></div></div></div></div></section><section class="slide" data-title="Native Flow state"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">13</div><div><h1 class="stage-title">Native Flow state</h1><p class="stage-kicker">Derived fields appear as stages complete</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>{&quot;id&quot;: &quot;framework UUID&quot;, &quot;request&quot;: &quot;user request&quot;}
+
+# Later fields:
+requirements, chosen_workers
+flight_report, hotel_report, activity_report
+draft_plan, critique, final_plan</code></pre><p>Unselected report fields stay absent. Flow.state is a mutable dictionary. It does not use LangGraph reducers or its concurrent-update conflict checks.</p></div></div></div></div></section><section class="slide" data-title="Flow entry and worker barrier"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">14</div><div><h1 class="stage-title">Flow entry and worker barrier</h1><p class="stage-kicker">Concurrency is explicit Python orchestration</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>class TravelPlannerFlow(Flow):
+    @start()
+    async def manager(self):
+        self.state.update(await manager_node(self.state))
+
+    @listen(manager)
+    async def selected_workers(self):
+        nodes = {&quot;flight_agent&quot;: flight_node, &quot;hotel_agent&quot;: hotel_node,
+                 &quot;activity_agent&quot;: activity_node}
+        snapshot = dict(self.state)
+        updates = await asyncio.gather(
+            *(nodes[name](snapshot) for name in snapshot[&quot;chosen_workers&quot;]))
+        for update in updates:
+            self.state.update(update)
+
+</code></pre><p>asyncio.gather runs independent Crews concurrently. Reports merge only after all chosen workers finish. There is one workers listener, rather than three worker graph vertices.</p></div></div></div></div></section><section class="slide" data-title="Synthesis, review and final output"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">15</div><div><h1 class="stage-title">Synthesis, review and final output</h1><p class="stage-kicker">Listeners encode the fixed sequence</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>    @listen(selected_workers)
+    async def synthesis(self):
+        self.state.update(await synthesis_node(self.state))
+
+    @listen(synthesis)
+    async def critic(self):
+        self.state.update(await critic_node(self.state))
+
+    @listen(critic)
+    async def revision(self):
+        self.state.update(await revision_node(self.state))
+        return dict(self.state)
+
+async def run_travel_state(request: str) -&gt; dict:
+    return await TravelPlannerFlow().kickoff_async(inputs={&quot;request&quot;: request})
+</code></pre><p>Each method updates native state. The last method returns a snapshot. No persistent checkpoint store is configured.</p></div></div></div></div></section><section class="slide" data-title="The critic and revision policy"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">16</div><div><h1 class="stage-title">The critic and revision policy</h1><p class="stage-kicker">One review and at most one repair</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>async def critic_node(state):
+    &quot;&quot;&quot;The critic looks for problems. It does not fix them.&quot;&quot;&quot;
+    issues = await ask(&#x27;critic_agent&#x27;, f&quot;\nReview this plan against the requirements.\n\nREQUIREMENTS:\n{state[&#x27;requirements&#x27;]}\n\nPLAN:\n{state[&#x27;draft_plan&#x27;]}\n&quot;)
+    print(&#x27;CRITIC finished the review.&#x27;)
+    return {&#x27;critique&#x27;: issues}
+
+async def revision_node(state):
+    &quot;&quot;&quot;The manager fixes only what the critic listed. Everything else stays as it was.&quot;&quot;&quot;
+    if &#x27;NO ISSUES FOUND&#x27; in state[&#x27;critique&#x27;].upper():
+        print(&#x27;No changes needed.&#x27;)
+        return {&#x27;final_plan&#x27;: state[&#x27;draft_plan&#x27;]}
+    fixed = await ask(&#x27;manager_agent&#x27;, f&quot;\nFix ONLY the problems listed below. Do not rewrite the parts that are fine.\n\nPLAN:\n{state[&#x27;draft_plan&#x27;]}\n\nPROBLEMS TO FIX:\n{state[&#x27;critique&#x27;]}\n\nReturn the full corrected plan, then a short section called WHAT CHANGED.\n&quot;)
+    print(&#x27;MANAGER fixed the plan.&#x27;)
+    return {&#x27;final_plan&#x27;: fixed}
+print(&#x27;7 nodes ready.&#x27;)</code></pre><p>The inherited NO ISSUES FOUND substring check skips the model call. It can misread a negated phrase. A stricter structured review would be a deliberate enhancement.</p></div></div></div></div></section><section class="slide" data-title="Invocation and result"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">17</div><div><h1 class="stage-title">Invocation and result</h1><p class="stage-kicker">The caller receives the full state</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>result = await plan_trip(demo_request)
+plan_text = result[&quot;final_plan&quot;]</code></pre><p>Jupyter supports top-level await. A fresh Flow isolates each trip. The original fina typo is corrected in the result wrapper. Model output can vary between runs.</p></div></div></div></div></section><section class="slide" data-title="A budget calculation to inspect"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">18</div><div><h1 class="stage-title">A budget calculation to inspect</h1><p class="stage-kicker">Sample arithmetic, not captured model output</p></div></div><div class="body-wrap"><div></div><div class="prose"><pre><code>6E-1071: 2 × INR 21900 = INR 43800
+Hotel Mono: 3 × INR 10500 = INR 31500
+Known flight + hotel subtotal = INR 75300</code></pre><p>Assumptions: one-way fares per person, one shared room, three nights. The hotel total fits INR 45000. Meals, transfers, return flights and admission costs prevent treating this subtotal as a full trip price.</p></div></div></div></div></section><section class="slide" data-title="Sequential and hierarchical processes"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">19</div><div><h1 class="stage-title">Sequential and hierarchical processes</h1><p class="stage-kicker">Why this notebook uses a Flow</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><tr><td>Design</td><td>Meaning</td></tr><tr><td>Process.sequential</td><td>Tasks run in order within each one-task Crew</td></tr><tr><td>Process.hierarchical</td><td>A manager delegates and validates work autonomously</td></tr><tr><td>Flow here</td><td>Explicit selection, barrier and one-revision policy</td></tr></table><p>The named travel manager is an ordinary Agent role. It does not invoke CrewAI hierarchical delegation. Sequential process does not itself cause worker concurrency.</p></div></div></div></div></section><section class="slide" data-title="Framework comparison"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">20</div><div><h1 class="stage-title">Framework comparison</h1><p class="stage-kicker">Similar business outputs, different runtime semantics</p></div></div><div class="body-wrap"><div></div><div class="prose"><table><tr><td>Concern</td><td>LangGraph</td><td>Microsoft</td><td>CrewAI here</td></tr><tr><td>Scheduling</td><td>Graph nodes</td><td>Executors</td><td>Flow listeners</td></tr><tr><td>State writes</td><td>Partial updates</td><td>get/set state</td><td>Mutable dictionary</td></tr><tr><td>Workers</td><td>Parallel nodes</td><td>gather in executor</td><td>gather around Crews</td></tr><tr><td>Text output</td><td>Message content</td><td>AgentResponse.text</td><td>CrewOutput.raw</td></tr><tr><td>Final result</td><td>State dictionary</td><td>Yielded snapshot</td><td>Last Flow return</td></tr></table></div></div></div></div></section><section class="slide" data-title="State, memory and recovery"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">21</div><div><h1 class="stage-title">State, memory and recovery</h1><p class="stage-kicker">Different lifetimes and responsibilities</p></div></div><div class="body-wrap"><div></div><div class="prose"><p>Flow state contains request fields and reports. Agent conversations contain tool interactions and model messages. A saved final-plan dictionary does not contain execution progress for crash recovery.</p><p>This notebook creates fresh Crews and Flows. Crew memory and Flow persistence remain off. The default Flow memory facility remains unused. Adding persistence requires a separate lesson on identity, stored state and resume behavior.</p></div></div></div></div></section><section class="slide" data-title="Customer support companion"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">22</div><div><h1 class="stage-title">Customer support companion</h1><p class="stage-kicker">The same clean, analyse, decide, reply pipeline</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><a href="../lcel/Simple_CrewAI_Ticket_Solver.ipynb">Open the CrewAI ticket solver</a></p><pre><code>result = await solve_ticket(SAMPLE_TICKET)
+# ticket, analysis, decision, reply</code></pre><p>Five task invocations: summary, category, urgency, decision and reply. The first three run sequentially, matching LangGraph and Microsoft. LCEL uses RunnableParallel. There are no tools or real escalation actions.</p></div></div></div></div></section><section class="slide" data-title="Classroom exercises"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">23</div><div><h1 class="stage-title">Classroom exercises</h1><p class="stage-kicker">Follow state and inspect evidence</p></div></div><div class="body-wrap"><div></div><div class="prose"><p>Try a hotel-only request and identify absent report keys. Try an unsupported city and inspect empty results. Compare the direct flight-tool result with the flight report.</p><p>Explain why CrewOutput and Flow state differ. Identify where the worker barrier completes. Inspect nights, arrival timing, traveller counts and unpriced costs in a live plan.</p></div></div></div></div></section><section class="slide" data-title="Notebooks and official references"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">24</div><div><h1 class="stage-title">Notebooks and official references</h1><p class="stage-kicker">Pinned APIs and companion examples</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><a href="../travel-planner/notebooks/travel_planner_crewai.ipynb">CrewAI travel planner</a><br><a href="../lcel/Simple_CrewAI_Ticket_Solver.ipynb">CrewAI customer support</a><br><a href="https://docs.crewai.com/en/concepts/flows">Official Flow documentation</a><br><a href="https://docs.crewai.com/en/concepts/tasks">Official Tasks documentation</a><br><a href="https://docs.crewai.com/en/concepts/crews">Official Crews documentation</a><br><a href="https://docs.crewai.com/en/concepts/tools">Official Tools documentation</a><br><a href="https://docs.crewai.com/en/learn/hierarchical-process">Official hierarchical process guide</a></p></div></div></div></div></section><div class="foot">Generative &amp; Agentic AI Development · Boston Institute of Analytics</div><script>
+const slides=[...document.querySelectorAll('.slide')],menu=document.getElementById('dropMenu'),drop=document.getElementById('chDrop'),toggle=document.getElementById('chDropBtn');let cur=0;
+slides.forEach((s,i)=>{const a=document.createElement('a');a.href='#chapter-'+(i+1);a.textContent=String(i+1).padStart(2,'0')+'  '+s.dataset.title;a.onclick=e=>{e.preventDefault();go(i)};menu.append(a)});
+function go(i){if(i<0||i>=slides.length)return;slides[cur].classList.remove('active');cur=i;slides[cur].classList.add('active');[...menu.children].forEach((a,n)=>{a.classList.toggle('cur',n===i);a.setAttribute('aria-current',n===i?'page':'false')});document.getElementById('btnPrev').disabled=i===0;document.getElementById('btnNext').disabled=i===slides.length-1;document.getElementById('railFill').style.width=(i/(slides.length-1)*100)+'%';drop.classList.remove('open');toggle.setAttribute('aria-expanded','false');window.scrollTo(0,0)}
+document.getElementById('btnPrev').onclick=()=>go(cur-1);document.getElementById('btnNext').onclick=()=>go(cur+1);toggle.onclick=e=>{e.stopPropagation();drop.classList.toggle('open');toggle.setAttribute('aria-expanded',drop.classList.contains('open'))};document.addEventListener('click',()=>{drop.classList.remove('open');toggle.setAttribute('aria-expanded','false')});document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.key===' '&&['BUTTON','SUMMARY','A'].includes(e.target.tagName))return;if(['ArrowRight','ArrowLeft',' '].includes(e.key)){e.preventDefault();go(cur+(e.key==='ArrowLeft'?-1:1))}});go(0);
+</script></body></html>

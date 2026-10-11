@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+
 <!-- The landing page for the GitHub Pages site. Links to the teaching decks. -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Generative &amp; Agentic AI — Teaching Decks</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,800;9..144,900&family=JetBrains+Mono:wght@400;700&family=Inter+Tight:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,800;9..144,900&amp;family=JetBrains+Mono:wght@400;700&amp;family=Inter+Tight:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
 <style>
 :root{
   --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
@@ -98,181 +99,165 @@ footer{padding:60px 0 80px;margin-top:44px;border-top:1px solid var(--card-borde
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style></head>
 <body>
-
 <div class="container">
-
-  <header>
-    <div class="kicker">Generative &amp; Agentic AI Development</div>
-    <h1 class="display">Teaching<br><em>Decks</em></h1>
-    <p class="sub">Nine decks across eight sessions, built to be read straight through. Start on the left if you have never written code. Use the Slides menu at the top of each deck, or just press the arrow keys.</p>
-  </header>
-
-  <div class="decks">
-
-    <a class="deck emerald" href="web-foundations.html">
-      <div class="num">Start here · 12 slides</div>
-      <h2>How A Web App Actually Works</h2>
-      <p>For people who have never written code. Opens the bonnet on the apps you already use every day — no prior tech knowledge assumed.</p>
-      <ul>
-        <li>HTML, CSS and JavaScript</li>
-        <li>JSON, and what it looks like</li>
-        <li>Servers, APIs, GET / POST / PUT / DELETE</li>
-        <li>FastAPI, and backend logic</li>
-        <li>Databases, SQL, and CRUD end to end</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck violet" href="genai-foundations.html">
-      <div class="num">Session one · 9 slides</div>
-      <h2>How Models Are Built, Licensed &amp; Run</h2>
-      <p>The ideas behind every AI system you will build — where the models came from, and how to run one on your own laptop with the internet switched off.</p>
-      <ul>
-        <li>Classical ML vs deep learning vs Gen AI</li>
-        <li>The timeline, 1936 to now</li>
-        <li>Diffusion vs autoregressive</li>
-        <li>Open vs closed licences</li>
-        <li>HuggingFace, and Ollama step by step</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck sky" href="agent-architecture.html">
-      <div class="num">Session two · 13 slides</div>
-      <h2>What An Agent Really Is, And What To Build</h2>
-      <p>The loop is twenty lines of code. This session is about the eleven layers wrapped around it — the ones that decide whether an agent survives real users.</p>
-      <ul>
-        <li>Workflow vs autonomous architectures</li>
-        <li>The core loop, and its brakes</li>
-        <li>Tools, context and memory</li>
-        <li>Safety, state and evaluation</li>
-        <li>Cost, and what to ship first</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck amber" href="simple-agent-architecture.html">
-      <div class="num">Session three · 15 slides</div>
-      <h2>Building A Tool-Calling Agent</h2>
-      <p>The same loop, now in code you can run. Walks through the companion chatbot project one file at a time, from the system prompt to the React screen.</p>
-      <ul>
-        <li>What an agent actually is</li>
-        <li>Tools, and the tool registry</li>
-        <li>How tool calls travel as messages</li>
-        <li>Short term vs long term memory</li>
-        <li>FastAPI and React, wired together</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck rose" href="mini-gpt.html">
-      <div class="num">Session four · 16 slides</div>
-      <h2>MiniGPT — How A Tiny Transformer Learns</h2>
-      <p>Inside the model itself. A GPT small enough to follow end to end, from raw characters to a trained network writing new text.</p>
-      <ul>
-        <li>Characters become numbers, then vectors</li>
-        <li>Self-attention, the heart of GPT</li>
-        <li>Residuals and the feed-forward layer</li>
-        <li>Softmax, sampling, and generation</li>
-        <li>How the weights got smart</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck indigo" href="prompt-essentials.html">
-      <div class="num">Session five · 13 slides</div>
-      <h2>Prompt Essentials — Wrong Prompt, Right Prompt</h2>
-      <p>Thirty worked before-and-after pairs. Every bad prompt sits next to the fixed version, so you can see exactly which words did the work.</p>
-      <ul>
-        <li>The seven parts of a prompt contract</li>
-        <li>Six failures that cover almost everything</li>
-        <li>Zero-shot, one-shot and few-shot</li>
-        <li>System messages, templates, versions</li>
-        <li>Temperature, and debugging by trace</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck teal" href="structured-prompting.html">
-      <div class="num">Session six · 14 slides</div>
-      <h2>Structured Prompting — CoT, ToT, GoT &amp; ReAct</h2>
-      <p>A model answers before it thinks. Four ways to slow it down, plus the file format teams use to store their procedures. Twenty worked examples, all from coding, code review and research.</p>
-      <ul>
-        <li>Chain of Thought — show the working</li>
-        <li>Tree of Thought — try three, keep the best</li>
-        <li>Graph of Thought — combine the pieces</li>
-        <li>ReAct — look things up instead of guessing</li>
-        <li>SKILL.md — procedures the agent opens when needed</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck cyan" href="self-reflection-critique.html">
-      <div class="num">Session seven · 14 slides</div>
-      <h2>Self-Reflection &amp; Critique — Loops That Fix The First Answer</h2>
-      <p>A first answer can look complete and still be wrong. Four ways to review, rewrite and know when to stop, with twenty-nine full worked examples from writing, code, support and data.</p>
-      <ul>
-        <li>Self-Refine — one model, three jobs</li>
-        <li>Reflexion — turn a failure into a short lesson</li>
-        <li>Evaluator-Generator — a separate scorer as a quality gate</li>
-        <li>Principles-based review — one short rule book for everything</li>
-        <li>Stopping rules, and the six ways reviewing backfires</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck emerald" href="self-reflection-critique-practical.html">
-      <div class="num">Session seven · the practical · 13 slides</div>
-      <h2>The Critic Loop, In Code</h2>
-      <p>The companion to session seven. The <code>self_reflection_critique</code> project one file at a time, with the real source on the slide — then you leave the deck and run it.</p>
-      <ul>
-        <li>The rubric and constitution that make critique possible</li>
-        <li>Pydantic schemas — the shape of a critique</li>
-        <li>Three prompts, three roles, kept apart</li>
-        <li>The loop, and the three ways it stops</li>
-        <li>A real run, including the score plateau</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck teal" href="langchain-lcel-runnables.html">
-      <div class="num">LangChain Core · 11 slides</div>
-      <h2>LCEL &amp; Runnables</h2>
-      <p>The companion to <code>Simple_LangChain_Ticket_Solver_Core_Only.ipynb</code>. Explains the pipe operator (<code>|</code>), <code>RunnableLambda</code>, <code>RunnableParallel</code>, and <code>RunnablePassthrough</code> in plain English.</p>
-      <ul>
-        <li>What is a Runnable? The worker &amp; Lego brick model</li>
-        <li>The pipe operator (<code>|</code>) — Unix pipes in Python</li>
-        <li><code>RunnableLambda</code> — wrapping custom Python functions</li>
-        <li><code>RunnableParallel</code> — concurrent execution for 3x speedup</li>
-        <li><code>RunnablePassthrough.assign</code> — the state backpack</li>
-        <li>Interactive quiz and comparative cheatsheet</li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-    <a class="deck violet" href="lora_qlora_visual.html">
-      <div class="num">Fine-Tuning · Visual Lesson</div>
-      <h2>LoRA &amp; QLoRA</h2>
-      <p>A visual, interactive deep-dive into Parameter-Efficient Fine-Tuning (PEFT) on Gemma. Matrix decomposition, 4-bit NormalFloat quantization, and memory math.</p>
-      <ul>
-        <li>Why full fine-tuning is impossible on consumer GPUs</li>
-        <li>Rank decomposition (W = W₀ + B·A) step-by-step</li>
-        <li>QLoRA: Double Quantization &amp; Paged Optimizers</li>
-        <li>Companion notebook: <code>fine-tuning/gemma_lora_qlora_(2).ipynb</code></li>
-      </ul>
-      <span class="go">Open deck →</span>
-    </a>
-
-  </div>
-
-  <div class="note">
-    <div class="t">The companion projects</div>
-    <p><strong>mood-app</strong> is the worked example for session two: a notes app with a chatbot that calls seventeen real tools. Every answer has an eye button that opens the full JSON of what was sent to the LLM, which tools ran, and what came back. <strong>simple_agent_chatbot</strong> is the smaller one from session three — the agent loop with nothing else around it.</p>
-    <p>Both need a Python backend, so they cannot run on this page. They live in the same <a href="https://github.com/jadenitishraj/bia-batch-july">repository</a> as these decks — clone it and follow the <code>SETUP.md</code> inside each project folder.</p>
-  </div>
-
-  <footer>Generative &amp; Agentic AI Development · Boston Institute of Analytics</footer>
-
+<header>
+<div class="kicker">Generative &amp; Agentic AI Development</div>
+<h1 class="display">Teaching<br/><em>Decks</em></h1>
+<p class="sub">Nine decks across eight sessions, built to be read straight through. Start on the left if you have never written code. Use the Slides menu at the top of each deck, or just press the arrow keys.</p>
+</header>
+<div class="decks">
+<a class="deck teal" href="Travel_Planner_CrewAI.html"><div class="num">CrewAI · 24 slides</div><h2>Travel Planner with CrewAI</h2><p>The same travel project using Agents, Tasks, Crews and native Flow state. Includes the customer-support companion.</p><ul><li>Actual notebook code and worker barrier</li><li>Manager selection, critic and one revision</li><li>State and framework comparisons</li></ul><span class="go">Open deck →</span></a>
+<a class="deck teal" href="Travel_Planner_LangGraph_vs_Microsoft_Agent_Framework.html"><div class="num">Travel Planner · 36 slides</div><h2>Travel Planner: LangGraph vs Microsoft Agent Framework</h2><p>The same travel project step by step: initial state, every agent, state transitions, execution and optional checkpoints.</p><ul><li>State snapshots and corresponding actual code</li><li>Concurrent workers, barrier and revision branches</li><li>Native shared state, checkpoints and resume</li></ul><span class="go">Open deck →</span></a>
+<a class="deck teal" href="Microsoft_Agent_Framework_vs_LangGraph.html"><div class="num">Agent Frameworks · 30 slides</div><h2>Microsoft Agent Framework vs LangGraph</h2><p>Trace an API request through initial state, every ticket step, graph construction and final output, then compare an optional checkpoint replay.</p><ul><li>Agents, executors, messages, and state</li><li>Corresponding code for every ticket step</li><li>Migration decisions and classroom checks</li></ul><span class="go">Open deck →</span></a>
+<a class="deck emerald" href="web-foundations.html">
+<div class="num">Start here · 12 slides</div>
+<h2>How A Web App Actually Works</h2>
+<p>For people who have never written code. Opens the bonnet on the apps you already use every day — no prior tech knowledge assumed.</p>
+<ul>
+<li>HTML, CSS and JavaScript</li>
+<li>JSON, and what it looks like</li>
+<li>Servers, APIs, GET / POST / PUT / DELETE</li>
+<li>FastAPI, and backend logic</li>
+<li>Databases, SQL, and CRUD end to end</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck violet" href="genai-foundations.html">
+<div class="num">Session one · 9 slides</div>
+<h2>How Models Are Built, Licensed &amp; Run</h2>
+<p>The ideas behind every AI system you will build — where the models came from, and how to run one on your own laptop with the internet switched off.</p>
+<ul>
+<li>Classical ML vs deep learning vs Gen AI</li>
+<li>The timeline, 1936 to now</li>
+<li>Diffusion vs autoregressive</li>
+<li>Open vs closed licences</li>
+<li>HuggingFace, and Ollama step by step</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck sky" href="agent-architecture.html">
+<div class="num">Session two · 13 slides</div>
+<h2>What An Agent Really Is, And What To Build</h2>
+<p>The loop is twenty lines of code. This session is about the eleven layers wrapped around it — the ones that decide whether an agent survives real users.</p>
+<ul>
+<li>Workflow vs autonomous architectures</li>
+<li>The core loop, and its brakes</li>
+<li>Tools, context and memory</li>
+<li>Safety, state and evaluation</li>
+<li>Cost, and what to ship first</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck amber" href="simple-agent-architecture.html">
+<div class="num">Session three · 15 slides</div>
+<h2>Building A Tool-Calling Agent</h2>
+<p>The same loop, now in code you can run. Walks through the companion chatbot project one file at a time, from the system prompt to the React screen.</p>
+<ul>
+<li>What an agent actually is</li>
+<li>Tools, and the tool registry</li>
+<li>How tool calls travel as messages</li>
+<li>Short term vs long term memory</li>
+<li>FastAPI and React, wired together</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck rose" href="mini-gpt.html">
+<div class="num">Session four · 16 slides</div>
+<h2>MiniGPT — How A Tiny Transformer Learns</h2>
+<p>Inside the model itself. A GPT small enough to follow end to end, from raw characters to a trained network writing new text.</p>
+<ul>
+<li>Characters become numbers, then vectors</li>
+<li>Self-attention, the heart of GPT</li>
+<li>Residuals and the feed-forward layer</li>
+<li>Softmax, sampling, and generation</li>
+<li>How the weights got smart</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck indigo" href="prompt-essentials.html">
+<div class="num">Session five · 13 slides</div>
+<h2>Prompt Essentials — Wrong Prompt, Right Prompt</h2>
+<p>Thirty worked before-and-after pairs. Every bad prompt sits next to the fixed version, so you can see exactly which words did the work.</p>
+<ul>
+<li>The seven parts of a prompt contract</li>
+<li>Six failures that cover almost everything</li>
+<li>Zero-shot, one-shot and few-shot</li>
+<li>System messages, templates, versions</li>
+<li>Temperature, and debugging by trace</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck teal" href="structured-prompting.html">
+<div class="num">Session six · 14 slides</div>
+<h2>Structured Prompting — CoT, ToT, GoT &amp; ReAct</h2>
+<p>A model answers before it thinks. Four ways to slow it down, plus the file format teams use to store their procedures. Twenty worked examples, all from coding, code review and research.</p>
+<ul>
+<li>Chain of Thought — show the working</li>
+<li>Tree of Thought — try three, keep the best</li>
+<li>Graph of Thought — combine the pieces</li>
+<li>ReAct — look things up instead of guessing</li>
+<li>SKILL.md — procedures the agent opens when needed</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck cyan" href="self-reflection-critique.html">
+<div class="num">Session seven · 14 slides</div>
+<h2>Self-Reflection &amp; Critique — Loops That Fix The First Answer</h2>
+<p>A first answer can look complete and still be wrong. Four ways to review, rewrite and know when to stop, with twenty-nine full worked examples from writing, code, support and data.</p>
+<ul>
+<li>Self-Refine — one model, three jobs</li>
+<li>Reflexion — turn a failure into a short lesson</li>
+<li>Evaluator-Generator — a separate scorer as a quality gate</li>
+<li>Principles-based review — one short rule book for everything</li>
+<li>Stopping rules, and the six ways reviewing backfires</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck emerald" href="self-reflection-critique-practical.html">
+<div class="num">Session seven · the practical · 13 slides</div>
+<h2>The Critic Loop, In Code</h2>
+<p>The companion to session seven. The <code>self_reflection_critique</code> project one file at a time, with the real source on the slide — then you leave the deck and run it.</p>
+<ul>
+<li>The rubric and constitution that make critique possible</li>
+<li>Pydantic schemas — the shape of a critique</li>
+<li>Three prompts, three roles, kept apart</li>
+<li>The loop, and the three ways it stops</li>
+<li>A real run, including the score plateau</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck teal" href="langchain-lcel-runnables.html">
+<div class="num">LangChain Core · 11 slides</div>
+<h2>LCEL &amp; Runnables</h2>
+<p>The companion to <code>Simple_LangChain_Ticket_Solver_Core_Only.ipynb</code>. Explains the pipe operator (<code>|</code>), <code>RunnableLambda</code>, <code>RunnableParallel</code>, and <code>RunnablePassthrough</code> in plain English.</p>
+<ul>
+<li>What is a Runnable? The worker &amp; Lego brick model</li>
+<li>The pipe operator (<code>|</code>) — Unix pipes in Python</li>
+<li><code>RunnableLambda</code> — wrapping custom Python functions</li>
+<li><code>RunnableParallel</code> — concurrent execution for 3x speedup</li>
+<li><code>RunnablePassthrough.assign</code> — the state backpack</li>
+<li>Interactive quiz and comparative cheatsheet</li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
+<a class="deck violet" href="lora_qlora_visual.html">
+<div class="num">Fine-Tuning · Visual Lesson</div>
+<h2>LoRA &amp; QLoRA</h2>
+<p>A visual, interactive deep-dive into Parameter-Efficient Fine-Tuning (PEFT) on Gemma. Matrix decomposition, 4-bit NormalFloat quantization, and memory math.</p>
+<ul>
+<li>Why full fine-tuning is impossible on consumer GPUs</li>
+<li>Rank decomposition (W = W₀ + B·A) step-by-step</li>
+<li>QLoRA: Double Quantization &amp; Paged Optimizers</li>
+<li>Companion notebook: <code>fine-tuning/gemma_lora_qlora_(2).ipynb</code></li>
+</ul>
+<span class="go">Open deck →</span>
+</a>
 </div>
-
+<div class="note">
+<div class="t">The companion projects</div>
+<p><strong>mood-app</strong> is the worked example for session two: a notes app with a chatbot that calls seventeen real tools. Every answer has an eye button that opens the full JSON of what was sent to the LLM, which tools ran, and what came back. <strong>simple_agent_chatbot</strong> is the smaller one from session three — the agent loop with nothing else around it.</p>
+<p>Both need a Python backend, so they cannot run on this page. They live in the same <a href="https://github.com/jadenitishraj/bia-batch-july">repository</a> as these decks — clone it and follow the <code>SETUP.md</code> inside each project folder.</p>
+</div>
+<footer>Generative &amp; Agentic AI Development · Boston Institute of Analytics</footer>
+</div>
 </body></html>
