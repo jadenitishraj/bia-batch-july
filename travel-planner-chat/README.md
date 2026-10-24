@@ -40,8 +40,9 @@ Stop each server with Ctrl+C. Keep the backend port and Vite proxy consistent.
 2. `frontend/src/main.js`: browser interactions and HTTP calls.
 3. `frontend/src/style.css`: responsive layout.
 4. `backend/app.py`: HTTP routes and errors.
-5. `backend/validation.py`: input limits.
-6. `backend/database.py`: schema and parameterized SQLite queries.
+5. `backend/trip_handlers.py`: separate GET, POST, PUT and DELETE operations.
+6. `backend/validation.py`: input limits.
+7. `backend/database.py`: schema and parameterized SQLite queries.
 
 ## API contract
 

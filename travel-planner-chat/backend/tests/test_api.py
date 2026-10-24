@@ -112,6 +112,16 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.data('POST', body=TRIP, headers={
             'Content-Type': 'application/json', 'Origin': 'http://127.0.0.1:5175'})[0], 201)
 
+    def test_invalid_update_does_not_modify_the_existing_trip(self):
+        _, trip = self.data('POST', body=TRIP)
+        route = f"/api/trips/{trip['id']}"
+        status, error = self.data('PUT', route, {**TRIP, 'days': 0})
+        self.assertEqual(status, 400)
+        self.assertIn('Days', error['error'])
+        self.assertEqual(self.data(path=route)[1], trip)
+        self.assertEqual(self.data('POST', route, TRIP)[0], 405)
+        self.assertEqual(self.data(path=route)[1], trip)
+
     def test_database_unavailable(self):
         with sqlite3.connect(self.path) as connection:
             connection.execute('DROP TABLE trips')

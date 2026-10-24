@@ -9,12 +9,13 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import database
+from trip_handlers import TripHandlers
 from validation import validate_trip
 
 MAX_BODY = 100000
 
 
-class Handler(BaseHTTPRequestHandler):
+class Handler(TripHandlers, BaseHTTPRequestHandler):
     def __init__(self, *args, database_path, **kwargs):
         self.database_path = database_path
         super().__init__(*args, **kwargs)
@@ -30,26 +31,25 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):
-        path = urlsplit(self.path).path
-        self.api('GET', path)
+        self.dispatch(self.get_trips)
 
     def do_POST(self):
-        self.mutate('POST')
+        self.dispatch(self.create_trip, scope='collection')
 
     def do_PUT(self):
-        self.mutate('PUT')
+        self.dispatch(self.update_trip, scope='item')
 
     def do_DELETE(self):
-        self.mutate('DELETE')
+        self.dispatch(self.delete_trip, scope='item')
 
-    def mutate(self, method):
+    def allow_write(self):
         origin = self.headers.get('Origin')
         expected = 'http://' + self.headers.get('Host', '')
         allowed_origins = {expected, 'http://127.0.0.1:5175', 'http://localhost:5175'}
         if origin and origin not in allowed_origins:
             self.respond(403, {'error': 'Cross-origin changes are not allowed.'})
-            return
-        self.api(method, urlsplit(self.path).path)
+            return False
+        return True
 
     def read_payload(self):
         if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
@@ -65,27 +65,21 @@ class Handler(BaseHTTPRequestHandler):
         except (json.JSONDecodeError, UnicodeDecodeError):
             raise ValueError('Invalid JSON.') from None
 
-    def api(self, method, path):
+    def dispatch(self, action, *, scope='any'):
+        if self.command != 'GET' and not self.allow_write():
+            return
+        path = urlsplit(self.path).path
         match = re.fullmatch(r'/api/trips/([1-9][0-9]{0,17})', path)
         trip_id = int(match[1]) if match else None
         collection = path == '/api/trips'
         if not collection and not match:
             self.respond(404, {'error': 'Not found.'})
             return
+        if (scope == 'item' and collection) or (scope == 'collection' and match):
+            self.respond(405, {'error': 'Method not allowed.'})
+            return
         try:
-            if method == 'GET':
-                result = database.list_trips(self.database_path) if collection else database.get_trip(self.database_path, trip_id)
-            elif method == 'POST' and collection:
-                result = database.save_trip(self.database_path, self.read_payload())
-            elif method == 'PUT' and match:
-                result = database.save_trip(self.database_path, self.read_payload(), trip_id)
-            elif method == 'DELETE' and match:
-                result = {'deleted': True} if database.delete_trip(self.database_path, trip_id) else None
-            else:
-                self.respond(405, {'error': 'Method not allowed.'})
-                return
-            self.respond(404 if result is None else 201 if method == 'POST' else 200,
-                         {'error': 'Trip not found.'} if result is None else result)
+            action(trip_id)
         except ValueError as error:
             self.respond(400, {'error': str(error)})
         except sqlite3.Error:
