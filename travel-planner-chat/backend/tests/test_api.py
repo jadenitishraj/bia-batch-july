@@ -84,6 +84,8 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(self.data('POST', raw=raw)[0], 400)
         self.assertEqual(self.data('POST', body=TRIP, headers={'Content-Type': 'text/plain'})[0], 400)
         self.assertEqual(self.data('POST', raw=b'x' * 100001)[0], 400)
+        self.assertEqual(self.data('POST', raw=b'{}', headers={
+            'Content-Type': 'application/json', 'Content-Length': 'invalid'})[0], 400)
         self.assertEqual(self.data()[1], [])
 
     def test_trims_strings_and_stores_sql_and_html_as_plain_text(self):

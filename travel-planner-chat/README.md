@@ -32,9 +32,7 @@ npm run dev
 ```
 
 Open http://127.0.0.1:5175/. Vite forwards `/api` requests to the Python backend.
-Stop each server with Ctrl+C. Backend port/database options:
-`python3 app.py --port 8004 --database /path/to/demo.db`.
-If changing the backend port, update the Vite proxy too.
+Stop each server with Ctrl+C. Keep the backend port and Vite proxy consistent.
 
 ## Read the code
 
@@ -77,7 +75,7 @@ python3 -m unittest discover -s tests -v
 cd travel-planner-chat/frontend
 npm ci
 npm run lint
-npm test
+npm run test:coverage
 npm run build
 ```
 
@@ -129,3 +127,23 @@ four parameters. Source, configuration and tests use the same quality rules.
 There is no universal Fortune 500 preset. These checks suit this small JavaScript
 app; React/TypeScript rules should be added if those technologies are introduced.
 Lint catches certain bugs and patterns, not all security or accessibility issues.
+
+## Coverage gate
+
+Both suites must reach **90%**, measured separately, without excluding untested
+application code. Frontend V8 coverage includes every `src/**/*.js` file and gates
+statements, branches, functions and lines. Run `npm run test:coverage` in frontend.
+
+From backend, after installing `requirements-dev.txt`, run:
+
+```sh
+.venv/bin/python -m coverage run -m unittest discover -s tests -v
+.venv/bin/python -m coverage report
+.venv/bin/python -m coverage json
+.venv/bin/python check_coverage.py
+```
+
+Python includes all backend Python modules, including untested ones, except tests
+and dependencies. coverage.py reports statements/lines and branches, not function
+coverage. The extra gate requires statements/lines and branches to each reach 90%.
+CI enforces these coverage gates inside the Tests check. Reports stay out of Git.

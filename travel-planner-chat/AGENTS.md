@@ -49,6 +49,12 @@
 ## Tests and verification
 
 - Maintain separate automated frontend and backend test suites.
+- Require at least 90% coverage separately for frontend and backend. Frontend must
+  reach 90% statements, branches, functions and lines. Python coverage.py supports
+  statements/lines and branches; enforce each separately and disclose that it does
+  not report function coverage. Include all executable application source, including
+  untested files. Exclude only tests, dependencies and generated artifacts.
+- Never weaken thresholds or omit difficult application code to make coverage pass.
 - Every behavior change needs meaningful tests. Fixes need a regression test.
 - Test success, invalid input, missing records, failure handling and persistence.
 - Exercise real HTTP and temporary SQLite databases for API integration tests.
@@ -78,10 +84,12 @@ From this folder:
 
 ```sh
 python3 scripts/check_file_sizes.py
-python3 -m unittest discover -s backend/tests -v
+(cd backend && .venv/bin/python -m coverage run -m unittest discover -s tests -v)
+(cd backend && .venv/bin/python -m coverage report && .venv/bin/python -m coverage json)
+(cd backend && .venv/bin/python check_coverage.py)
 npm --prefix frontend ci
 backend/.venv/bin/ruff check backend scripts --config backend/ruff.toml
 npm --prefix frontend run lint
-npm --prefix frontend test
+npm --prefix frontend run test:coverage
 npm --prefix frontend run build
 ```

@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-IGNORED_PARTS = {'node_modules', 'dist', '__pycache__', 'data', '.git', '.venv', '.ruff_cache'}
-IGNORED_FILES = {'package-lock.json'}
+IGNORED_PARTS = {'node_modules', 'dist', '__pycache__', 'data', '.git', '.venv', '.ruff_cache', 'coverage'}
+IGNORED_FILES = {'package-lock.json', 'coverage.json'}
 TEXT_SUFFIXES = {'.py', '.js', '.css', '.html', '.json', '.md'}
 
 

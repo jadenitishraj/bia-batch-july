@@ -6,3 +6,5 @@ node_modules/
 dist/
 .venv/
 .ruff_cache/
+coverage/
+coverage.json
