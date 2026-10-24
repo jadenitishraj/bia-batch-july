@@ -4,3 +4,5 @@ data/
 htmlcov/
 node_modules/
 dist/
+.venv/
+.ruff_cache/

@@ -53,8 +53,10 @@
 - Never use classroom/user data for destructive tests. Isolate disposable test data.
 - For frontend changes, verify actual browser interactions and relevant keyboard,
   responsive, empty and error states. API tests alone do not establish UI correctness.
-- Run frontend tests, backend tests, file-size check and frontend build before
-  declaring completion.
+- Run ESLint for frontend source, configuration and tests. Run Ruff for Python
+  source, scripts and tests. Fix findings; do not silence rules without justification.
+- Run both linters, frontend tests, backend tests, file-size check and frontend build
+  before declaring completion.
 - Do not weaken tests or checks to hide failures. State exactly what is unverified.
 
 ## Git and delivery
@@ -74,6 +76,8 @@ From this folder:
 python3 scripts/check_file_sizes.py
 python3 -m unittest discover -s backend/tests -v
 npm --prefix frontend ci
+backend/.venv/bin/ruff check backend scripts --config backend/ruff.toml
+npm --prefix frontend run lint
 npm --prefix frontend test
 npm --prefix frontend run build
 ```

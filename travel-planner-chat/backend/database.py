@@ -1,7 +1,7 @@
 """SQLite storage for the single-user classroom app."""
+import sqlite3
 from contextlib import closing
 from pathlib import Path
-import sqlite3
 
 DEFAULT_DATABASE = Path(__file__).parent / 'data' / 'travel_planner.db'
 FIELDS = ('title', 'destination', 'days', 'travelers', 'budget', 'plan')

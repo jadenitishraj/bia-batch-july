@@ -1,12 +1,12 @@
 """Local-only Python web server. Run: python3 app.py."""
-from functools import partial
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
-from urllib.parse import urlsplit
 import argparse
 import json
 import re
 import sqlite3
+from functools import partial
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import urlsplit
 
 import database
 from validation import validate_trip

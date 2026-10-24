@@ -23,7 +23,7 @@ API: http://127.0.0.1:8003/api/trips. SQLite is created at
 
 ## Start the frontend
 
-Node.js 22.12+ (22.x) or 24.x, in a separate terminal:
+Node.js 22.13+ (22.x) or 24.x, in a separate terminal:
 
 ```sh
 cd travel-planner-chat/frontend
@@ -76,6 +76,7 @@ python3 -m unittest discover -s tests -v
 ```sh
 cd travel-planner-chat/frontend
 npm ci
+npm run lint
 npm test
 npm run build
 ```
@@ -88,3 +89,18 @@ Frontend tests exercise real DOM events and rendering, with simulated HTTP respo
 for success and failure states. They do not replace real Python/SQLite integration
 tests or desktop/mobile browser review. jsdom provides the DOM; dialog show/close
 methods are shimmed because native modal behavior requires an actual browser.
+
+## Python linting
+
+Runtime still uses only Python's standard library. Ruff is a development tool.
+From `travel-planner-chat/`:
+
+```sh
+python3 -m venv backend/.venv
+backend/.venv/bin/python -m pip install -r backend/requirements-dev.txt
+backend/.venv/bin/ruff check backend scripts --config backend/ruff.toml
+python3 scripts/check_file_sizes.py
+```
+
+ESLint checks frontend source/config/tests. Ruff checks Python imports, errors,
+common bugs and supported syntax. Tests remain separate checks, not replaced by lint.

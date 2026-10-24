@@ -1,16 +1,15 @@
 import json
-from pathlib import Path
 import sqlite3
 import sys
 import tempfile
 import threading
 import unittest
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app import create_server
-import database
 
 TRIP = dict(title='Singapore escape', destination='Singapore', days=4,
             travelers=2, budget=85000, plan='Day 1 — Arrive\nRelax.\n\nDay 2 — Explore\nGardens.')
