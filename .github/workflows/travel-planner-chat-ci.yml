@@ -7,7 +7,7 @@ on:
       - 'travel-planner-chat/**'
       - '.github/workflows/travel-planner-chat-ci.yml'
   push:
-    branches: [main, 'codex/travel-planner-chat-crud']
+    branches: [main]
     paths:
       - 'travel-planner-chat/**'
       - '.github/workflows/travel-planner-chat-ci.yml'

@@ -108,7 +108,7 @@ common bugs and supported syntax. Tests remain separate checks, not replaced by 
 ## GitHub PR checks
 
 The `Travel Planner Chat CI` workflow runs on matching pull requests to `main`,
-relevant branch pushes, and manual dispatch. Its three visible checks are:
+relevant main-branch pushes, and manual dispatch. Its three visible checks are:
 
 - **Lint**: frontend ESLint, backend Ruff, and the 150-line handwritten-file limit.
 - **Tests**: automated frontend and backend test suites using disposable databases.
