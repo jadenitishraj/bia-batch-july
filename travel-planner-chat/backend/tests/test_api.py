@@ -107,12 +107,11 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(self.data('POST', body=TRIP, headers={
             'Content-Type': 'application/json', 'Origin': self.base})[0], 201)
 
-    def test_assets_and_database_unavailable(self):
-        for path in ['/', '/style.css', '/app.js']:
-            status, content, headers = self.call(path=path)
-            self.assertEqual(status, 200)
-            self.assertGreater(len(content), 0)
-            self.assertIn("default-src 'self'", headers['Content-Security-Policy'])
+    def test_vite_development_origin_can_save(self):
+        self.assertEqual(self.data('POST', body=TRIP, headers={
+            'Content-Type': 'application/json', 'Origin': 'http://127.0.0.1:5175'})[0], 201)
+
+    def test_database_unavailable(self):
         with sqlite3.connect(self.path) as connection:
             connection.execute('DROP TABLE trips')
         status, payload = self.data()

@@ -1,3 +1,5 @@
+import './style.css';
+
 const $ = (selector) => document.querySelector(selector);
 let trips = [];
 let selectedId = null;
