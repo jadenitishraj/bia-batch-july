@@ -18,7 +18,7 @@ export function renderTrips(trips, selectedId, onSelect) {
   $('#trip').hidden = !trip;
   $('#empty').hidden = Boolean(trip);
   $('#list-status').textContent = trips.length ? '' : 'No saved trips yet.';
-  if (!trip) return;
+  if (!trip) {return;}
   $('#trip-title').textContent = trip.title;
   $('#destination').textContent = trip.destination;
   $('#metadata').textContent = `${trip.days} days · ${trip.travelers} travelers · Estimated ₹${trip.budget.toLocaleString('en-IN')}`;

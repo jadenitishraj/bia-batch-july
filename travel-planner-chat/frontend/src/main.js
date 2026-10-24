@@ -38,7 +38,7 @@ async function loadTrips(preferredId = selectedId) {
 }
 
 function openEditor(trip = null) {
-  if (loading) return;
+  if (loading) {return;}
   editingId = trip?.id ?? null;
   $('#trip-form').reset();
   $('#form-error').textContent = '';
@@ -62,7 +62,7 @@ for (const id of ['#close-editor', '#cancel-editor']) {
 $('#trip-form').onsubmit = async (event) => {
   event.preventDefault();
   const values = Object.fromEntries(new FormData(event.currentTarget));
-  for (const field of ['days', 'travelers', 'budget']) values[field] = Number(values[field]);
+  for (const field of ['days', 'travelers', 'budget']) {values[field] = Number(values[field]);}
   $('#save').disabled = true;
   $('#form-error').textContent = '';
   try {

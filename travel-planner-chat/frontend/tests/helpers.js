@@ -14,7 +14,7 @@ export async function startApp(fetchMock = vi.fn().mockResolvedValue(response([]
   HTMLDialogElement.prototype.close = function () { this.open = false; };
   vi.stubGlobal('fetch', fetchMock);
   await import('../src/main.js');
-  await vi.waitFor(() => { if ($('#new-trip').disabled) throw new Error('Still loading'); });
+  await vi.waitFor(() => { if ($('#new-trip').disabled) {throw new Error('Still loading');} });
   return fetchMock;
 }
 
@@ -26,5 +26,5 @@ export function fillTrip(values = trip) {
 
 export async function submit() {
   $('#trip-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-  await vi.waitFor(() => { if ($('#save').disabled) throw new Error('Still saving'); });
+  await vi.waitFor(() => { if ($('#save').disabled) {throw new Error('Still saving');} });
 }

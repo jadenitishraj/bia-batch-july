@@ -31,6 +31,8 @@
 - Prevent repeated submissions while requests run. Keep entered values after failures.
 - Do not put database access, secrets or authorization decisions in browser code.
 - Add dependencies only when they solve a real requirement. Keep the lockfile in Git.
+- Preserve the recommended and project ESLint rules for correctness, unsafe language
+  features and maintainability. Rule changes require rationale and config tests.
 
 ## Backend and database
 
