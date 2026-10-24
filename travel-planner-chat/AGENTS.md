@@ -46,13 +46,15 @@
 
 ## Tests and verification
 
+- Maintain separate automated frontend and backend test suites.
 - Every behavior change needs meaningful tests. Fixes need a regression test.
 - Test success, invalid input, missing records, failure handling and persistence.
 - Exercise real HTTP and temporary SQLite databases for API integration tests.
 - Never use classroom/user data for destructive tests. Isolate disposable test data.
 - For frontend changes, verify actual browser interactions and relevant keyboard,
   responsive, empty and error states. API tests alone do not establish UI correctness.
-- Run backend tests, file-size check and frontend build before declaring completion.
+- Run frontend tests, backend tests, file-size check and frontend build before
+  declaring completion.
 - Do not weaken tests or checks to hide failures. State exactly what is unverified.
 
 ## Git and delivery
@@ -72,5 +74,6 @@ From this folder:
 python3 scripts/check_file_sizes.py
 python3 -m unittest discover -s backend/tests -v
 npm --prefix frontend ci
+npm --prefix frontend test
 npm --prefix frontend run build
 ```

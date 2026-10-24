@@ -23,7 +23,7 @@ API: http://127.0.0.1:8003/api/trips. SQLite is created at
 
 ## Start the frontend
 
-Node.js 20 or later, in a separate terminal:
+Node.js 22.12+ (22.x) or 24.x, in a separate terminal:
 
 ```sh
 cd travel-planner-chat/frontend
@@ -76,9 +76,15 @@ python3 -m unittest discover -s tests -v
 ```sh
 cd travel-planner-chat/frontend
 npm ci
+npm test
 npm run build
 ```
 
 HTTP tests use temporary databases. This app deliberately has no login and binds
 to loopback only: it is a local classroom starter, not a public multi-user service.
 No cloud resources, credentials, photos or existing app code are required.
+
+Frontend tests exercise real DOM events and rendering, with simulated HTTP responses
+for success and failure states. They do not replace real Python/SQLite integration
+tests or desktop/mobile browser review. jsdom provides the DOM; dialog show/close
+methods are shimmed because native modal behavior requires an actual browser.
