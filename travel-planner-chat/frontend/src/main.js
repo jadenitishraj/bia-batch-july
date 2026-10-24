@@ -1,4 +1,6 @@
 import './style.css';
+import { request } from './api.js';
+import { renderTrips } from './trip-view.js';
 
 const $ = (selector) => document.querySelector(selector);
 let trips = [];
@@ -6,36 +8,13 @@ let selectedId = null;
 let editingId = null;
 let loading = false;
 
-async function request(path, options = {}) {
-  const response = await fetch(path, { ...options, headers: { 'Content-Type': 'application/json' } });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
-  return data;
-}
 
 function render() {
-  $('#trip-list').replaceChildren();
-  for (const trip of trips) {
-    const button = document.createElement('button');
-    button.className = 'trip-link';
-    button.setAttribute('aria-current', String(trip.id === selectedId));
-    const title = document.createElement('strong');
-    title.textContent = trip.title;
-    const summary = document.createElement('small');
-    summary.textContent = `${trip.destination} · ${trip.days} days`;
-    button.append(title, summary);
-    button.onclick = () => { selectedId = trip.id; render(); $('#main').focus(); };
-    $('#trip-list').append(button);
-  }
-  const trip = trips.find((item) => item.id === selectedId);
-  $('#trip').hidden = !trip;
-  $('#empty').hidden = Boolean(trip);
-  $('#list-status').textContent = trips.length ? '' : 'No saved trips yet.';
-  if (!trip) return;
-  $('#trip-title').textContent = trip.title;
-  $('#destination').textContent = trip.destination;
-  $('#metadata').textContent = `${trip.days} days · ${trip.travelers} travelers · Estimated ₹${trip.budget.toLocaleString('en-IN')}`;
-  $('#plan').textContent = trip.plan;
+  renderTrips(trips, selectedId, (id) => {
+    selectedId = id;
+    render();
+    $('#main').focus();
+  });
 }
 
 async function loadTrips(preferredId = selectedId) {
