@@ -62,6 +62,8 @@
 ## Git and delivery
 
 - Use a focused `codex/` branch and review the diff before committing.
+- The PR must show passing GitHub Actions Lint, Tests and Build checks.
+  Local passing results do not substitute for the remote PR checks.
 - Keep secrets, runtime databases, uploads, caches and build output out of Git.
 - Update the relevant README/API contract when behavior or setup changes.
 - Push and open/update a PR only within the user's authorization. Never merge or

@@ -1,0 +1,90 @@
+name: Travel Planner Chat CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'travel-planner-chat/**'
+      - '.github/workflows/travel-planner-chat-ci.yml'
+  push:
+    branches: [main, 'codex/travel-planner-chat-crud']
+    paths:
+      - 'travel-planner-chat/**'
+      - '.github/workflows/travel-planner-chat-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: travel-planner-chat-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: travel-planner-chat/frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frontend development dependencies
+        run: npm ci
+        working-directory: travel-planner-chat/frontend
+      - name: Frontend ESLint
+        run: npm run lint
+        working-directory: travel-planner-chat/frontend
+      - name: Install Python lint dependencies
+        run: python -m pip install -r travel-planner-chat/backend/requirements-dev.txt
+      - name: Backend Ruff
+        run: ruff check travel-planner-chat/backend travel-planner-chat/scripts --config travel-planner-chat/backend/ruff.toml
+      - name: Check handwritten file sizes
+        run: python travel-planner-chat/scripts/check_file_sizes.py
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: travel-planner-chat/frontend/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install frontend test dependencies
+        run: npm ci
+        working-directory: travel-planner-chat/frontend
+      - name: Frontend tests
+        run: npm test
+        working-directory: travel-planner-chat/frontend
+      - name: Backend integration tests
+        run: python -m unittest discover -s travel-planner-chat/backend/tests -v
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: travel-planner-chat/frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: travel-planner-chat/frontend
+      - name: Production frontend build
+        run: npm run build
+        working-directory: travel-planner-chat/frontend

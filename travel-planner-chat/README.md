@@ -104,3 +104,16 @@ python3 scripts/check_file_sizes.py
 
 ESLint checks frontend source/config/tests. Ruff checks Python imports, errors,
 common bugs and supported syntax. Tests remain separate checks, not replaced by lint.
+
+## GitHub PR checks
+
+The `Travel Planner Chat CI` workflow runs on matching pull requests to `main`,
+relevant branch pushes, and manual dispatch. Its three visible checks are:
+
+- **Lint**: frontend ESLint, backend Ruff, and the 150-line handwritten-file limit.
+- **Tests**: automated frontend and backend test suites using disposable databases.
+- **Build**: Vite's production frontend build.
+
+The workflow has read-only repository permissions, time limits and cancellation
+of superseded runs. It does not deploy or merge. Branch protection can separately
+require these checks; this workflow alone does not enforce merge restrictions.
