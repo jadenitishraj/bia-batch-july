@@ -1,6 +1,7 @@
 __pycache__/
 data/
-.coverage*
+.coverage
+.coverage.*
 htmlcov/
 node_modules/
 dist/
