@@ -6,7 +6,7 @@
 - Keep `frontend/` and `backend/` separate. Frontend uses Vite; backend uses Python
   and SQLite. Do not add a chatbot, AI provider, login or cloud service unless asked.
 - Keep the original `travel-planner/` app and unrelated work untouched.
-- The current app is single-user and local-only. Do not imply production readiness.
+- The app uses local JWT login and per-account trips. Do not imply production readiness.
 
 ## Readability and file size
 
@@ -44,7 +44,7 @@
 - Never log secrets or return tracebacks/database internals to clients.
 - Keep request-size limits, loopback binding and browser-origin checks intact.
 - Do not disable security checks to make an integration pass; test the valid path.
-- If authentication is added later, enforce ownership on every protected server action.
+- Require a verified JWT and enforce ownership on every protected trip operation.
 
 ## Tests and verification
 

@@ -13,3 +13,5 @@ coverage.json
 .env
 .env.*
 !.env.example
+
+*.jwt-key

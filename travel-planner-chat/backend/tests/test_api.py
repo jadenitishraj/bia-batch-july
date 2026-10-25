@@ -19,7 +19,10 @@ class ApiTests(unittest.TestCase):
     def setUp(self):
         self.folder = tempfile.TemporaryDirectory()
         self.path = Path(self.folder.name) / 'data' / 'trips.db'
+        self.token = None
         self.start_server()
+        self.token = self.data('POST', '/api/auth/register', {
+            'email': 'class@example.com', 'password': 'class-test-password'})[1]['access_token']
 
     def start_server(self):
         self.server = create_server(0, self.path)
@@ -39,7 +42,9 @@ class ApiTests(unittest.TestCase):
     def call(self, method='GET', path='/api/trips', body=None, raw=None, headers=None):
         content = json.dumps(body).encode() if body is not None else raw
         request = Request(self.base + path, data=content, method=method,
-                          headers=headers or {'Content-Type': 'application/json'})
+                          headers={'Content-Type': 'application/json',
+                                   **({'Authorization': 'Bearer ' + self.token} if self.token else {}),
+                                   **(headers or {})})
         try:
             response = urlopen(request)
         except HTTPError as error:
