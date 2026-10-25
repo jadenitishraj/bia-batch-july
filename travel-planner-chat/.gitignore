@@ -1,0 +1,11 @@
+__pycache__/
+data/
+.coverage
+.coverage.*
+htmlcov/
+node_modules/
+dist/
+.venv/
+.ruff_cache/
+coverage/
+coverage.json

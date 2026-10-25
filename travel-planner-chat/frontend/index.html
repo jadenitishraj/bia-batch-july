@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Travel Planner Chat</title>
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+  <header><a href="/">travel planner<span>.</span></a><button id="new-trip">+ New trip</button></header>
+  <div class="workspace">
+    <aside aria-label="Saved trips"><h2>My Plans</h2><p id="list-status" role="status"></p><nav id="trip-list" aria-label="Trip list"></nav><button id="retry" hidden>Retry</button></aside>
+    <main id="main" tabindex="-1">
+      <p id="notice" role="status" aria-live="polite"></p>
+      <section id="empty"><p class="eyebrow">YOUR NEXT ADVENTURE</p><h1>A little plan.<br>A world of possibility.</h1><p>Create your first trip and write a day-by-day plan.</p><button id="first-trip">Create a trip</button></section>
+      <article id="trip" hidden><p class="eyebrow" id="destination"></p><h1 id="trip-title"></h1><p id="metadata"></p><div class="actions"><button id="edit" class="secondary">Edit plan</button><button id="delete" class="quiet">Delete</button></div><div id="plan"></div></article>
+    </main>
+  </div>
+  <dialog id="editor" aria-labelledby="editor-title">
+    <form id="trip-form">
+      <div class="dialog-heading"><h2 id="editor-title">Create a trip</h2><button type="button" id="close-editor" class="quiet" aria-label="Close editor">✕</button></div>
+      <label>Trip title<input name="title" required maxlength="100" placeholder="A relaxed Singapore escape"></label>
+      <label>Destination<input name="destination" required maxlength="100" placeholder="Singapore"></label>
+      <div class="fields"><label>Days<input name="days" type="number" min="1" max="365" value="4" required></label><label>Travelers<input name="travelers" type="number" min="1" max="100" value="2" required></label><label>Budget (₹)<input name="budget" type="number" min="0" max="100000000" value="0" required></label></div>
+      <label>Your plan<textarea name="plan" rows="8" required maxlength="20000" placeholder="Day 1 — Arrive and unwind&#10;Write your plans here.&#10;&#10;Day 2 — Explore the city&#10;Add another paragraph."></textarea></label>
+      <p id="form-error" role="alert"></p><div class="dialog-actions"><button type="button" id="cancel-editor" class="secondary">Cancel</button><button type="submit" id="save">Save trip</button></div>
+    </form>
+  </dialog>
+  <dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Delete this trip?</h2><p>The saved plan will be removed from this local app.</p><p id="delete-error" role="alert"></p><div class="dialog-actions"><button id="cancel-delete" class="secondary">Keep trip</button><button id="confirm-delete">Delete trip</button></div></dialog>
+</body>
+</html>
