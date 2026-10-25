@@ -1,20 +1,20 @@
 # Travel Planner Chat — classroom CRUD starter
 
-A fresh single-user app for manually creating, viewing, editing and deleting trip
-plans. Day headings and paragraphs are plain text. No chatbot or AI integration.
+A classroom app with JWT login for creating, viewing, editing and deleting your trip
+plans. Day headings and paragraphs are plain text. No chatbot or AI integration. See [AUTH.md](AUTH.md) for login and Postman examples.
 
 ## Two folders
-
 - `frontend/`: Vite with HTML, CSS and JavaScript. React is not required for this
   first CRUD lesson.
 - `backend/`: Python standard-library HTTP API and SQLite storage.
 
 ## Start the backend
 
-Python 3.9 or later, no Python packages to install:
+Python 3.10 or later. Install the small authentication dependencies first:
 
 ```sh
 cd travel-planner-chat/backend
+python3 -m pip install -r requirements.txt
 python3 app.py
 ```
 
@@ -32,7 +32,7 @@ npm run dev
 ```
 
 Open http://127.0.0.1:5175/. Vite forwards `/api` requests to the Python backend.
-Stop each server with Ctrl+C. Keep the backend port and Vite proxy consistent.
+Stop each server with Ctrl+C.
 
 ## Read the code
 
@@ -54,7 +54,7 @@ JSON errors have an `error` message. Create/update require all six fields:
 
 | Method | Path | Result |
 | --- | --- | --- |
-| GET | `/api/trips` | 200, all trips, newest edits first |
+| GET | `/api/trips` | 200, your trips, newest edits first |
 | POST | `/api/trips` | 201, created trip |
 | GET | `/api/trips/{id}` | 200, trip or 404 |
 | PUT | `/api/trips/{id}` | 200, replaced trip or 404 |
@@ -80,9 +80,9 @@ npm run test:coverage
 npm run build
 ```
 
-HTTP tests use temporary databases. This app deliberately has no login and binds
-to loopback only: it is a local classroom starter, not a public multi-user service.
-No cloud resources, credentials, photos or existing app code are required.
+HTTP tests use temporary databases. All trip routes require a JWT Bearer token and
+filter by account ownership. The app binds to loopback for classroom use. Read
+[AUTH.md](AUTH.md) for token lifetime, account setup and legacy-data preservation.
 
 Frontend tests exercise real DOM events and rendering, with simulated HTTP responses
 for success and failure states. They do not replace real Python/SQLite integration
@@ -91,7 +91,7 @@ methods are shimmed because native modal behavior requires an actual browser.
 
 ## Python linting
 
-Runtime still uses only Python's standard library. Ruff is a development tool.
+Runtime uses PyJWT and python-dotenv. Ruff is a development tool.
 From `travel-planner-chat/`:
 
 ```sh

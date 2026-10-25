@@ -7,8 +7,18 @@
   <script type="module" src="/src/main.js"></script>
 </head>
 <body>
-  <header><a href="/">travel planner<span>.</span></a><button id="new-trip">+ New trip</button></header>
-  <div class="workspace">
+  <header><a href="/">travel planner<span>.</span></a><div class="account-actions"><span id="account"></span><button id="logout" class="secondary" hidden>Log out</button><button id="new-trip" hidden>+ New trip</button></div></header>
+  <section id="auth-panel" aria-labelledby="auth-title">
+    <p class="eyebrow">YOUR TRIPS, YOUR ACCOUNT</p><h1 id="auth-title">Welcome back.</h1>
+    <p>Log in to view and save your travel plans.</p>
+    <form id="auth-form">
+      <label>Email<input id="auth-email" name="email" type="email" autocomplete="username" maxlength="254" required></label>
+      <label>Password<input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required></label>
+      <label class="register-option"><input id="register-account" type="checkbox"> Create a new account</label>
+      <p id="auth-error" role="alert"></p><button id="auth-submit" type="submit">Continue</button>
+    </form><p class="auth-note">Your login lasts up to one hour. Refreshing this classroom app signs you out.</p>
+  </section>
+  <div class="workspace" id="workspace" hidden>
     <aside aria-label="Saved trips"><h2>My Plans</h2><p id="list-status" role="status"></p><nav id="trip-list" aria-label="Trip list"></nav><button id="retry" hidden>Retry</button></aside>
     <main id="main" tabindex="-1">
       <p id="notice" role="status" aria-live="polite"></p>

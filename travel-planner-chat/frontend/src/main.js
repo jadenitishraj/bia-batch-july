@@ -1,6 +1,7 @@
 import './style.css';
 import { request } from './api.js';
 import { renderTrips } from './trip-view.js';
+import { setupAuth } from './auth.js';
 
 const $ = (selector) => document.querySelector(selector);
 let trips = [];
@@ -97,4 +98,13 @@ $('#confirm-delete').onclick = async () => {
     $('#confirm-delete').disabled = false;
   }
 };
-loadTrips();
+setupAuth(() => loadTrips(null), () => {
+  trips = [];
+  selectedId = null;
+  editingId = null;
+  $('#notice').textContent = '';
+  for (const id of ['#trip-title', '#destination', '#metadata', '#plan']) {$(id).textContent = '';}
+  $('#editor').close();
+  $('#delete-dialog').close();
+  render();
+});
