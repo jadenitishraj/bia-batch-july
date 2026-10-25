@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Travel Planner: Taxonomy and RACI</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600;9..144,800;9..144,900&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Inter+Tight:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#09090e;--ink:#f4f1ea;--ink-dim:#aba7b9;--ink-faint:#5f5a72;
+  --sky:#0ea5e9;--emerald:#10b981;--indigo:#6366f1;--violet:#8b5cf6;--amber:#f59e0b;--rose:#f43f5e;--teal:#2dd4bf;--cyan:#22d3ee;
+  --card-bg:rgba(255,255,255,.03);--card-border:rgba(255,255,255,.08);--panel:rgba(255,255,255,.02);--accent:#2dd4bf;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter Tight',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;overflow-x:hidden;background-color:#08080c;
+  background-image:radial-gradient(circle at 12% 45%, rgba(45,212,191,.07), transparent 26%),radial-gradient(circle at 88% 28%, rgba(139,92,246,.07), transparent 26%);
+  background-attachment:fixed;
+}
+.container{max-width:1180px;margin:0 auto;padding:0 32px;position:relative;z-index:2}
+.display{font-family:'Fraunces',serif;font-weight:900;letter-spacing:-.04em;line-height:.95}
+.label{font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--ink-dim)}
+
+/* sitenav */
+.sitenav{position:sticky;top:0;z-index:120;background:rgba(8,8,12,.93);backdrop-filter:blur(16px);border-bottom:1px solid var(--card-border)}
+.sitenav-inner{max-width:1180px;margin:0 auto;padding:12px 32px;display:flex;align-items:center;gap:18px}
+.brand{font-family:'Fraunces',serif;font-weight:800;font-size:16px;letter-spacing:-.02em;color:var(--ink);text-decoration:none;white-space:nowrap}
+.brand em{font-style:italic;font-weight:300;color:var(--teal)}
+.nav-spacer{flex:1}
+.nav-prevnext{display:flex;gap:8px}
+.nav-prevnext a,.nav-prevnext button,.home-link{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:8px 12px;border:1px solid var(--card-border);border-radius:5px;color:var(--ink-dim);text-decoration:none;transition:all .18s;background:transparent;cursor:pointer}
+.nav-prevnext a:hover,.nav-prevnext button:hover,.home-link:hover{color:#fff;border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.home-link{white-space:nowrap;flex:0 0 auto}
+.nav-prevnext .disabled{opacity:.3;pointer-events:none}
+.dropdown{position:relative}
+.dropbtn{font:600 12px 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;padding:9px 14px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:6px;color:#c7f5ee;cursor:pointer;display:flex;align-items:center;gap:8px}
+.dropbtn .chev{transition:transform .2s}
+.dropdown.open .chev{transform:rotate(180deg)}
+.dropmenu{position:absolute;top:calc(100% + 8px);left:0;min-width:420px;max-height:70vh;overflow-y:auto;background:#0b0b12;border:1px solid color-mix(in srgb,var(--accent) 30%,var(--card-border));border-radius:10px;padding:8px;box-shadow:0 24px 70px rgba(0,0,0,.6);display:none;z-index:130}
+.dropdown.open .dropmenu{display:block;animation:fadeIn .2s ease}
+.dropmenu a{display:flex;gap:12px;align-items:baseline;padding:10px 12px;border-radius:7px;text-decoration:none;color:var(--ink-dim);transition:all .15s;cursor:pointer}
+.dropmenu a:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.dropmenu a.cur{background:color-mix(in srgb,var(--accent) 16%,transparent);color:#fff}
+.dropmenu a .dn{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;color:var(--teal);flex:0 0 26px}
+.dropmenu a .dt{font-size:14.5px;font-weight:400;line-height:1.3}
+.dropmenu .part{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);padding:12px 12px 6px}
+
+/* progress rail */
+.rail{height:2px;background:rgba(255,255,255,.05)}
+.rail-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--violet));width:0;transition:width .35s ease}
+
+/* hero */
+.hero{min-height:82vh;display:flex;flex-direction:column;justify-content:center;padding:70px 0 60px;position:relative}
+.hero .stage-num{font-family:'Fraunces',serif;font-style:italic;font-weight:300;font-size:14px;color:var(--ink-faint);margin-bottom:24px}
+.hero h1{font-size:clamp(40px,7.4vw,84px);margin-bottom:26px;background:linear-gradient(135deg,var(--teal),var(--sky),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.hero h1 em{font-style:italic;font-weight:300;color:var(--ink);-webkit-text-fill-color:var(--ink)}
+.hero .sub{font-size:clamp(18px,2.2vw,22px);max-width:880px;color:var(--ink-dim);margin-bottom:44px;font-weight:300}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:1040px}
+.stat{border-left:2px solid var(--card-border);padding-left:16px}
+.stat .num{font-family:'Fraunces',serif;font-size:32px;font-weight:800;letter-spacing:-.03em}
+.stat .label{margin-top:4px}
+
+/* slide transitions */
+.slide{display:none}
+.slide.active{display:block;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.stage{padding:60px 0 80px;border-top:1px solid var(--card-border)}
+.stage-header{display:grid;grid-template-columns:80px 1fr;gap:24px;margin-bottom:34px;align-items:start}
+.stage-num-big{font-family:'Fraunces',serif;font-style:italic;font-size:56px;line-height:1;color:var(--accent);font-weight:300}
+.stage-title{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;line-height:1.08;margin-bottom:12px}
+.stage-kicker{font-size:17px;color:var(--ink-dim);font-weight:300;max-width:880px}
+
+/* prose */
+.body-wrap{display:grid;grid-template-columns:80px 1fr;gap:24px}
+.prose{max-width:940px}
+.prose h3{font-family:'Fraunces',serif;font-weight:800;font-size:24px;letter-spacing:-.02em;margin:34px 0 14px;color:var(--ink)}
+.prose h3:first-child{margin-top:0}
+.prose h4{font:700 12px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:28px 0 12px}
+.prose p{font-size:16.5px;color:var(--ink-dim);font-weight:300;line-height:1.72;margin-bottom:15px}
+.prose p strong{color:var(--ink);font-weight:600}
+.prose ul{list-style:none;margin:6px 0 18px}
+.prose li{font-size:16px;color:var(--ink-dim);font-weight:300;line-height:1.65;padding-left:22px;position:relative;margin-bottom:9px}
+.prose li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:700}
+.prose li strong{color:var(--ink);font-weight:600}
+code.inl{font-family:'JetBrains Mono',monospace;font-size:13.5px;background:rgba(45,212,191,.13);border:1px solid rgba(45,212,191,.24);border-radius:4px;padding:2px 6px;color:#b8f0e8}
+
+/* callouts */
+.callout{border-radius:8px;padding:18px 20px;margin:22px 0;border:1px solid;backdrop-filter:blur(8px);font-size:15.5px;font-weight:300;line-height:1.65}
+.callout .co-tag{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.callout p{margin:0 0 8px;font-size:15.5px;color:var(--ink-dim)}
+.callout p:last-child{margin-bottom:0}
+.callout strong{color:var(--ink);font-weight:600}
+.co-note{background:rgba(14,165,233,.06);border-color:rgba(14,165,233,.28)}.co-note .co-tag{color:var(--sky)}
+.co-win{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.28)}.co-win .co-tag{color:var(--emerald)}
+.co-trap{background:rgba(244,63,94,.07);border-color:rgba(244,63,94,.3)}.co-trap .co-tag{color:var(--rose)}
+.co-cost{background:rgba(245,158,11,.07);border-color:rgba(245,158,11,.3)}.co-cost .co-tag{color:var(--amber)}
+
+/* pairs (comparison) */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0 12px}
+.pcard{background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-radius:9px;overflow:hidden;display:flex;flex-direction:column}
+.pcard.bad{border-top:3px solid var(--rose)}
+.pcard.good{border-top:3px solid var(--emerald)}
+.p-head{display:flex;align-items:center;gap:9px;padding:13px 16px 11px;border-bottom:1px solid var(--card-border)}
+.p-sig{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:700 12px 'JetBrains Mono',monospace;flex:0 0 auto}
+.pcard.bad .p-sig{background:rgba(244,63,94,.16);border:1px solid rgba(244,63,94,.42);color:var(--rose)}
+.pcard.good .p-sig{background:rgba(16,185,129,.14);border:1px solid rgba(16,185,129,.4);color:var(--emerald)}
+.p-lab{font:700 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}
+.pcard.bad .p-lab{color:var(--rose)}
+.pcard.good .p-lab{color:var(--emerald)}
+.p-sub{font:400 12px 'Inter Tight',sans-serif;color:var(--ink-faint);margin-left:auto;text-align:right}
+.p-prompt{margin:0;padding:16px 18px;background:rgba(255,255,255,.012);overflow-x:auto}
+.p-prompt code{font-family:'JetBrains Mono',monospace;font-size:12.6px;line-height:1.72;color:#cfd3e0;white-space:pre-wrap}
+.p-why{padding:14px 18px;border-top:1px solid var(--card-border);font-size:13.8px;color:var(--ink-dim);font-weight:300;line-height:1.6}
+.p-why strong{color:var(--ink);font-weight:600}
+
+/* code cards & grids */
+.code-cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.code-card{display:flex;align-items:center;gap:13px;background:rgba(13,13,20,.7);border:1px solid var(--card-border);border-left:3px solid var(--teal);border-radius:6px;padding:16px 18px;cursor:pointer;transition:all .18s}
+.code-card:hover{background:rgba(255,255,255,.05);transform:translateY(-2px);border-left-color:var(--emerald)}
+.code-card .cc-ico{font:700 14px 'JetBrains Mono',monospace;color:var(--teal);flex:0 0 auto}
+.code-card .cc-t{font-size:15px;color:var(--ink);font-weight:500;line-height:1.3}
+.code-card .cc-s{font:600 10px 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-top:2px}
+.code-card .cc-go{margin-left:auto;font:700 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);flex:0 0 auto}
+.code-card:hover .cc-go{color:var(--emerald)}
+
+.vocab-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:18px 0 8px}
+.vocab{background:var(--card-bg);border:1px solid var(--card-border);border-left:3px solid var(--accent);border-radius:6px;padding:16px 18px}
+.vocab .vt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13.5px;color:#b8f0e8;margin-bottom:6px}
+.vocab .vd{font-size:14.5px;color:var(--ink-dim);font-weight:300;line-height:1.55}
+
+/* codeblock */
+.codeblock{background:#0c0c13;border:1px solid var(--card-border);border-radius:8px;margin:20px 0;overflow:hidden}
+.cb-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--card-border);background:rgba(255,255,255,.02)}
+.cb-t{font:700 11px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.cb-lang{font:600 10px 'JetBrains Mono',monospace;color:var(--ink-faint);text-transform:uppercase}
+.cb-body{padding:16px 18px;margin:0;overflow-x:auto}
+.cb-body code{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.75;color:#d8deea;white-space:pre-wrap}
+.cb-body .kw{color:#c678dd;font-weight:600}
+.cb-body .fn{color:#61afef}
+.cb-body .str{color:#98c379}
+.cb-body .cm{color:#5c6370;font-style:italic}
+.cb-body .op{color:#56b6c2;font-weight:700}
+.cb-body .cls{color:#e5c07b}
+
+/* visual diagram box */
+.diagram-box{background:rgba(12,12,18,.8);border:1px solid var(--card-border);border-radius:10px;padding:24px;margin:22px 0;text-align:center}
+.diag-flow{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin:16px 0}
+.diag-node{background:rgba(45,212,191,.1);border:1px solid rgba(45,212,191,.35);padding:10px 16px;border-radius:6px;font:600 13px 'JetBrains Mono',monospace;color:#c7f5ee}
+.diag-node.hl{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.45);color:#dcd6ff}
+.diag-arr{color:var(--accent);font-weight:700;font-size:18px}
+
+/* pager */
+.pager{display:flex;justify-content:space-between;gap:14px;margin-top:48px;padding-top:28px;border-top:1px solid var(--card-border)}
+.pager button{background:var(--card-bg);border:1px solid var(--card-border);border-radius:8px;padding:12px 18px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;text-align:left;transition:all .18s}
+.pager button:hover:not(:disabled){background:rgba(255,255,255,.06);border-color:var(--accent)}
+.pager button.rt{margin-left:auto;text-align:right}
+.pager button:disabled{opacity:.25;cursor:default}
+.pager .pg-l{font:700 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:3px}
+.pager .pg-t{font-size:14px;font-weight:500}
+
+/* quiz */
+.quiz{background:rgba(13,13,20,.6);border:1px solid var(--card-border);border-radius:10px;padding:22px 24px;margin:24px 0}
+.q-title{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:14px}
+.opts{display:grid;gap:9px}
+.opt{background:rgba(255,255,255,.025);border:1px solid var(--card-border);border-radius:6px;padding:12px 16px;font-size:14.5px;color:var(--ink-dim);cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
+.opt:hover:not(:disabled){background:rgba(255,255,255,.06);color:var(--ink)}
+.opt.correct{background:rgba(16,185,129,.14)!important;border-color:rgba(16,185,129,.5)!important;color:#6ee7b7!important}
+.opt.wrong{background:rgba(244,63,94,.14)!important;border-color:rgba(244,63,94,.5)!important;color:#fda4af!important}
+.opt:disabled{cursor:default}
+.explain{margin-top:14px;font-size:14px;color:var(--ink-dim);display:none;line-height:1.6;border-top:1px dashed var(--card-border);padding-top:10px}
+.explain.show{display:block;animation:fadeIn .2s ease}
+
+/* table */
+.comp-table{width:100%;border-collapse:collapse;margin:22px 0;font-size:14.5px}
+.comp-table th,.comp-table td{border:1px solid var(--card-border);padding:12px 16px;text-align:left}
+.comp-table th{background:rgba(255,255,255,.04);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.comp-table tr:nth-child(even){background:rgba(255,255,255,.015)}
+
+.foot{text-align:center;padding:40px 0;color:var(--ink-faint);font-size:13px;border-top:1px solid var(--card-border);margin-top:40px}
+
+@media(max-width:820px){
+  .hero h1{font-size:38px}
+  .stage-header,.body-wrap{grid-template-columns:1fr;gap:12px}
+  .stage-num-big{font-size:36px}
+  .stats,.pair,.vocab-grid,.code-cards{grid-template-columns:1fr}
+  .container{padding:0 20px}
+  .sitenav-inner{padding:12px 20px}
+  .dropmenu{min-width:300px}
+}
+
+.prose{min-width:0;width:100%;overflow-x:auto}.compare{display:grid;grid-template-columns:1fr 1fr;gap:24px}.compare>div{min-width:0}pre{background:#101019;border:1px solid var(--card-border);padding:22px;border-radius:8px;overflow:auto;font:13px/1.65 'JetBrains Mono',monospace;white-space:pre;margin:12px 0 24px}h3{color:var(--teal)}.sources a,a{color:var(--teal)}.flow{font-size:24px;line-height:2;padding:24px 0;color:var(--teal)}.reveal{margin:18px 0;padding:18px;border-left:2px solid var(--teal)}summary{cursor:pointer;color:var(--ink);font-weight:600}button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--teal);outline-offset:4px}table{width:100%;border-collapse:collapse}td,th{padding:14px;text-align:left;border-bottom:1px solid var(--card-border);vertical-align:top}.foot{padding:24px;text-align:center;color:var(--ink-faint)}@media(max-width:760px){.compare{grid-template-columns:1fr}.dropmenu{min-width:0;width:min(85vw,420px)}.brand{display:none}.body-wrap,.stage-header{grid-template-columns:1fr}.stage-num-big{font-size:32px}.container{padding:0 20px}}@media print{.slide{display:block!important;break-before:page}.sitenav,.pager,.foot{display:none}body{background:white;color:black}.prose p,.prose li{color:#222}pre{white-space:pre-wrap;color:black;background:#eee}.stage{padding:20px 0}}
+
+.body-wrap{grid-template-columns:1fr}.body-wrap>div:first-child:empty{display:none}.prose{max-width:none}pre{font-size:14px;line-height:1.7}.compare h3{font-size:22px}.stage-kicker{font-weight:400}.prose p,.prose li{font-weight:400} .pager button:disabled{opacity:.3;cursor:default}
+
+.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+
+.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+
+.flowgraph{max-width:940px;margin:28px auto;text-align:center}.flowgraph>div,.workergrid>div{padding:16px;border:1px solid var(--card-border);border-radius:6px;background:var(--card-bg)}.flowgraph>span{display:block;padding:8px;color:var(--teal)}.workergrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.workergrid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.table-wrap{overflow:auto}td,th{min-width:140px}.compare pre{max-height:none;white-space:pre-wrap;overflow-wrap:anywhere}pre{tab-size:4}.stage-kicker{max-width:100%}
+pre{white-space:pre-wrap;overflow-wrap:anywhere} .sitenav-inner{flex-wrap:wrap} .stage-title{overflow-wrap:anywhere} .stage{min-height:80vh} .slide-count{font:12px monospace;color:var(--ink-dim)} @media(max-width:760px){.workergrid{grid-template-columns:1fr}.sitenav-inner{gap:8px}.nav-spacer{display:none}.nav-prevnext{margin-left:auto}}
+</style>
+</head><body><nav aria-label="Presentation" class="sitenav"><div class="sitenav-inner"><a class="brand" href="index.html">BIA <em>Teaching decks</em></a><a class="home-link" href="index.html">Home</a><div class="dropdown" id="chDrop"><button aria-expanded="false" class="dropbtn" id="chDropBtn">Chapters ▾</button><div class="dropmenu" id="dropMenu"></div></div><div class="nav-spacer"></div><div class="nav-prevnext"><button id="btnPrev">← Prev</button><button id="btnNext">Next →</button></div></div><div class="rail"><div class="rail-fill" id="railFill"></div></div></nav>
+<section class="slide active" data-title="Travel Planner: Taxonomy and RACI"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">01</div><div><h1 class="stage-title">Travel Planner: Taxonomy and RACI</h1><p class="stage-kicker">The existing LangGraph project, with an inspectable responsibility map</p></div></div><div class="body-wrap"><div></div><div class="prose"><p>One trip request, a Manager, selected specialists, a Critic and a final plan. This lesson explains the new teaching notebook using the project students already know.</p><p><a href="../travel-planner/notebooks/travel_planner_langgraph_raci_teaching.ipynb">Open the teaching notebook</a></p><ul><li>What RACI means and why it exists</li><li>How the matrix changes with the selected team</li><li>How declared ownership differs from observed execution</li></ul></div></div></div></div></section>
+<section class="slide" data-title="The familiar travel workflow"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">02</div><div><h1 class="stage-title">The familiar travel workflow</h1><p class="stage-kicker">The business flow stays the same</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="flowgraph"><div>Manager: understand request and select workers</div><span>Selected specialists run concurrently</span><div class="workergrid"><div>Flight Agent</div><div>Hotel Agent</div><div>Activity Agent</div></div><span>Reports join at synthesis</span><div>Manager draft</div><span>Review</span><div>Critic findings</div><span>Keep or revise once</span><div>Manager final plan</div></div><p>RACI adds a map and an execution record. LangGraph still schedules the nodes.</p></div></div></div></div></section>
+<section class="slide" data-title="Why a responsibility map helps"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">03</div><div><h1 class="stage-title">Why a responsibility map helps</h1><p class="stage-kicker">A budget problem can involve several agents</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table class="comp-table"><thead><tr><th scope="col">Question</th><th scope="col">Example</th></tr></thead><tbody><tr><td>Who calculates hotel stay cost?</td><td>Hotel Agent</td></tr><tr><td>Who combines the whole plan?</td><td>Manager</td></tr><tr><td>Who checks the draft?</td><td>Critic Agent</td></tr><tr><td>Who handles the fixes?</td><td>Manager</td></tr></tbody></table></div><p>A matrix makes these expectations explicit during teaching, debugging and review. It does not automatically improve the answer.</p></div></div></div></div></section>
+<section class="slide" data-title="The four RACI roles"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">04</div><div><h1 class="stage-title">The four RACI roles</h1><p class="stage-kicker">One task can involve several kinds of participation</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table class="comp-table"><thead><tr><th scope="col">Letter</th><th scope="col">Meaning</th><th scope="col">Travel example</th></tr></thead><tbody><tr><td>R</td><td>Responsible: performs the task</td><td>Hotel Agent researches hotels</td></tr><tr><td>A</td><td>Accountable: owns the outcome</td><td>Manager owns the assembled plan</td></tr><tr><td>C</td><td>Consulted: supplies input</td><td>Manager requirements guide the specialist</td></tr><tr><td>I</td><td>Informed: receives the outcome</td><td>User receives the final output</td></tr></tbody></table></div></div></div></div></div></section>
+<section class="slide" data-title="Responsible and accountable"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">05</div><div><h1 class="stage-title">Responsible and accountable</h1><p class="stage-kicker">The specialist performs the work; the Manager owns the combined result</p></div></div><div class="body-wrap"><div></div><div class="prose"><p>For hotel research, the Hotel Agent is responsible. The Manager is accountable within this teaching model because it consumes the report and assembles the plan.</p><p>For draft review, the Critic is responsible. The Manager owns the response to that review. Naming an AI agent accountable does not transfer real-world liability away from people.</p><p>A real product still needs a human owner and explicit approval rules.</p></div></div></div></div></section>
+<section class="slide" data-title="Taxonomy, selection, RACI and execution"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">06</div><div><h1 class="stage-title">Taxonomy, selection, RACI and execution</h1><p class="stage-kicker">Four separate questions</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table class="comp-table"><thead><tr><th scope="col">Layer</th><th scope="col">Question</th><th scope="col">Implemented by</th></tr></thead><tbody><tr><td>Taxonomy</td><td>Which roles exist?</td><td>TAXONOMY and print_taxonomy</td></tr><tr><td>Team selection</td><td>Which workers does this request need?</td><td>manager_node</td></tr><tr><td>RACI</td><td>Who performs and owns each task?</td><td>RACIEntry and build_raci</td></tr><tr><td>Execution</td><td>Which steps actually run?</td><td>LangGraph edges and result tracking</td></tr></tbody></table></div></div></div></div></div></section>
+<section class="slide" data-title="What this notebook adds"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">07</div><div><h1 class="stage-title">What this notebook adds</h1><p class="stage-kicker">The implementation has several connected pieces</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table class="comp-table"><thead><tr><th scope="col">Addition</th><th scope="col">Purpose</th></tr></thead><tbody><tr><td>TAXONOMY + print_taxonomy</td><td>Print available roles, missions and tools</td></tr><tr><td>RACIEntry</td><td>Represent one responsibility row</td></tr><tr><td>build_raci + print_raci</td><td>Build and display the selected team matrix</td></tr><tr><td>raci_entries in state</td><td>Carry the matrix with this run</td></tr><tr><td>with_raci</td><td>Add ownership to a completed task result</td></tr><tr><td>execution_log + reducer</td><td>Collect completed steps from parallel workers</td></tr></tbody></table></div></div></div></div></div></section>
+<section class="slide" data-title="The taxonomy table"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">08</div><div><h1 class="stage-title">The taxonomy table</h1><p class="stage-kicker">Existing travel roles replace the research notebook roles</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>def print_taxonomy():
+    table = Table(title=&quot;TRAVEL TEAM TAXONOMY&quot;, show_lines=True)
+    for column in (&quot;Role&quot;, &quot;Mission&quot;, &quot;Selection&quot;, &quot;Allowed tools&quot;):
+        table.add_column(column)
+    for key, info in TAXONOMY.items():
+        tools = &quot;, &quot;.join(t.name for t in TOOL_REGISTRY.get(key, [])) or &quot;None&quot;
+        table.add_row(info[&quot;label&quot;], info[&quot;mission&quot;],
+                      &quot;Always&quot; if info[&quot;always&quot;] else &quot;Manager selects&quot;, tools)
+    console.print(table)</code></pre></div><p>The catalog contains Manager, Flight Agent, Hotel Agent, Activity Agent and Critic Agent. Tool names come directly from TOOL_REGISTRY. Printing this table makes no model call.</p></div></div></div></div></section>
+<section class="slide" data-title="One RACI row"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">09</div><div><h1 class="stage-title">One RACI row</h1><p class="stage-kicker">The same dataclass pattern as the research notebook</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>@dataclass(frozen=True)
+class RACIEntry:
+    task: str
+    responsible: str
+    accountable: str
+    consulted: str = &quot;&quot;
+    informed: str = &quot;User (through final output)&quot;</code></pre></div><p>A row describes a task, its performer, its owner, its inputs and its intended recipient. frozen=True prevents accidental mutation of the row object.</p></div></div></div></div></section>
+<section class="slide" data-title="Worker tasks have explicit names"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">10</div><div><h1 class="stage-title">Worker tasks have explicit names</h1><p class="stage-kicker">The matrix uses the same worker IDs as the graph</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>WORKER_TASKS = {&#x27;flight_agent&#x27;: &#x27;Research flights&#x27;, &#x27;hotel_agent&#x27;: &#x27;Research hotels&#x27;, &#x27;activity_agent&#x27;: &#x27;Plan activities and meals&#x27;}</code></pre></div><p>The IDs match the Manager selection and graph node names. RACI introduces no extra model agents.</p></div></div></div></div></section>
+<section class="slide" data-title="build_raci validates the selected team"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">11</div><div><h1 class="stage-title">build_raci validates the selected team</h1><p class="stage-kicker">Unknown names fail; repeated names produce one row</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>def build_raci(workers):
+    unknown = set(workers) - set(WORKER_TASKS)
+    if unknown:
+        raise ValueError(f&quot;Unknown workers: {sorted(unknown)}&quot;)
+    selected = list(dict.fromkeys(workers))
+    if not selected:
+        raise ValueError(&quot;Select at least one travel specialist.&quot;)
+    rows = [RACIEntry(&quot;Understand request and select team&quot;, &quot;Manager&quot;, &quot;Manager&quot;)]
+    for worker in selected:
+        rows.append(RACIEntry(WORKER_TASKS[worker], TAXONOMY[worker][&quot;label&quot;],
+                              &quot;Manager&quot;, consulted=&quot;Manager requirements&quot;))
+    consulted = &quot;, &quot;.join(TAXONOMY[worker][&quot;label&quot;] for worker in selected)
+    rows.extend([</code></pre></div><p>Empty selections and unknown workers raise ValueError. dict.fromkeys preserves selection order while removing duplicates. The original Manager falls back to all workers if its response contains no valid names.</p></div></div></div></div></section>
+<section class="slide" data-title="build_raci adds synthesis and review"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">12</div><div><h1 class="stage-title">build_raci adds synthesis and review</h1><p class="stage-kicker">Only selected specialists become consulted inputs</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>        RACIEntry(&quot;Synthesize draft&quot;, &quot;Manager&quot;, &quot;Manager&quot;, consulted),
+        RACIEntry(&quot;Review draft&quot;, &quot;Critic Agent&quot;, &quot;Manager&quot;, &quot;Manager draft and requirements&quot;),
+        RACIEntry(&quot;Revise or keep plan&quot;, &quot;Manager&quot;, &quot;Manager&quot;, &quot;Critic Agent&quot;),
+    ])
+    return rows</code></pre></div><p>The Manager performs synthesis and revision. The Critic performs review. These rows describe the existing sequence rather than adding another review cycle.</p></div></div></div></div></section>
+<section class="slide" data-title="print_raci displays the matrix"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">13</div><div><h1 class="stage-title">print_raci displays the matrix</h1><p class="stage-kicker">The table is readable during a live class</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>def print_raci(entries):
+    table = Table(title=&quot;RACI — SELECTED TRAVEL TEAM&quot;, show_lines=True)
+    for column in (&quot;Task&quot;, &quot;R: Responsible&quot;, &quot;A: Accountable&quot;, &quot;C: Consulted&quot;, &quot;I: Informed&quot;):
+        table.add_column(column)
+    for entry in entries:
+        table.add_row(entry.task, entry.responsible, entry.accountable,
+                      entry.consulted or &quot;—&quot;, entry.informed)
+    console.print(table)</code></pre></div><p>Rich formats the five columns. An empty consulted field displays a dash. This function does not call agents or send notifications.</p></div></div></div></div></section>
+<section class="slide" data-title="A flight-only matrix"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">14</div><div><h1 class="stage-title">A flight-only matrix</h1><p class="stage-kicker">Illustrative deterministic output for one selected specialist</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table class="comp-table"><thead><tr><th scope="col">Task</th><th scope="col">R</th><th scope="col">A</th><th scope="col">C</th></tr></thead><tbody><tr><td>Understand request and select team</td><td>Manager</td><td>Manager</td><td>—</td></tr><tr><td>Research flights</td><td>Flight Agent</td><td>Manager</td><td>Manager requirements</td></tr><tr><td>Synthesize draft</td><td>Manager</td><td>Manager</td><td>Flight Agent</td></tr><tr><td>Review draft</td><td>Critic Agent</td><td>Manager</td><td>Manager draft and requirements</td></tr><tr><td>Revise or keep plan</td><td>Manager</td><td>Manager</td><td>Critic Agent</td></tr></tbody></table></div><p>The I column is User through final output for every row. Hotel and Activity research rows are absent.</p></div></div></div></div></section>
+<section class="slide" data-title="State carries the matrix and trace"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">15</div><div><h1 class="stage-title">State carries the matrix and trace</h1><p class="stage-kicker">The new fields belong to one graph invocation</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>raci_entries: list[RACIEntry]
+execution_log: Annotated[list[dict[str, str]], operator.add]</code></pre></div><p>The Manager writes the matrix once. Every completed node contributes one log record. Each worker still owns its separate report field.</p></div></div></div></div></section>
+<section class="slide" data-title="Why the execution log needs a reducer"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">16</div><div><h1 class="stage-title">Why the execution log needs a reducer</h1><p class="stage-kicker">Multiple workers can write in one graph step</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>import operator
+from typing import Annotated
+
+execution_log: Annotated[list[dict[str, str]], operator.add]</code></pre></div><p>The append reducer combines worker records instead of replacing the shared list. Separate flight_report, hotel_report and activity_report fields avoid report conflicts.</p><p>The displayed list is a graph trace. Its parallel entries do not establish precise wall-clock completion order.</p></div></div></div></div></section>
+<section class="slide" data-title="with_raci is a plain function"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">17</div><div><h1 class="stage-title">with_raci is a plain function</h1><p class="stage-kicker">Pass the task name and its completed result</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>def with_raci(task_name, task_result):
+    &quot;&quot;&quot;Add the task&#x27;s ownership record to its normal result.&quot;&quot;&quot;
+    roles = NODE_ROLES[task_name]
+
+    if task_name == &quot;manager&quot;:
+        task_result[&quot;raci_entries&quot;] = build_raci(task_result[&quot;chosen_workers&quot;])
+        print_raci(task_result[&quot;raci_entries&quot;])
+
+    task_result[&quot;execution_log&quot;] = [{
+        &quot;step&quot;: task_name,
+        &quot;responsible&quot;: roles[&quot;responsible&quot;],
+        &quot;accountable&quot;: roles[&quot;accountable&quot;],
+        &quot;status&quot;: &quot;completed&quot;,
+    }]
+    return task_result</code></pre></div><p>The helper reads the named responsible and accountable fields, adds a completed record and returns the same result. It does not receive or return a function. The Manager also builds the selected-team matrix.</p></div></div></div></div></section>
+<section class="slide" data-title="Each node adds its own record"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">18</div><div><h1 class="stage-title">Each node adds its own record</h1><p class="stage-kicker">The task runs first, then the helper receives its result</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>def flight_node(state):
+    &quot;&quot;&quot;The flight agent works on its part.&quot;&quot;&quot;
+    # NEWLY ADDED: run only workers selected by the Manager.
+    if &quot;flight_agent&quot; not in state[&quot;chosen_workers&quot;]:
+        raise ValueError(&quot;flight_agent was not selected for this trip.&quot;)
+    report = ask(flight_agent, f&quot;Find flights for this trip.\n\n{state[&#x27;requirements&#x27;]}&quot;)
+    # NEWLY ADDED: add ownership details to this completed task.
+    return with_raci(&quot;flight_agent&quot;, {&quot;flight_report&quot;: report})</code></pre></div><p>The flight node checks selection before doing work. After ask returns the report, with_raci attaches ownership details. If the task raises an error, this return never executes and no completed record is added.</p></div></div></div></div></section>
+<section class="slide" data-title="Graph registration stays familiar"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">19</div><div><h1 class="stage-title">Graph registration stays familiar</h1><p class="stage-kicker">The graph still receives ordinary node functions</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>graph.add_node(&quot;manager&quot;, manager_node)
+graph.add_node(&quot;flight_agent&quot;, flight_node)
+graph.add_node(&quot;hotel_agent&quot;, hotel_node)
+graph.add_node(&quot;activity_agent&quot;, activity_node)
+graph.add_node(&quot;synthesis&quot;, synthesis_node)
+graph.add_node(&quot;critic&quot;, critic_node)
+graph.add_node(&quot;revision&quot;, revision_node)</code></pre></div><p>No wrapper appears in graph registration. The nodes call the plain helper themselves. Existing edges and selected-worker routing are unchanged.</p></div></div></div></div></section>
+<section class="slide" data-title="The runner returns the full state"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">20</div><div><h1 class="stage-title">The runner returns the full state</h1><p class="stage-kicker">The class can inspect both intent and execution</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code>result = travel_planner.invoke({&quot;request&quot;: request, &quot;execution_log&quot;: []})
+
+print_raci(result[&quot;raci_entries&quot;])
+print_execution_log(result[&quot;execution_log&quot;])
+return result</code></pre></div><p>This is an excerpt from plan_trip. The new copy fixes the original fina return typo. The caller receives final_plan together with requirements, reports, matrix and execution trace.</p></div></div></div></div></section>
+<section class="slide" data-title="One request through the new fields"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">21</div><div><h1 class="stage-title">One request through the new fields</h1><p class="stage-kicker">Illustrative state snapshots, not captured model output</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="codeblock"><div class="cb-head"><span class="cb-t">Notebook code</span><span class="cb-lang">Python</span></div><pre class="cb-body"><code># Initial input
+{&quot;request&quot;: &quot;Flights from Mumbai to Singapore&quot;, &quot;execution_log&quot;: []}
+
+# After Manager
+chosen_workers = [&quot;flight_agent&quot;]
+# raci_entries: five task rows
+# execution_log: one manager completion
+
+# After selected worker and downstream steps
+# completed steps: manager, flight_agent, synthesis, critic, revision</code></pre></div><p>The taxonomy contains all five roles. The active run includes only the needed specialist.</p></div></div></div></div></section>
+<section class="slide" data-title="What RACI does and does not enforce"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">22</div><div><h1 class="stage-title">What RACI does and does not enforce</h1><p class="stage-kicker">The implementation separates documentation from runtime checks</p></div></div><div class="body-wrap"><div></div><div class="prose"><div class="table-wrap"><table class="comp-table"><thead><tr><th scope="col">Implemented here</th><th scope="col">Not implied</th></tr></thead><tbody><tr><td>Selected-team matrix</td><td>Automatic correctness or legal accountability</td></tr><tr><td>Selection checks inside worker nodes</td><td>Full authorization system</td></tr><tr><td>Completed-node trace</td><td>Persistent audit storage or failure recovery</td></tr><tr><td>Critic followed by one revision</td><td>Second critic approval after revision</td></tr><tr><td>Intended user recipient</td><td>Automatic notifications</td></tr></tbody></table></div></div></div></div></div></section>
+<section class="slide" data-title="Validation and classroom exercise"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">23</div><div><h1 class="stage-title">Validation and classroom exercise</h1><p class="stage-kicker">The graph runs with deterministic model fixtures in local tests</p></div></div><div class="body-wrap"><div></div><div class="prose"><ul><li>All seven non-empty worker subsets execute through real LangGraph.</li><li>Synthesis runs once after the selected workers.</li><li>Matrix rows and completion records match the selected team.</li><li>Unknown workers, empty requests and negated critic phrases have regression checks.</li></ul><p>Live Colab with real OpenAI calls remains unverified. Fixtures are static travel data. API access and billing are required for live model runs.</p><p>Class exercise: compare a full trip with a flights-only request, then identify which rows and log entries disappear.</p></div></div></div></div></section>
+<section class="slide" data-title="Notebook and implementation references"><div class="container"><div class="stage"><div class="stage-header"><div class="stage-num-big">24</div><div><h1 class="stage-title">Notebook and implementation references</h1><p class="stage-kicker">The lesson links directly to its runnable source</p></div></div><div class="body-wrap"><div></div><div class="prose"><p><a href="../travel-planner/notebooks/travel_planner_langgraph_raci_teaching.ipynb">RACI teaching notebook</a><br><a href="../travel-planner/notebooks/travel_planner_langgraph_%281%29%20%282%29.ipynb">Original Travel Planner notebook</a><br><a href="../travel-planner/validation/test_raci_teaching_notebook.py">Local validation script</a><br><a href="https://docs.langchain.com/oss/python/langgraph/graph-api">LangGraph graph API and reducers</a></p><p>Taxonomy defines the roles. The Manager chooses workers. RACI describes responsibilities. LangGraph executes. The trace records completed steps.</p></div></div></div></div></section>
+<div class="foot">Generative &amp; Agentic AI Development · Boston Institute of Analytics</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')],menu=document.getElementById('dropMenu'),drop=document.getElementById('chDrop'),toggle=document.getElementById('chDropBtn');let cur=0;
+slides.forEach((s,i)=>{const a=document.createElement('a');a.href='#chapter-'+(i+1);a.textContent=String(i+1).padStart(2,'0')+'  '+s.dataset.title;a.onclick=e=>{e.preventDefault();go(i)};menu.append(a)});
+function go(i){if(i<0||i>=slides.length)return;slides[cur].classList.remove('active');cur=i;slides[cur].classList.add('active');[...menu.children].forEach((a,n)=>{a.classList.toggle('cur',n===i);a.setAttribute('aria-current',n===i?'page':'false')});document.getElementById('btnPrev').disabled=i===0;document.getElementById('btnNext').disabled=i===slides.length-1;document.getElementById('railFill').style.width=(i/(slides.length-1)*100)+'%';drop.classList.remove('open');toggle.setAttribute('aria-expanded','false');window.scrollTo(0,0)}
+document.getElementById('btnPrev').onclick=()=>go(cur-1);document.getElementById('btnNext').onclick=()=>go(cur+1);toggle.onclick=e=>{e.stopPropagation();drop.classList.toggle('open');toggle.setAttribute('aria-expanded',drop.classList.contains('open'))};document.addEventListener('click',()=>{drop.classList.remove('open');toggle.setAttribute('aria-expanded','false')});document.addEventListener('keydown',e=>{if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.key===' '&&['BUTTON','SUMMARY','A'].includes(e.target.tagName))return;if(['ArrowRight','ArrowLeft',' '].includes(e.key)){e.preventDefault();go(cur+(e.key==='ArrowLeft'?-1:1))}});go(0);
+</script></body></html>

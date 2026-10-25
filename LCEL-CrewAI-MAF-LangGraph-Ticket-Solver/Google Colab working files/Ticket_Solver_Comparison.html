@@ -1,28 +1,42 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>One ticket. Six approaches.</title><style>
 *{box-sizing:border-box}body{margin:0;background:#101813;color:#ecf0e5;font-family:Inter,system-ui,sans-serif}main{max-width:1400px;margin:auto;padding:48px 32px 64px}.eyebrow{font-size:11px;letter-spacing:.18em;color:#c9ed87;font-weight:700}h1{font-size:clamp(30px,4vw,52px);font-weight:550;letter-spacing:-.045em;margin:14px 0 10px}.sub{color:#aab9ae;font-size:15px;margin:0 0 32px}nav{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:28px}button{font:inherit;text-align:left;border:1px solid #38473c;background:#1a261e;color:#dbe4d5;border-radius:9px;padding:15px 12px;cursor:pointer;font-size:13px;font-weight:600}button span{display:block;font-size:10px;letter-spacing:.12em;color:#8c9d90;margin-bottom:8px}button:hover{border-color:#91b968}button[aria-selected=true]{background:#d6f59a;color:#162117;border-color:#d6f59a}button[aria-selected=true] span{color:#425638}button:focus-visible,a:focus-visible,pre:focus-visible{outline:3px solid #c9ed87;outline-offset:4px}.intro{display:flex;justify-content:space-between;gap:28px;align-items:center;margin-bottom:24px}h2{font-size:24px;font-weight:500;margin:0 0 10px}.intro p{font-size:14px;line-height:1.65;color:#b7c4b8;max-width:850px;margin:0}a{color:#c9ed87;font-size:12px;white-space:nowrap;text-underline-offset:4px}.codebar{display:flex;justify-content:space-between;gap:16px;background:#223027;border:1px solid #38473c;border-bottom:0;border-radius:10px 10px 0 0;padding:13px 20px;color:#adbeae;font-size:11px}pre{margin:0;background:#0c120f;border:1px solid #38473c;border-radius:0 0 10px 10px;padding:24px;overflow:auto;tab-size:4;line-height:1.7;font-size:13px;color:#dce6da}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.keyword{color:#c2adff}.string{color:#c9e79a}.comment{color:#8c9b90}.number{color:#efc58c}[hidden]{display:none!important}footer{font-size:11px;color:#8fa091;margin-top:22px}@media(max-width:850px){nav{grid-template-columns:repeat(3,1fr)}main{padding:30px 18px}.intro{display:block}.intro a{display:inline-block;margin-top:14px}.codebar{flex-direction:column;gap:6px}pre{padding:18px;font-size:12px}}@media(max-width:430px){nav{grid-template-columns:repeat(2,1fr)}}
-</style></head><body><main><div class="eyebrow">SAME PROBLEM · SIX IMPLEMENTATIONS</div><h1>One ticket. Six approaches.</h1><p class="sub">Choose a version to see its complete Python code.</p><nav role="tablist" aria-label="Ticket solver implementations"><button role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0" data-index="0"><span>01</span>LangChain LCEL</button><button role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1" data-index="1"><span>02</span>LangGraph</button><button role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-index="2"><span>03</span>Microsoft</button><button role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-index="3"><span>04</span>CrewAI Flow</button><button role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-index="4"><span>05</span>CrewAI Crew</button><button role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1" data-index="5"><span>06</span>CrewAI Manager</button></nav><section role="tabpanel" id="panel-0" aria-labelledby="tab-0" ><div class="intro"><div><h2>LangChain LCEL</h2><p>Small runnable steps are joined into a pipeline. Each step passes its result to the next.</p></div></div><div class="codebar"><span>Simple_LangChain_Ticket_Solver_Core_Only.py</span><span>Complete Python · 229 lines</span></div><pre tabindex="0" aria-label="Complete LangChain LCEL Python code"><code><span class="string">&quot;&quot;&quot;LangChain LCEL ticket solver.
+</style></head><body><main><div class="eyebrow">SAME PROBLEM · SIX IMPLEMENTATIONS</div><h1>One ticket. Six approaches.</h1><p class="sub">Choose a version to see its complete Python code.</p><nav role="tablist" aria-label="Ticket solver implementations"><button role="tab" id="tab-0" aria-controls="panel-0" aria-selected="true" tabindex="0" data-index="0"><span>01</span>LangChain LCEL</button><button role="tab" id="tab-1" aria-controls="panel-1" aria-selected="false" tabindex="-1" data-index="1"><span>02</span>LangGraph</button><button role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false" tabindex="-1" data-index="2"><span>03</span>Microsoft</button><button role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false" tabindex="-1" data-index="3"><span>04</span>CrewAI Flow</button><button role="tab" id="tab-4" aria-controls="panel-4" aria-selected="false" tabindex="-1" data-index="4"><span>05</span>CrewAI Crew</button><button role="tab" id="tab-5" aria-controls="panel-5" aria-selected="false" tabindex="-1" data-index="5"><span>06</span>CrewAI Manager</button></nav><section role="tabpanel" id="panel-0" aria-labelledby="tab-0" ><div class="intro"><div><h2>LangChain LCEL</h2><p>Small runnable steps are joined into a pipeline. Each step passes its result to the next.</p></div></div><div class="codebar"><span>Simple_LangChain_Ticket_Solver_Core_Only.py</span><span>Complete Python · 261 lines</span></div><pre tabindex="0" aria-label="Complete LangChain LCEL Python code"><code><span class="string">&quot;&quot;&quot;LangChain LCEL ticket solver.
 Install: python -m pip install &quot;langchain-core==1.6.9&quot; &quot;langchain-openai==1.7.0&quot; &quot;python-dotenv==1.2.4&quot;
 Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
 &quot;&quot;&quot;</span>
 
 <span class="keyword">import</span> asyncio
 
+<span class="comment"># os lets us read and set environment variables, where the API client expects its key.</span>
 <span class="keyword">import</span> os
 
+<span class="comment"># Return one non-empty key. This only loads credentials; it does not call OpenAI.</span>
 <span class="keyword">def</span> read_openai_key():
     <span class="comment"># In Colab, always use this notebook&#x27;s enabled secret.</span>
+    <span class="comment"># This import succeeds in Colab. Local Jupyter/Python normally takes the fallback.</span>
     <span class="keyword">try</span>:
         <span class="keyword">from</span> google.colab <span class="keyword">import</span> userdata
     <span class="keyword">except</span> ImportError:
+        <span class="comment"># A local Python/Jupyter session normally has no google.colab module.</span>
+        <span class="comment"># None is a marker meaning &quot;there is no Colab Secrets reader here&quot;;</span>
+        <span class="comment"># it is not an API key and does not clear an existing environment key.</span>
+        <span class="comment"># The `if userdata is not None` block below is therefore skipped.</span>
+        <span class="comment"># Execution continues to the local fallback: environment/.env, then</span>
+        <span class="comment"># a hidden prompt if no key was found. In Colab, the import succeeds</span>
+        <span class="comment"># and userdata remains the module used to read the enabled secret.</span>
         userdata = <span class="keyword">None</span>
     <span class="keyword">if</span> userdata <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
         <span class="keyword">try</span>:
+            <span class="comment"># The secret name must match exactly, with Notebook access enabled.</span>
             key = userdata.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>)
         <span class="keyword">except</span> Exception:
+            <span class="comment"># Give a useful setup message without exposing secret/error details.</span>
+            <span class="comment"># In Colab, stop here rather than silently using a different local key.</span>
             <span class="keyword">raise</span> RuntimeError(
                 <span class="string">&quot;In Colab Secrets, add OPENAI_API_KEY and enable Notebook access, &quot;</span>
                 <span class="string">&quot;then rerun this cell.&quot;</span>
             ) <span class="keyword">from</span> <span class="keyword">None</span>
+        <span class="comment"># Reject missing/blank values; strip removes accidental surrounding spaces.</span>
         <span class="keyword">if</span> <span class="keyword">not</span> isinstance(key, str) <span class="keyword">or</span> <span class="keyword">not</span> key.strip():
             <span class="keyword">raise</span> RuntimeError(<span class="string">&quot;The OPENAI_API_KEY Colab secret is empty.&quot;</span>)
         <span class="keyword">return</span> key.strip()
@@ -30,34 +44,43 @@ Python 3.12 or 3.13. Set OPENAI_API_KEY or enter it when prompted.
     <span class="comment"># Local Python fallback; never overwrite an existing environment key.</span>
     <span class="keyword">try</span>:
         <span class="keyword">from</span> dotenv <span class="keyword">import</span> load_dotenv, find_dotenv
+        <span class="comment"># Search from the current folder upward for .env. Existing environment values win.</span>
         load_dotenv(find_dotenv(usecwd=<span class="keyword">True</span>), override=<span class="keyword">False</span>)
     <span class="keyword">except</span> ImportError:
-        <span class="keyword">pass</span>
+        <span class="keyword">pass</span>  <span class="comment"># python-dotenv is optional here; environment and hidden input still work.</span>
+    <span class="comment"># Read an existing environment key, or the key just loaded from .env.</span>
     key = os.environ.get(<span class="string">&quot;OPENAI_API_KEY&quot;</span>, <span class="string">&quot;&quot;</span>).strip()
     <span class="keyword">if</span> <span class="keyword">not</span> key:
         <span class="keyword">from</span> getpass <span class="keyword">import</span> getpass
+        <span class="comment"># getpass hides what you type; never paste a key directly into notebook code.</span>
         key = getpass(<span class="string">&quot;Enter OPENAI_API_KEY (hidden): &quot;</span>).strip()
     <span class="keyword">if</span> <span class="keyword">not</span> key:
         <span class="keyword">raise</span> ValueError(<span class="string">&quot;OPENAI_API_KEY cannot be empty.&quot;</span>)
     <span class="keyword">return</span> key
 
+<span class="comment"># Make the key available to ChatOpenAI. Do not print the environment value.</span>
 os.environ[<span class="string">&quot;OPENAI_API_KEY&quot;</span>] = read_openai_key()
 
+<span class="comment"># &quot;Ready&quot; means loaded; authentication/quota are checked on the first model request.</span>
 print(<span class="string">&quot;✅ OpenAI API key is ready.&quot;</span>)
 
+<span class="comment"># Wraps the OpenAI chat API as a runnable that fits into an LCEL pipeline.</span>
 <span class="keyword">from</span> langchain_openai <span class="keyword">import</span> ChatOpenAI
+<span class="comment"># Replaces placeholders such as {ticket} with values from the input dictionary.</span>
 <span class="keyword">from</span> langchain_core.prompts <span class="keyword">import</span> ChatPromptTemplate
+<span class="comment"># Converts the model message into a plain string for the following step.</span>
 <span class="keyword">from</span> langchain_core.output_parsers <span class="keyword">import</span> StrOutputParser
 <span class="keyword">from</span> langchain_core.runnables <span class="keyword">import</span> (
-    RunnableLambda,
-    RunnableParallel,
-    RunnablePassthrough,
+    RunnableLambda,       <span class="comment"># Turns an ordinary Python function into a runnable step.</span>
+    RunnableParallel,     <span class="comment"># Gives the same input to branches and collects named results.</span>
+    RunnablePassthrough,  <span class="comment"># Keeps existing input fields; .assign() adds new fields.</span>
 )
 
 <span class="comment"># ---------------------------------------------------------</span>
 <span class="comment"># MODEL</span>
 <span class="comment"># ---------------------------------------------------------</span>
 
+<span class="comment"># Creating the client configures the model; .invoke() later sends the actual request.</span>
 model = ChatOpenAI(
     model=<span class="string">&quot;gpt-4o-mini&quot;</span>
 )
@@ -77,6 +100,7 @@ model = ChatOpenAI(
     <span class="keyword">return</span> {<span class="string">&quot;ticket&quot;</span>: message}
 
 
+<span class="comment"># Later, clean_step.invoke(text) will call clean_message(text).</span>
 clean_step = RunnableLambda(clean_message)
 
 <span class="comment"># ---------------------------------------------------------</span>
@@ -85,6 +109,8 @@ clean_step = RunnableLambda(clean_message)
 <span class="comment"># Solution: run all three from the same ticket, then attach them.</span>
 <span class="comment"># ---------------------------------------------------------</span>
 
+<span class="comment"># The | operator passes each runnable&#x27;s output into the next runnable:</span>
+<span class="comment"># ticket dictionary -&gt; formatted prompt -&gt; model message -&gt; plain text.</span>
 summary_chain = (
     ChatPromptTemplate.from_template(
         <span class="string">&quot;Summarize this support ticket in one short sentence:\n{ticket}&quot;</span>
@@ -111,12 +137,15 @@ urgency_chain = (
     | StrOutputParser()
 )
 
+<span class="comment"># These three branches use the same ticket; they do not depend on each other.</span>
+<span class="comment"># The result is a dictionary with summary, category and urgency.</span>
 analyse_ticket = RunnableParallel(
     summary=summary_chain,
     category=category_chain,
     urgency=urgency_chain,
 )
 
+<span class="comment"># Keep the ticket and attach that analysis dictionary under the &quot;analysis&quot; key.</span>
 keep_ticket_and_add_analysis = RunnablePassthrough.assign(
     analysis=analyse_ticket
 )
@@ -150,6 +179,7 @@ decision_chain = (
 )
 
 <span class="comment"># Keep ticket + analysis, and ADD the final decision.</span>
+<span class="comment"># decision_chain can read ticket and analysis; its string is stored as decision.</span>
 add_decision = RunnablePassthrough.assign(
     decision=decision_chain
 )
@@ -181,6 +211,7 @@ reply_chain = (
 )
 
 <span class="comment"># Keep previous state and ADD customer reply</span>
+<span class="comment"># Keep ticket, analysis and decision, then attach the customer reply string.</span>
 add_reply = RunnablePassthrough.assign(
     reply=reply_chain
 )
@@ -207,6 +238,7 @@ ticket_workflow = (
     It runs the entire LangChain flow and prints the result.
     &quot;&quot;&quot;</span>
 
+    <span class="comment"># Start with the input text. The pipeline returns the accumulated result dictionary.</span>
     result = ticket_workflow.invoke(message)
 
     print(<span class="string">&quot;\n========== TICKET RESULT ==========&quot;</span>)
