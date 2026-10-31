@@ -1,0 +1,20 @@
+.chat-toggle { position: fixed; bottom: 24px; right: 24px; z-index: 2; }
+.chat-panel { position: fixed; right: 20px; top: 96px; bottom: 90px; width: 380px;
+  max-width: calc(100vw - 40px); background: white; border: 1px solid #cbdad2;
+  border-radius: 16px; box-shadow: 0 12px 40px #183c3026; z-index: 3;
+  display: flex; flex-direction: column; padding: 20px; }
+.chat-panel[hidden] { display: none; }
+.chat-heading { display: flex; align-items: center; justify-content: space-between; }
+.chat-heading h2 { margin: 0; font-size: 22px; }
+.chat-hint { color: #587064; font-size: 14px; margin: 8px 0; }
+.chat-messages { overflow-y: auto; flex: 1; min-height: 60px; }
+.chat-message { padding: 10px 12px; background: #f0f5f1; border-radius: 10px;
+  white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; }
+.chat-message.user { background: #dceadf; margin-left: 24px; }
+.chat-panel form { display: grid; gap: 8px; }
+.chat-panel textarea { resize: vertical; min-height: 72px; max-height: 160px; }
+.chat-panel [role="alert"] { color: #9b3025; font-size: 14px; margin: 0; }
+@media (max-width: 600px) {
+  .chat-panel { top: 16px; right: 12px; bottom: 84px; max-width: calc(100vw - 24px); }
+  .chat-toggle { right: 16px; bottom: 16px; }
+}

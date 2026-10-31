@@ -1,4 +1,6 @@
 import './style.css';
+import './chat.css';
+import { setupChat } from './chat.js';
 import { listTrips, deleteTrip } from './trip-api.js';
 import { $ } from './dom.js';
 import { setupEditor } from './trip-editor.js';
@@ -40,6 +42,7 @@ async function loadTrips(preferredId = selectedId) {
 
 const resetEditor = setupEditor(loadTrips, () => trips.find((trip) => trip.id === selectedId),
   () => loading);
+const resetChat = setupChat(() => loadTrips());
 $('#retry').onclick = () => loadTrips();
 
 $('#delete').onclick = () => {
@@ -64,6 +67,7 @@ setupAuth(() => loadTrips(null), () => {
   trips = [];
   selectedId = null;
   resetEditor();
+  resetChat();
   $('#notice').textContent = '';
   for (const id of ['#trip-title', '#destination', '#metadata', '#plan']) {$(id).textContent = '';}
   $('#delete-dialog').close();

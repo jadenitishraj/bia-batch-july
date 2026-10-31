@@ -9,12 +9,13 @@ from urllib.parse import urlsplit
 
 import database
 from auth_handlers import AuthHandlers, LoginLimit
+from chat_handlers import ChatHandlers
 from http_helpers import HttpHelpers
 from tokens import signing_key
 from trip_handlers import TripHandlers
 
 
-class Handler(AuthHandlers, TripHandlers, HttpHelpers, BaseHTTPRequestHandler):
+class Handler(AuthHandlers, TripHandlers, ChatHandlers, HttpHelpers, BaseHTTPRequestHandler):
     def __init__(self, *args, database_path, **kwargs):
         self.database_path = database_path
         super().__init__(*args, **kwargs)
@@ -43,7 +44,7 @@ class Handler(AuthHandlers, TripHandlers, HttpHelpers, BaseHTTPRequestHandler):
 
     def route(self, action, scope):
         path = urlsplit(self.path).path
-        if self.auth_route(path):
+        if self.auth_route(path) or self.chat_route(path):
             return
         match = re.fullmatch(r'/api/trips/([1-9][0-9]{0,17})', path)
         trip_id = int(match[1]) if match else None

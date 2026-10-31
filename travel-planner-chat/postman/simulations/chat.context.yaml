@@ -1,0 +1,23 @@
+purpose:
+  stands_in_for: Amazon Bedrock Converse HTTP transport, not model reasoning.
+  unblocks: Repeatable SDK, LangGraph, tool and SQLite integration checks without paid calls.
+assumptions:
+  - id: converse-tool-loop
+    status: supported
+    claim: The client handles a toolUse response and sends a toolResult back to Bedrock.
+    reason: The mock models the Converse shapes used by ChatBedrockConverse.
+    verification: On 2026-10-31 the transport script passed create, update and delete with real SDK, graph and SQLite. Seven requests appeared in the simulation log. Live Bedrock operations also succeeded.
+    source: backend/chat_graph.py; scripts/check_chat_transport.py; postman/mocks/bedrock/default.js
+    updated_at: '2026-10-31'
+  - id: throttling-does-not-write
+    status: supported
+    claim: A throttled initial model call returns a safe error without changing trips.
+    reason: SDK automatic retries are disabled; no tool runs before the first model response.
+    verification: On 2026-10-31 the stand-in returned 429; the app returned 503 with safe text, did not retry, and the disposable trip database stayed empty.
+    source: backend/chat_handlers.py; scripts/check_chat_transport.py
+    updated_at: '2026-10-31'
+fingerprints:
+  - id: chatbot-development
+    date: '2026-10-31'
+    commit: Uncommitted chatbot work on top of classroom cleanup.
+    cli: Postman 1.76.0

@@ -1,7 +1,7 @@
 # Travel Planner Chat — classroom CRUD starter
 
 A classroom app with JWT login for creating, viewing, editing and deleting your trip
-plans. Day headings and paragraphs are plain text. No chatbot or AI integration. See [AUTH.md](AUTH.md) for login and Postman examples.
+plans, plus a simple LangGraph chatbot. See [CHATBOT.md](CHATBOT.md) for its three tools and setup, and [AUTH.md](AUTH.md) for login.
 
 ## Two folders
 - `frontend/`: Vite with HTML, CSS and JavaScript. React is not required for this
@@ -10,7 +10,7 @@ plans. Day headings and paragraphs are plain text. No chatbot or AI integration.
 
 ## Start the backend
 
-Python 3.10 or later. Install the small authentication dependencies first:
+Python 3.12 or later. Install the backend dependencies first:
 
 ```sh
 cd travel-planner-chat/backend
