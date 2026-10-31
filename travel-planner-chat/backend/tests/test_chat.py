@@ -2,6 +2,7 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 
+import httpx
 from botocore.exceptions import ClientError, NoCredentialsError
 from chat_graph import answer_chat, build_graph, create_model
 from chat_handlers import validate_chat
@@ -13,6 +14,13 @@ from trip_tools import make_trip_tools
 
 
 class ChatTests(unittest.TestCase):
+    def test_deployed_frontend_origin_is_allowed_but_other_origins_are_rejected(self):
+        with ChatServer() as api, patch.dict(os.environ, {'PUBLIC_ORIGIN': 'https://class.example'}):
+            for origin, expected in [('https://class.example', 201), ('https://other.example', 403)]:
+                response = httpx.post(api.base + '/api/trips', json=TRIP,
+                                      headers={'Origin': origin, 'Authorization': api.token})
+                self.assertEqual(response.status_code, expected)
+
     def test_input_contract_rejects_injected_roles_and_bad_shapes(self):
         self.assertEqual(validate_chat({'message': ' Hi '}), ('Hi', []))
         invalid = [None, {}, {'message': ''}, {'message': 'x' * 2001},

@@ -12,8 +12,9 @@ The browser calls relative paths, such as `/api/chat`. No separate API domain is
 The EC2 public address supports outbound package downloads; API access is restricted
 to CloudFront/VPC traffic. Python binds to loopback behind nginx. No SSH port is open.
 The API forwards Bearer authorization and JSON content type, with caching disabled.
-Cookies and browser Origin are not forwarded; this app authenticates with explicit
-Bearer tokens, not automatic cookies. It has no cross-origin browser API access.
+The backend allows the exact CloudFront site origin configured during deployment.
+It authenticates with explicit Bearer tokens, not automatic cookies, and rejects
+mutations from unrelated browser origins.
 
 ## Read these files in order
 

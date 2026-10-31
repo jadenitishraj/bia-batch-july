@@ -1,5 +1,6 @@
 """Shared HTTP input/output rules, separate from application routing."""
 import json
+import os
 
 from validation import validate_trip
 
@@ -25,6 +26,8 @@ class HttpHelpers:
         origin = self.headers.get('Origin')
         expected = 'http://' + self.headers.get('Host', '')
         allowed_origins = {expected, 'http://127.0.0.1:5175', 'http://localhost:5175'}
+        if os.environ.get('PUBLIC_ORIGIN'):
+            allowed_origins.add(os.environ['PUBLIC_ORIGIN'])
         if origin and origin not in allowed_origins:
             self.respond(403, {'error': 'Cross-origin changes are not allowed.'})
             return False
