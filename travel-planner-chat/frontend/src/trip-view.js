@@ -1,4 +1,4 @@
-const $ = (selector) => document.querySelector(selector);
+import { $ } from './dom.js';
 
 export function renderTrips(trips, selectedId, onSelect) {
   $('#trip-list').replaceChildren();

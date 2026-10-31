@@ -1,0 +1,10 @@
+version: 1
+name: Bedrock Converse teaching stand-in
+slug: bedrock-converse-teaching
+protocol: http
+port: 4519
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

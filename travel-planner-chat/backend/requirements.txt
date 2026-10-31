@@ -1,2 +1,6 @@
 PyJWT==2.15.1
 python-dotenv==1.2.4
+langgraph==1.2.19
+langchain-core==1.7.3
+langchain-aws==1.9.1
+botocore[crt]==1.43.123

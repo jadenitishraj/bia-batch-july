@@ -1,6 +1,5 @@
 """Local-only Python web server. Run: python3 app.py."""
 import argparse
-import json
 import re
 import sqlite3
 from functools import partial
@@ -10,31 +9,16 @@ from urllib.parse import urlsplit
 
 import database
 from auth_handlers import AuthHandlers, LoginLimit
+from chat_handlers import ChatHandlers
+from http_helpers import HttpHelpers
 from tokens import signing_key
 from trip_handlers import TripHandlers
-from validation import validate_trip
-
-MAX_BODY = 100000
 
 
-class Handler(AuthHandlers, TripHandlers, BaseHTTPRequestHandler):
+class Handler(AuthHandlers, TripHandlers, ChatHandlers, HttpHelpers, BaseHTTPRequestHandler):
     def __init__(self, *args, database_path, **kwargs):
         self.database_path = database_path
         super().__init__(*args, **kwargs)
-
-    def respond(self, status, value):
-        payload = json.dumps(value, ensure_ascii=False).encode()
-        self.send_response(status)
-        self.send_header('Content-Type', 'application/json; charset=utf-8')
-        self.send_header('Content-Length', str(len(payload)))
-        self.send_header('Cache-Control', 'no-store')
-        if status == 401:
-            self.send_header('WWW-Authenticate', 'Bearer')
-        if status == 429:
-            self.send_header('Retry-After', '60')
-        self.send_header('X-Content-Type-Options', 'nosniff')
-        self.end_headers()
-        self.wfile.write(payload)
 
     def do_GET(self):
         self.dispatch(self.get_trips)
@@ -48,44 +32,19 @@ class Handler(AuthHandlers, TripHandlers, BaseHTTPRequestHandler):
     def do_DELETE(self):
         self.dispatch(self.delete_trip, scope='item')
 
-    def allow_write(self):
-        origin = self.headers.get('Origin')
-        expected = 'http://' + self.headers.get('Host', '')
-        allowed_origins = {expected, 'http://127.0.0.1:5175', 'http://localhost:5175'}
-        if origin and origin not in allowed_origins:
-            self.respond(403, {'error': 'Cross-origin changes are not allowed.'})
-            return False
-        return True
-
-    def read_payload(self):
-        return validate_trip(self.read_json())
-
-    def read_json(self):
-        if self.headers.get('Content-Type', '').split(';')[0] != 'application/json':
-            raise ValueError('Send application/json.')
-        try:
-            length = int(self.headers.get('Content-Length', '0'))
-        except ValueError:
-            raise ValueError('Invalid request length.') from None
-        if not 0 < length <= MAX_BODY:
-            raise ValueError('Request must contain JSON smaller than 100 KB.')
-        try:
-            return json.loads(self.rfile.read(length))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            raise ValueError('Invalid JSON.') from None
-
     def dispatch(self, action, *, scope='any'):
         if self.command != 'GET' and not self.allow_write():
             return
-        path = urlsplit(self.path).path
         try:
-            if self.auth_route(path):
-                return
+            self.route(action, scope)
         except ValueError as error:
             self.respond(400, {'error': str(error)})
-            return
         except sqlite3.Error:
             self.respond(503, {'error': 'Database unavailable. Please try again.'})
+
+    def route(self, action, scope):
+        path = urlsplit(self.path).path
+        if self.auth_route(path) or self.chat_route(path):
             return
         match = re.fullmatch(r'/api/trips/([1-9][0-9]{0,17})', path)
         trip_id = int(match[1]) if match else None
@@ -96,14 +55,8 @@ class Handler(AuthHandlers, TripHandlers, BaseHTTPRequestHandler):
         if (scope == 'item' and collection) or (scope == 'collection' and match):
             self.respond(405, {'error': 'Method not allowed.'})
             return
-        try:
-            if not self.authorize():
-                return
+        if self.authorize():
             action(trip_id)
-        except ValueError as error:
-            self.respond(400, {'error': str(error)})
-        except sqlite3.Error:
-            self.respond(503, {'error': 'Database unavailable. Please try again.'})
 
 
 def create_server(port=8003, database_path=database.DEFAULT_DATABASE):
@@ -112,6 +65,7 @@ def create_server(port=8003, database_path=database.DEFAULT_DATABASE):
     server = ThreadingHTTPServer(('127.0.0.1', port), partial(Handler, database_path=database_path))
     server.jwt_key = key
     server.login_limit = LoginLimit()
+    server.chat_limit = LoginLimit()
     return server
 
 

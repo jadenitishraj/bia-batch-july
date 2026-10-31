@@ -25,6 +25,17 @@
       <section id="empty"><p class="eyebrow">YOUR NEXT ADVENTURE</p><h1>A little plan.<br>A world of possibility.</h1><p>Create your first trip and write a day-by-day plan.</p><button id="first-trip">Create a trip</button></section>
       <article id="trip" hidden><p class="eyebrow" id="destination"></p><h1 id="trip-title"></h1><p id="metadata"></p><div class="actions"><button id="edit" class="secondary">Edit plan</button><button id="delete" class="quiet">Delete</button></div><div id="plan"></div></article>
     </main>
+    <button id="chat-toggle" class="chat-toggle" aria-controls="chat-panel" aria-expanded="false">Trip chat</button>
+    <section id="chat-panel" class="chat-panel" aria-labelledby="chat-title" hidden>
+      <div class="chat-heading"><h2 id="chat-title">Trip chat</h2><button id="chat-close" class="quiet" aria-label="Close trip chat">✕</button></div>
+      <p class="chat-hint">Ask me to create, update or delete a trip. Suggested costs are estimates.</p>
+      <div id="chat-messages" class="chat-messages" role="log" aria-live="polite" aria-label="Chat messages"></div>
+      <form id="chat-form">
+        <label for="chat-input">Your message</label>
+        <textarea id="chat-input" rows="3" maxlength="2000" placeholder="Plan 3 days in Jaipur for 2 people, budget ₹20,000." required></textarea>
+        <p id="chat-error" role="alert"></p><button id="chat-send" type="submit">Send</button>
+      </form>
+    </section>
   </div>
   <dialog id="editor" aria-labelledby="editor-title">
     <form id="trip-form">

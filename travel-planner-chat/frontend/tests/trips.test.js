@@ -70,3 +70,20 @@ test('renders HTML-like input as text instead of executable markup', async () =>
   expect($('#plan').querySelector('img')).toBeNull();
   expect($('#trip-list').querySelector('script')).toBeNull();
 });
+
+test('creating after cancelling an edit never overwrites the previously selected trip', async () => {
+  const created = { ...trip, id: 2, title: 'A second trip' };
+  const fetchMock = vi.fn().mockResolvedValueOnce(response([trip]))
+    .mockResolvedValueOnce(response(created)).mockResolvedValueOnce(response([created, trip]));
+  await startApp(fetchMock);
+  $('#edit').click();
+  $('#cancel-editor').click();
+  $('#new-trip').click();
+  expect($('#editor-title').textContent).toBe('Create a trip');
+  expect($('#trip-form').elements.title.value).toBe('');
+  fillTrip(created);
+  await submit();
+  expect(fetchMock.mock.calls[1][0]).toBe('/api/trips');
+  expect(fetchMock.mock.calls[1][1].method).toBe('POST');
+  expect($('#trip-title').textContent).toBe(created.title);
+});

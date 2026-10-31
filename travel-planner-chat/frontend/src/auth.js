@@ -1,6 +1,5 @@
 import { request, setAccessToken } from './api.js';
-
-const $ = (selector) => document.querySelector(selector);
+import { $ } from './dom.js';
 
 function showSession(user = null) {
   $('#auth-panel').hidden = Boolean(user);

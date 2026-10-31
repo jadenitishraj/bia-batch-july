@@ -1,12 +1,20 @@
 # Travel Planner Chat — development rules
 
+## Teaching first
+
+- This project is for teaching. Prioritize simple, clean code students can follow.
+- Prefer clear names and step-by-step logic over clever code or optimization.
+- Explain unfamiliar ideas in short, plain English. Preserve essential safety checks.
+
 ## Product and scope
 
 - Build the classroom app incrementally. Implement only the requested lesson.
 - Keep `frontend/` and `backend/` separate. Frontend uses Vite; backend uses Python
-  and SQLite. Do not add a chatbot, AI provider, login or cloud service unless asked.
+  and SQLite. The requested chatbot uses one LangGraph agent and exactly three
+  `@tool` functions: create_trip, update_trip and delete_trip. Keep this simple.
 - Keep the original `travel-planner/` app and unrelated work untouched.
 - The app uses local JWT login and per-account trips. Do not imply production readiness.
+- Keep tool authentication server-side. Use the existing trip endpoints for tool actions.
 
 ## Readability and file size
 
