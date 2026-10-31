@@ -65,6 +65,7 @@ def create_server(port=8003, database_path=database.DEFAULT_DATABASE):
     server = ThreadingHTTPServer(('127.0.0.1', port), partial(Handler, database_path=database_path))
     server.jwt_key = key
     server.login_limit = LoginLimit()
+    server.chat_limit = LoginLimit()
     return server
 
 

@@ -1,0 +1,96 @@
+name: Travel Demo Deployment
+on:
+  push:
+    branches: [main]
+    paths: ['travel-planner-chat/**', '.github/workflows/travel-demo-deploy.yml']
+  pull_request:
+    paths: ['travel-planner-chat/**', '.github/workflows/travel-demo-deploy.yml']
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [deploy, destroy]
+        default: deploy
+permissions:
+  contents: read
+concurrency:
+  group: travel-demo-deployment
+  cancel-in-progress: false
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.17.1'
+          terraform_wrapper: false
+      - name: Check frontend
+        working-directory: travel-planner-chat/frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run test:coverage
+          npm run build
+      - name: Check backend
+        working-directory: travel-planner-chat
+        run: |
+          pip install -r backend/requirements-dev.txt
+          ruff check backend scripts --config backend/ruff.toml
+          python scripts/check_file_sizes.py
+          cd backend
+          python -m coverage run -m unittest discover -s tests -v
+          python -m coverage json
+          python check_coverage.py
+      - name: Validate Terraform
+        working-directory: travel-planner-chat/terraform
+        run: |
+          terraform fmt -check -recursive
+          terraform init -backend=false
+          terraform validate
+          terraform -chdir=bootstrap init
+          terraform -chdir=bootstrap validate
+  deploy:
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.17.1'
+          terraform_wrapper: false
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Deploy or remove teaching demo
+        working-directory: travel-planner-chat
+        env:
+          DEMO_ACTION: ${{ inputs.action || 'deploy' }}
+        run: |
+          if [ "$DEMO_ACTION" = destroy ]; then
+            bash scripts/destroy_demo.sh
+          else
+            bash scripts/deploy_demo.sh
+          fi

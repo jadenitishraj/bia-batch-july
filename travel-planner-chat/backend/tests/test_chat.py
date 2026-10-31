@@ -66,3 +66,5 @@ class ChatTests(unittest.TestCase):
                 status, response = api.call('/api/chat', 'POST', {'message': 'Hi'})
                 self.assertEqual(status, 503)
                 self.assertNotIn('private detail', response['error'])
+            with patch.object(api.server.chat_limit, 'allow', return_value=False):
+                self.assertEqual(api.call('/api/chat', 'POST', {'message': 'Hi'})[0], 429)

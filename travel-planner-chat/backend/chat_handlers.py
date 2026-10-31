@@ -31,7 +31,10 @@ class ChatHandlers:
             self.respond(405, {'error': 'Method not allowed.'})
         elif self.authorize():
             message, history = validate_chat(self.read_json())
-            self.reply_to_chat(message, history)
+            if self.server.chat_limit.allow('chat'):
+                self.reply_to_chat(message, history)
+            else:
+                self.respond(429, {'error': 'The class demo allows 10 chat requests per minute. Please wait.'})
         return True
 
     def reply_to_chat(self, message, history):

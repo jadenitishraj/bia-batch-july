@@ -73,6 +73,7 @@ errors because an action may have succeeded before the final reply failed.
 Check saved trips before repeating a request after a failure.
 
 The graph has a short step limit; model calls have timeouts and no automatic retries.
+The class demo limits chat to 10 requests per minute across the app.
 This is a local teaching app, not a production service.
 
 ## Repeat the transport check without paid model calls
