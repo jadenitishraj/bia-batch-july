@@ -36,13 +36,25 @@ Stop each server with Ctrl+C.
 
 ## Read the code
 
-1. `frontend/index.html`: page and forms.
-2. `frontend/src/main.js`: browser interactions and HTTP calls.
-3. `frontend/src/style.css`: responsive layout.
-4. `backend/app.py`: HTTP routes and errors.
-5. `backend/trip_handlers.py`: separate GET, POST, PUT and DELETE operations.
-6. `backend/validation.py`: input limits.
-7. `backend/database.py`: schema and parameterized SQLite queries.
+Follow one trip from the screen to SQLite:
+
+1. `frontend/index.html`: the page and its labelled forms.
+2. `frontend/src/main.js`: load/select/delete trips and coordinate the workspace.
+3. `frontend/src/trip-editor.js`: open, populate and submit the create/edit form.
+4. `frontend/src/trip-api.js`: trip URLs and HTTP methods.
+5. `frontend/src/api.js`: shared JSON requests and JWT handling.
+6. `frontend/src/auth.js`: login/logout; `dom.js`: shared element lookup.
+7. `frontend/src/trip-view.js`: safely display trip text; `style.css`: layout.
+8. `backend/app.py`: start the server and route each request.
+9. `backend/http_helpers.py`: JSON input/output, request size and origin checks.
+10. `backend/auth_handlers.py`: account endpoints and JWT authorization.
+11. `backend/trip_handlers.py`: GET, POST, PUT and DELETE operations.
+12. `backend/validation.py`: validate trip fields before saving.
+13. `backend/database.py`: schema and parameterized SQLite queries.
+
+An edit follows: form → trip API → shared request → Python route → authorization
+→ trip handler → validation → SQLite → JSON response → refreshed screen.
+The refactor keeps the existing URLs, account ownership, data and UI unchanged.
 
 ## API contract
 
@@ -89,9 +101,9 @@ for success and failure states. They do not replace real Python/SQLite integrati
 tests or desktop/mobile browser review. jsdom provides the DOM; dialog show/close
 methods are shimmed because native modal behavior requires an actual browser.
 
-## Python linting
+## Linting
 
-Runtime uses PyJWT and python-dotenv. Ruff is a development tool.
+See [ESLint policy](LINTING.md). Runtime uses PyJWT and python-dotenv; Ruff is a development tool.
 From `travel-planner-chat/`:
 
 ```sh
@@ -116,18 +128,6 @@ relevant main-branch pushes, and manual dispatch. Its three visible checks are:
 The workflow has read-only repository permissions, time limits and cancellation
 of superseded runs. It does not deploy or merge. Branch protection can separately
 require these checks; this workflow alone does not enforce merge restrictions.
-
-## ESLint policy
-
-`eslint:recommended` supplies the baseline error checks. Explicit project rules add
-strict comparisons, braces, callback returns, promise-executor checks, safe language
-features, immutable parameters and consistent modern JavaScript. Maintainability
-limits are 150 lines/file, 60 lines/function, complexity 12, nesting depth 3 and
-four parameters. Source, configuration and tests use the same quality rules.
-
-There is no universal Fortune 500 preset. These checks suit this small JavaScript
-app; React/TypeScript rules should be added if those technologies are introduced.
-Lint catches certain bugs and patterns, not all security or accessibility issues.
 
 ## Coverage gate
 

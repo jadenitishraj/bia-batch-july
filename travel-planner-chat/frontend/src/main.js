@@ -1,12 +1,12 @@
 import './style.css';
-import { request } from './api.js';
+import { listTrips, deleteTrip } from './trip-api.js';
+import { $ } from './dom.js';
+import { setupEditor } from './trip-editor.js';
 import { renderTrips } from './trip-view.js';
 import { setupAuth } from './auth.js';
 
-const $ = (selector) => document.querySelector(selector);
 let trips = [];
 let selectedId = null;
-let editingId = null;
 let loading = false;
 
 
@@ -25,7 +25,7 @@ async function loadTrips(preferredId = selectedId) {
   $('#list-status').textContent = 'Loading trips…';
   $('#retry').hidden = true;
   try {
-    trips = await request('/api/trips');
+    trips = await listTrips();
     selectedId = trips.some((trip) => trip.id === preferredId) ? preferredId : trips[0]?.id;
     render();
   } catch {
@@ -38,47 +38,9 @@ async function loadTrips(preferredId = selectedId) {
   }
 }
 
-function openEditor(trip = null) {
-  if (loading) {return;}
-  editingId = trip?.id ?? null;
-  $('#trip-form').reset();
-  $('#form-error').textContent = '';
-  $('#editor-title').textContent = trip ? 'Edit trip' : 'Create a trip';
-  if (trip) {
-    for (const field of ['title', 'destination', 'days', 'travelers', 'budget', 'plan']) {
-      $('#trip-form').elements[field].value = trip[field];
-    }
-  }
-  $('#editor').showModal();
-}
-
-$('#new-trip').onclick = () => openEditor();
-$('#first-trip').onclick = () => openEditor();
+const resetEditor = setupEditor(loadTrips, () => trips.find((trip) => trip.id === selectedId),
+  () => loading);
 $('#retry').onclick = () => loadTrips();
-$('#edit').onclick = () => openEditor(trips.find((trip) => trip.id === selectedId));
-for (const id of ['#close-editor', '#cancel-editor']) {
-  $(id).onclick = () => $('#editor').close();
-}
-
-$('#trip-form').onsubmit = async (event) => {
-  event.preventDefault();
-  const values = Object.fromEntries(new FormData(event.currentTarget));
-  for (const field of ['days', 'travelers', 'budget']) {values[field] = Number(values[field]);}
-  $('#save').disabled = true;
-  $('#form-error').textContent = '';
-  try {
-    const trip = await request(editingId ? `/api/trips/${editingId}` : '/api/trips', {
-      method: editingId ? 'PUT' : 'POST', body: JSON.stringify(values),
-    });
-    $('#editor').close();
-    await loadTrips(trip.id);
-    $('#notice').textContent = 'Trip saved.';
-  } catch (error) {
-    $('#form-error').textContent = error.message;
-  } finally {
-    $('#save').disabled = false;
-  }
-};
 
 $('#delete').onclick = () => {
   $('#delete-error').textContent = '';
@@ -88,7 +50,7 @@ $('#cancel-delete').onclick = () => $('#delete-dialog').close();
 $('#confirm-delete').onclick = async () => {
   $('#confirm-delete').disabled = true;
   try {
-    await request(`/api/trips/${selectedId}`, { method: 'DELETE' });
+    await deleteTrip(selectedId);
     $('#delete-dialog').close();
     await loadTrips(null);
     $('#notice').textContent = 'Trip deleted.';
@@ -101,10 +63,9 @@ $('#confirm-delete').onclick = async () => {
 setupAuth(() => loadTrips(null), () => {
   trips = [];
   selectedId = null;
-  editingId = null;
+  resetEditor();
   $('#notice').textContent = '';
   for (const id of ['#trip-title', '#destination', '#metadata', '#plan']) {$(id).textContent = '';}
-  $('#editor').close();
   $('#delete-dialog').close();
   render();
 });

@@ -1,5 +1,11 @@
 # Travel Planner Chat — development rules
 
+## Teaching first
+
+- This project is for teaching. Prioritize simple, clean code students can follow.
+- Prefer clear names and step-by-step logic over clever code or optimization.
+- Explain unfamiliar ideas in short, plain English. Preserve essential safety checks.
+
 ## Product and scope
 
 - Build the classroom app incrementally. Implement only the requested lesson.
