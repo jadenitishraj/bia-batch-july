@@ -1,0 +1,13 @@
+.venv/
+.local/
+__pycache__/
+.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+.env
+*.sqlite3*
+*.db
+.env.*
+!.env.example
+*token*.json
+google-client*.json
