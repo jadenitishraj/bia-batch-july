@@ -17,13 +17,11 @@ python3.11 -m venv .venv
 cp .env.example .env  # only if .env does not already exist
 ```
 
-Choose the provider in `.env`, which stays on the backend and is ignored by Git.
-For Gemini, set `CHAT_PROVIDER=gemini`, privately add your existing `GOOGLE_API_KEY`
-(or `GEMINI_API_KEY`), and optionally set `GEMINI_MODEL=gemini-3.1-flash-lite`.
-For the original OpenAI setup, use `CHAT_PROVIDER=openai` and `OPENAI_API_KEY`.
-Restart the backend after changing these settings. All five travel agents, the
-request classifier and document answer writer share this provider configuration.
-The manager routing, parallel specialists, synthesis, critic and revision stay the same.
+Add `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) to the private `.env`.
+`GEMINI_MODEL` selects the Gemini model. If `HELICONE_API_KEY` is present, the
+shared model uses Helicone's Gemini proxy; otherwise it calls Google directly.
+There is no provider flag or per-agent model factory. Restart after changing keys.
+All five travel agents and the document answer code share this connection.
 The copied RAG indexing, embedding, reranking and image parsing pipeline still uses
 its original OpenAI integrations; changing those requires separate work and reindexing.
 
@@ -46,68 +44,42 @@ Open http://localhost:5174. Vite proxies `/api` to port 8002.
 
 ## Classroom observability
 
-**LangSmith shows the workflow.** One `@traceable` wraps the fixed demo request;
-LangGraph automatically adds the manager, specialist, model and tool spans.
-The graph itself is unchanged. Ordinary planner requests stay untraced.
+Three small pieces, without provider factories or per-agent gateway labels:
 
-Set `TRAVEL_PLANNER_LANGSMITH_API_KEY` privately in the ignored `.env`, restart
-the backend, and run `.venv/bin/python scripts/trace_demo.py`. The script uses
-sample flight data and never reads uploaded documents. Inputs, outputs and
-application metadata are hidden for every span. Failed runs stay marked as failed.
-Open the `bia-july-travel-planner-demo` project in LangSmith to inspect the tree.
+1. **Helicone — `backend/app/models.py`.** One shared Gemini model connection.
+   If `HELICONE_API_KEY` exists, it uses Helicone's documented Gemini proxy;
+   otherwise it calls Gemini directly. This is configuration fallback when the
+   key is absent, not a retry after a failed request. All agents use `model=model`.
+   Request/response bodies are omitted from Helicone storage.
+2. **LangSmith — `@traceable` in `backend/app/main.py`.** Set `LANGSMITH_API_KEY`,
+   `LANGSMITH_PROJECT` and `LANGSMITH_TRACING=true` in the private `.env`.
+   Ordinary planning now produces nested graph/model/tool spans; there is no
+   separate synthetic endpoint. Keep all three `LANGSMITH_HIDE_*` settings true
+   to omit inputs, outputs and metadata. A handled error may leave the outer
+   response-stream span successful; inspect failed model/graph children.
+3. **Grafana — `logger.py` and `metrics.py`.** Import the shared `logger` and write
+   ordinary `logger.info("search_flights started")` statements. `python-logging-loki`
+   handles queued log delivery. OpenTelemetry's FastAPI and system-metrics packages
+   collect API duration/counts plus process CPU time and current resident memory.
+   `main.py` only imports and calls `setup_metrics(app)`; no custom observer class.
 
-**Helicone is the model gateway.** The path is app → Helicone → model provider.
-Set `CHAT_PROVIDER=helicone`, `HELICONE_API_KEY` and `HELICONE_MODEL` in `.env`,
-then restart. For Gemini use `gemini-3.1-flash-lite/google-ai-studio`; an existing
-OpenAI provider can use `gpt-4o-mini/openai`. `CHAT_PROVIDER=gemini` restores direct
-Gemini. There is no silent application fallback.
+Copy `.env.example` to `.env`, enter credentials privately, then restart the backend.
+Use `{app="travel-planner"} | json` in Loki Explore. Prometheus names now follow the
+instrumentation packages (for example `process_cpu_time_s`, `process_memory_usage_By`
+and `http_server_duration_milliseconds_count`); use Explore's metric browser after
+startup to see the exported names. CPU is cumulative process time; memory is current
+process RSS. These are not whole-computer measurements. Export runs every 10 seconds.
+Old `travel_planner_*` series remain historical data and are no longer emitted.
 
-The gateway demo uses Gemini 3.1 Flash Lite. For this unregistered model, the
-hosted BYOK gateway returns native Gemini JSON. A small adapter delegates parsing
-to the pinned Gemini integration, preserving text, tool calls and token usage;
-standard OpenAI responses keep the normal parser. This uses an internal parser
-from the pinned dependency, so rerun the adapter tests before upgrading it.
-Google's older 2.5 Flash Lite is unavailable to this account despite its quota row.
-The current project is Free tier; 3.1 Flash Lite displays limits of 15 requests/minute,
-250,000 tokens/minute and 500 requests/day. Check AI Studio before classroom use.
+The Gemini proxy is Helicone's maintained provider integration, rather than the
+OpenAI-compatible AI Gateway. This avoids the custom response conversion needed by
+our Gemini model. No credentials are committed. Only fixed log messages, HTTP method,
+route templates, status and error types are logged; no prompts, arguments or results.
 
-The app sends only the Helicone key to the gateway. The upstream provider must
-already be configured in Helicone or have credits available. Adding a provider key
-to Helicone is a separate credential-sharing decision. Nothing changes billing or
-organization limits. Request and response body logging is omitted.
-
-Helicone labels each model call with `App` and `Agent`, so the dashboard can show
-status, latency and tokens by agent. This model currently shows **Cost Unsupported**
-in Helicone; use Google AI Studio for project usage rather than treating that as $0.
-Local tool execution stays in Python;
-look at LangSmith for the tool spans. The manager also handles synthesis/revision.
-The request classifier and document answer writer use the selected provider too;
-the separate RAG indexing and embedding pipeline retains its original integrations.
-
-Use Helicone's Rate Limits page to inspect actual throttling. When an active policy
-applies, responses may include `Helicone-RateLimit-Limit`, `Helicone-RateLimit-Policy`
-and `Helicone-RateLimit-Remaining`. A 429 can also mean insufficient credits, so
-check its cause. No load test or rate-limit rule is needed for this classroom demo.
-
-**Grafana shows app events and process metrics.** The standard Python logger writes
-Pino-style JSON to the console and Loki. Events include node/tool start and finish,
-routing decisions, duration and error type; they exclude prompts, tool arguments,
-results and credentials. A background queue keeps log delivery outside the response stream.
-
-Configure `GRAFANA_CLOUD_TOKEN`, `GRAFANA_LOKI_URL`, `GRAFANA_LOKI_USER`,
-`GRAFANA_PROMETHEUS_URL` and `GRAFANA_PROMETHEUS_USER` privately, then restart.
-The OpenTelemetry exporter sends metrics directly every ten seconds; no local
-Prometheus service is needed. In Grafana Explore, select Loki and query
-`{app="travel-planner"} | json`. Select Prometheus for
-`travel_planner_process_cpu_seconds_s`,
-`travel_planner_process_peak_resident_memory_bytes_By` and
-`travel_planner_http_requests`. CPU is cumulative app-process CPU time and memory
-is the app process's peak resident memory, not current memory or whole-computer usage.
-The HTTP counter increments when each response, including streaming, completes.
-
-References: [LangSmith tracing](https://docs.langchain.com/langsmith/trace-without-env-vars),
-[Helicone gateway](https://docs.helicone.ai/gateway/integrations/langchain),
-[Helicone rate limits](https://docs.helicone.ai/features/advanced-usage/custom-rate-limits).
+References: [Helicone Gemini integration](https://docs.helicone.ai/integrations/gemini/api/python),
+[LangSmith decorators](https://docs.langchain.com/langsmith/annotate-code),
+[OpenTelemetry FastAPI](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/fastapi/fastapi.html),
+[OpenTelemetry process metrics](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/system_metrics/system_metrics.html).
 
 ## Project files
 

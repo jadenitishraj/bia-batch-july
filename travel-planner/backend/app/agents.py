@@ -1,5 +1,5 @@
 from .registry import TOOL_REGISTRY
-from .models import create_model
+from .models import model
 from langchain.agents import create_agent
 
 def ask(agent, question: str) -> str:
@@ -10,7 +10,7 @@ def ask(agent, question: str) -> str:
 
 # ---------- The manager. No tools. It thinks and writes. ----------
 manager_agent = create_agent(
-    model=create_model('manager'),
+    model=model,
     tools=[],
     system_prompt=(
         "You are the manager of a travel planning team. "
@@ -22,7 +22,7 @@ manager_agent = create_agent(
 
 # ---------- Flight agent ----------
 flight_agent = create_agent(
-    model=create_model('flight_agent'),
+    model=model,
     tools=TOOL_REGISTRY["flight_agent"],
     system_prompt=(
         "You are the flight specialist. Use your tools to find real options. "
@@ -37,7 +37,7 @@ flight_agent = create_agent(
 
 # ---------- Hotel agent ----------
 hotel_agent = create_agent(
-    model=create_model('hotel_agent'),
+    model=model,
     tools=TOOL_REGISTRY["hotel_agent"],
     system_prompt=(
         "You are the hotel specialist. Use your tools to find real options. "
@@ -53,7 +53,7 @@ hotel_agent = create_agent(
 
 # ---------- Activity agent ----------
 activity_agent = create_agent(
-    model=create_model('activity_agent'),
+    model=model,
     tools=TOOL_REGISTRY["activity_agent"],
     system_prompt=(
         "You are the activities specialist. Use your tools to find real places. "
@@ -68,7 +68,7 @@ activity_agent = create_agent(
 
 # ---------- Critic agent ----------
 critic_agent = create_agent(
-    model=create_model('critic'),
+    model=model,
     tools=TOOL_REGISTRY["critic_agent"],
     system_prompt=(
         "You are a strict reviewer of travel plans. You do not rewrite the plan. "

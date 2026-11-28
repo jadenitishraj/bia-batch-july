@@ -1,10 +1,10 @@
 from .agents import ask, manager_agent, flight_agent, hotel_agent, activity_agent, critic_agent
-from .event_log import log_event, observed
+from .logger import logger
 
 
-@observed('node')
 def manager_node(state):
     """Read the request. Write down the requirements. Decide who should work."""
+    logger.info("manager_node started")
     requirements = ask(manager_agent, f"""
 Read this travel request and list what you understood.
 
@@ -29,35 +29,34 @@ Reply with the names separated by commas and nothing else.
     if fallback:
         workers = valid          # if unsure, use everyone
 
-    log_event('manager.routing', selected_workers=workers,
-              decision='fallback_all' if fallback else 'selected_specialists')
+    logger.info("Manager selected specialists")
     return {"requirements": requirements, "chosen_workers": workers}
 
 
-@observed('node')
 def flight_node(state):
     """The flight agent works on its part."""
+    logger.info("flight_node started")
     report = ask(flight_agent, f"Find flights for this trip.\n\n{state['requirements']}")
     return {"flight_report": report}
 
 
-@observed('node')
 def hotel_node(state):
     """The hotel agent works on its part."""
+    logger.info("hotel_node started")
     report = ask(hotel_agent, f"Find hotels for this trip.\n\n{state['requirements']}")
     return {"hotel_report": report}
 
 
-@observed('node')
 def activity_node(state):
     """The activity agent works on its part."""
+    logger.info("activity_node started")
     report = ask(activity_agent, f"Plan the days for this trip.\n\n{state['requirements']}")
     return {"activity_report": report}
 
 
-@observed('node')
 def synthesis_node(state):
     """The manager joins the three reports into one travel plan."""
+    logger.info("synthesis_node started")
     draft = ask(manager_agent, f"""
 Write the first version of the travel plan using ONLY the reports below.
 
@@ -79,9 +78,9 @@ CHOSEN FLIGHT, CHOSEN HOTEL, DAY BY DAY PLAN, TOTAL COST, WHY THESE CHOICES, ASS
     return {"draft_plan": draft}
 
 
-@observed('node')
 def critic_node(state):
     """The critic looks for problems. It does not fix them."""
+    logger.info("critic_node started")
     issues = ask(critic_agent, f"""
 Review this plan against the requirements.
 
@@ -94,14 +93,14 @@ PLAN:
     return {"critique": issues}
 
 
-@observed('node')
 def revision_node(state):
     """The manager fixes only what the critic listed. Everything else stays as it was."""
+    logger.info("revision_node started")
     if "NO ISSUES FOUND" in state["critique"].upper():
-        log_event('revision.decision', decision='approved_without_changes')
+        logger.info("Critic approved plan")
         return {"final_plan": state["draft_plan"]}
 
-    log_event('revision.decision', decision='apply_critic_fixes')
+    logger.info("Revising plan")
     fixed = ask(manager_agent, f"""
 Fix ONLY the problems listed below. Do not rewrite the parts that are fine.
 
