@@ -71,6 +71,8 @@ startup to see the exported names. CPU is cumulative process time; memory is cur
 process RSS. These are not whole-computer measurements. Export runs every 10 seconds.
 Old `travel_planner_*` series remain historical data and are no longer emitted.
 
+Import `observability/grafana-dashboard.json` through Grafana’s dashboard import page for a combined view of API traffic, average latency, HTTP status, process CPU/RAM and Loki logs. It uses the existing `grafanacloud-prom` and `grafanacloud-logs` data sources. Counter increases are estimates; idle windows may have no latency observations.
+
 The Gemini proxy is Helicone's maintained provider integration, rather than the
 OpenAI-compatible AI Gateway. This avoids the custom response conversion needed by
 our Gemini model. No credentials are committed. Only fixed log messages, HTTP method,
