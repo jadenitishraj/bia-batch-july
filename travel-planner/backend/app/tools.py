@@ -1,11 +1,13 @@
 from .data import FLIGHTS, HOTELS, ACTIVITIES, RESTAURANTS, WEATHER, TIPS, RATES
 from langchain.tools import tool
+from .logger import logger
 
 
 @tool
 def search_flights(origin: str, destination: str, avoid_red_eye: bool = False,
                    max_price_inr: int = 999999) -> list:
     """Find flights between two cities. Set avoid_red_eye to True to remove overnight flights."""
+    logger.info("search_flights started")
     # FLIGHTS = await("https://jsonplaceholder.typicode.com/flights")
       # FLIGHTS = select * from flight where time = 12-2-2026
     found = [f for f in FLIGHTS
@@ -20,6 +22,7 @@ def search_flights(origin: str, destination: str, avoid_red_eye: bool = False,
 @tool
 def search_hotels(city: str, max_price_per_night_inr: int = 999999, style: str = "any") -> list:
     """Find hotels in a city. Style can be budget, mid, luxury or any."""
+    logger.info("search_hotels started")
     found = [h for h in HOTELS
              if h["city"].lower() == city.lower()
              and h["price_per_night_inr"] <= max_price_per_night_inr]
@@ -31,6 +34,7 @@ def search_hotels(city: str, max_price_per_night_inr: int = 999999, style: str =
 @tool
 def search_activities(city: str, interest: str = "any") -> list:
     """Find things to do in a city. Interest can be food, culture, city views, relax or any."""
+    logger.info("search_activities started")
     found = [a for a in ACTIVITIES if a["city"].lower() == city.lower()]
     if interest != "any":
         found = [a for a in found if interest.lower() in a["interest"]]
@@ -40,6 +44,7 @@ def search_activities(city: str, interest: str = "any") -> list:
 @tool
 def search_restaurants(city: str, cuisine: str = "any") -> list:
     """Find places to eat in a city. Cuisine can be local, indian veg, halal, seafood or any."""
+    logger.info("search_restaurants started")
     found = [r for r in RESTAURANTS if r["city"].lower() == city.lower()]
     if cuisine != "any":
         found = [r for r in found if cuisine.lower() in r["cuisine"]]
@@ -49,18 +54,21 @@ def search_restaurants(city: str, cuisine: str = "any") -> list:
 @tool
 def get_weather(city: str) -> str:
     """Get the usual weather for a city, so the plan can allow for rain or heat."""
+    logger.info("get_weather started")
     return WEATHER.get(city.lower(), "No weather information for this city.")
 
 
 @tool
 def get_travel_tips(city: str) -> str:
     """Get visa, transport and local rules for a city."""
+    logger.info("get_travel_tips started")
     return TIPS.get(city.lower(), "No tips available for this city.")
 
 
 @tool
 def convert_currency(amount: float, from_currency: str, to_currency: str) -> str:
     """Convert money between currencies, for example SGD to INR."""
+    logger.info("convert_currency started")
     if from_currency.upper() not in RATES or to_currency.upper() not in RATES:
         return "Currency not supported."
     in_inr = amount * RATES[from_currency.upper()]

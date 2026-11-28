@@ -17,7 +17,13 @@ python3.11 -m venv .venv
 cp .env.example .env  # only if .env does not already exist
 ```
 
-Set `OPENAI_API_KEY` in `.env`. It stays on the backend and is ignored by Git.
+Add `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) to the private `.env`.
+`GEMINI_MODEL` selects the Gemini model. If `HELICONE_API_KEY` is present, the
+shared model uses Helicone's Gemini proxy; otherwise it calls Google directly.
+There is no provider flag or per-agent model factory. Restart after changing keys.
+All five travel agents and the document answer code share this connection.
+The copied RAG indexing, embedding, reranking and image parsing pipeline still uses
+its original OpenAI integrations; changing those requires separate work and reindexing.
 
 Start the backend:
 
@@ -36,7 +42,48 @@ npm run dev
 Open http://localhost:5174. Vite proxies `/api` to port 8002.
 `npm run build` validates and builds the frontend.
 
-## Structure
+## Classroom observability
+
+Three small pieces, without provider factories or per-agent gateway labels:
+
+1. **Helicone — `backend/app/models.py`.** One shared Gemini model connection.
+   If `HELICONE_API_KEY` exists, it uses Helicone's documented Gemini proxy;
+   otherwise it calls Gemini directly. This is configuration fallback when the
+   key is absent, not a retry after a failed request. All agents use `model=model`.
+   Request/response bodies are omitted from Helicone storage.
+2. **LangSmith — `@traceable` above each step in `backend/app/nodes.py`.** Set `LANGSMITH_API_KEY`,
+   `LANGSMITH_PROJECT` and `LANGSMITH_TRACING=true` in the private `.env`.
+   Ordinary planning now produces nested graph/model/tool spans; there is no
+   separate synthetic endpoint. Keep all three `LANGSMITH_HIDE_*` settings true
+   to omit inputs, outputs and metadata. Each decorated step is nested beneath
+   the LangGraph workflow and shares its trace ID. No stream wrapper is needed.
+3. **Grafana — `logger.py` and `metrics.py`.** Import the shared `logger` and write
+   ordinary `logger.info("search_flights started")` statements. `python-logging-loki`
+   handles queued log delivery. OpenTelemetry's FastAPI and system-metrics packages
+   collect API duration/counts plus process CPU time and current resident memory.
+   `main.py` only imports and calls `setup_metrics(app)`; no custom observer class.
+
+Copy `.env.example` to `.env`, enter credentials privately, then restart the backend.
+Use `{app="travel-planner"} | json` in Loki Explore. Prometheus names now follow the
+instrumentation packages (for example `process_cpu_time_s`, `process_memory_usage_By`
+and `http_server_duration_ms_count`); use Explore's metric browser after
+startup to see the exported names. CPU is cumulative process time; memory is current
+process RSS. These are not whole-computer measurements. Export runs every 10 seconds.
+Old `travel_planner_*` series remain historical data and are no longer emitted.
+
+Import `observability/grafana-dashboard.json` through Grafana’s dashboard import page for a combined view of API traffic, average latency, HTTP status, process CPU/RAM and Loki logs. It uses the existing `grafanacloud-prom` and `grafanacloud-logs` data sources. Counter increases are estimates; idle windows may have no latency observations.
+
+The Gemini proxy is Helicone's maintained provider integration, rather than the
+OpenAI-compatible AI Gateway. This avoids the custom response conversion needed by
+our Gemini model. No credentials are committed. Only fixed log messages, HTTP method,
+route templates, status and error types are logged; no prompts, arguments or results.
+
+References: [Helicone Gemini integration](https://docs.helicone.ai/integrations/gemini/api/python),
+[LangSmith decorators](https://docs.langchain.com/langsmith/annotate-code),
+[OpenTelemetry FastAPI](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/fastapi/fastapi.html),
+[OpenTelemetry process metrics](https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/system_metrics/system_metrics.html).
+
+## Project files
 
 - `backend/app/data.py`: notebook's sample travel data
 - `backend/app/tools.py`: seven tools
@@ -51,7 +98,7 @@ Open http://localhost:5174. Vite proxies `/api` to port 8002.
 
 ## Notes
 
-AI requests use the configured OpenAI account and incur usage charges. The UI makes one independent trip request at a time; it does not retain chat context. New trip clears the current view. The sample data supports Singapore flights from Mumbai, Delhi and Bangalore; it is not live booking inventory. The notebook's unused duplicate `retriver` tool was omitted. The broken notebook `result['fina']` return is avoided by returning the graph's actual `final_plan`.
+AI requests use the configured provider and may incur usage charges. The UI makes one independent trip request at a time; it does not retain chat context. New trip clears the current view. The sample data supports Singapore flights from Mumbai, Delhi and Bangalore; it is not live booking inventory. The notebook's unused duplicate `retriver` tool was omitted. The broken notebook `result['fina']` return is avoided by returning the graph's actual `final_plan`.
 
 ## Verification
 
