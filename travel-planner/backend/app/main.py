@@ -8,7 +8,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-from langsmith import traceable
 from pydantic import BaseModel, Field, StringConstraints
 from starlette.concurrency import run_in_threadpool
 
@@ -53,7 +52,7 @@ async def plan(payload: TripRequest):
     def event(data):
         return json.dumps(data) + '\n'
 
-    async def events():
+    async def stream():
         yield event({'type': 'started'})
         try:
             intent = await run_in_threadpool(classify_request, payload.request)
@@ -96,10 +95,5 @@ async def plan(payload: TripRequest):
                 'GoogleAPIError': 'Gemini is temporarily unavailable. Please try again later.',
             }
             yield event({'type': 'error', 'message': messages.get(name, 'Planning could not finish. Please try again with a more specific trip request.')})
-
-    @traceable(name='Travel Planner')
-    async def stream():
-        async for line in events():
-            yield line
 
     return StreamingResponse(stream(), media_type='application/x-ndjson', headers={'Cache-Control': 'no-cache'})

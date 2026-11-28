@@ -13,7 +13,6 @@ from app.tools import search_flights
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from langchain.agents import create_agent
-from langchain_core.runnables import RunnableLambda
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langsmith import get_current_run_tree, tracing_context
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -71,28 +70,31 @@ class ClassroomObservabilityTests(unittest.TestCase):
         self.assertIn('search_flights started', str(captured.output))
         self.assertNotIn('private-input', str(captured.output))
 
-    def test_actual_api_stream_keeps_nested_langsmith_runs(self):
+    def test_agent_steps_share_one_trace_and_stream_the_answer(self):
+        from app import nodes
         from app.document_answers import RequestIntent
-        roots, children = [], []
+        from langsmith.run_helpers import is_traceable_function
+        runs = []
+        answers = iter(['Sample flight requirements', 'flight_agent', 'Sample flights',
+                        'Fixed sample plan', 'NO ISSUES FOUND'])
 
-        def child(value):
-            children.append(get_current_run_tree())
-            return value
-
-        class Graph:
-            async def astream(self, *args, **kwargs):
-                roots.append(get_current_run_tree())
-                await RunnableLambda(child).ainvoke({})
-                yield {'revision': {'final_plan': 'Fixed sample answer'}}
+        def answer(*args):
+            runs.append(get_current_run_tree())
+            return next(answers)
 
         with tracing_context(enabled=True, client=Mock(), project_name='offline-test'), patch(
             'app.main.classify_request', return_value=RequestIntent(travel=True, documents=False)
-        ), patch('app.graph.travel_planner', Graph()):
+        ), patch('app.nodes.ask', side_effect=answer):
             response = TestClient(app).post('/api/plan', json={'request': 'Find sample flights'})
-        self.assertEqual(roots[0].name, 'Travel Planner')
-        self.assertEqual(children[0].parent_run_id, roots[0].id)
+        self.assertEqual({run.name for run in runs},
+                         {'manager_node', 'flight_node', 'synthesis_node', 'critic_node'})
+        self.assertEqual(len({run.trace_id for run in runs}), 1)
+        self.assertTrue(all(run.parent_run_id is not None for run in runs))
+        for name in ['manager_node', 'flight_node', 'hotel_node', 'activity_node',
+                     'synthesis_node', 'critic_node', 'revision_node']:
+            self.assertTrue(is_traceable_function(getattr(nodes, name)))
         events = [json.loads(line) for line in response.text.splitlines()]
-        self.assertIn({'type': 'result', 'answer': 'Fixed sample answer'}, events)
+        self.assertIn({'type': 'result', 'answer': 'Fixed sample plan'}, events)
 
     def test_packages_collect_api_cpu_and_current_memory_metrics(self):
         reader = InMemoryMetricReader()

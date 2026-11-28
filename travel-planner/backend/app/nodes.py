@@ -1,7 +1,9 @@
+from langsmith import traceable
 from .agents import ask, manager_agent, flight_agent, hotel_agent, activity_agent, critic_agent
 from .logger import logger
 
 
+@traceable
 def manager_node(state):
     """Read the request. Write down the requirements. Decide who should work."""
     logger.info("manager_node started")
@@ -33,6 +35,7 @@ Reply with the names separated by commas and nothing else.
     return {"requirements": requirements, "chosen_workers": workers}
 
 
+@traceable
 def flight_node(state):
     """The flight agent works on its part."""
     logger.info("flight_node started")
@@ -40,6 +43,7 @@ def flight_node(state):
     return {"flight_report": report}
 
 
+@traceable
 def hotel_node(state):
     """The hotel agent works on its part."""
     logger.info("hotel_node started")
@@ -47,6 +51,7 @@ def hotel_node(state):
     return {"hotel_report": report}
 
 
+@traceable
 def activity_node(state):
     """The activity agent works on its part."""
     logger.info("activity_node started")
@@ -54,6 +59,7 @@ def activity_node(state):
     return {"activity_report": report}
 
 
+@traceable
 def synthesis_node(state):
     """The manager joins the three reports into one travel plan."""
     logger.info("synthesis_node started")
@@ -78,6 +84,7 @@ CHOSEN FLIGHT, CHOSEN HOTEL, DAY BY DAY PLAN, TOTAL COST, WHY THESE CHOICES, ASS
     return {"draft_plan": draft}
 
 
+@traceable
 def critic_node(state):
     """The critic looks for problems. It does not fix them."""
     logger.info("critic_node started")
@@ -93,6 +100,7 @@ PLAN:
     return {"critique": issues}
 
 
+@traceable
 def revision_node(state):
     """The manager fixes only what the critic listed. Everything else stays as it was."""
     logger.info("revision_node started")

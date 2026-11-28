@@ -51,12 +51,12 @@ Three small pieces, without provider factories or per-agent gateway labels:
    otherwise it calls Gemini directly. This is configuration fallback when the
    key is absent, not a retry after a failed request. All agents use `model=model`.
    Request/response bodies are omitted from Helicone storage.
-2. **LangSmith — `@traceable` in `backend/app/main.py`.** Set `LANGSMITH_API_KEY`,
+2. **LangSmith — `@traceable` above each step in `backend/app/nodes.py`.** Set `LANGSMITH_API_KEY`,
    `LANGSMITH_PROJECT` and `LANGSMITH_TRACING=true` in the private `.env`.
    Ordinary planning now produces nested graph/model/tool spans; there is no
    separate synthetic endpoint. Keep all three `LANGSMITH_HIDE_*` settings true
-   to omit inputs, outputs and metadata. A handled error may leave the outer
-   response-stream span successful; inspect failed model/graph children.
+   to omit inputs, outputs and metadata. Each decorated step is nested beneath
+   the LangGraph workflow and shares its trace ID. No stream wrapper is needed.
 3. **Grafana — `logger.py` and `metrics.py`.** Import the shared `logger` and write
    ordinary `logger.info("search_flights started")` statements. `python-logging-loki`
    handles queued log delivery. OpenTelemetry's FastAPI and system-metrics packages
