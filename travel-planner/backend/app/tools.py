@@ -1,8 +1,10 @@
 from .data import FLIGHTS, HOTELS, ACTIVITIES, RESTAURANTS, WEATHER, TIPS, RATES
 from langchain.tools import tool
+from .event_log import observed
 
 
 @tool
+@observed('tool')
 def search_flights(origin: str, destination: str, avoid_red_eye: bool = False,
                    max_price_inr: int = 999999) -> list:
     """Find flights between two cities. Set avoid_red_eye to True to remove overnight flights."""
@@ -18,6 +20,7 @@ def search_flights(origin: str, destination: str, avoid_red_eye: bool = False,
 
 
 @tool
+@observed('tool')
 def search_hotels(city: str, max_price_per_night_inr: int = 999999, style: str = "any") -> list:
     """Find hotels in a city. Style can be budget, mid, luxury or any."""
     found = [h for h in HOTELS
@@ -29,6 +32,7 @@ def search_hotels(city: str, max_price_per_night_inr: int = 999999, style: str =
 
 
 @tool
+@observed('tool')
 def search_activities(city: str, interest: str = "any") -> list:
     """Find things to do in a city. Interest can be food, culture, city views, relax or any."""
     found = [a for a in ACTIVITIES if a["city"].lower() == city.lower()]
@@ -38,6 +42,7 @@ def search_activities(city: str, interest: str = "any") -> list:
 
 
 @tool
+@observed('tool')
 def search_restaurants(city: str, cuisine: str = "any") -> list:
     """Find places to eat in a city. Cuisine can be local, indian veg, halal, seafood or any."""
     found = [r for r in RESTAURANTS if r["city"].lower() == city.lower()]
@@ -47,18 +52,21 @@ def search_restaurants(city: str, cuisine: str = "any") -> list:
 
 
 @tool
+@observed('tool')
 def get_weather(city: str) -> str:
     """Get the usual weather for a city, so the plan can allow for rain or heat."""
     return WEATHER.get(city.lower(), "No weather information for this city.")
 
 
 @tool
+@observed('tool')
 def get_travel_tips(city: str) -> str:
     """Get visa, transport and local rules for a city."""
     return TIPS.get(city.lower(), "No tips available for this city.")
 
 
 @tool
+@observed('tool')
 def convert_currency(amount: float, from_currency: str, to_currency: str) -> str:
     """Convert money between currencies, for example SGD to INR."""
     if from_currency.upper() not in RATES or to_currency.upper() not in RATES:

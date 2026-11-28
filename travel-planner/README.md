@@ -17,7 +17,15 @@ python3.11 -m venv .venv
 cp .env.example .env  # only if .env does not already exist
 ```
 
-Set `OPENAI_API_KEY` in `.env`. It stays on the backend and is ignored by Git.
+Choose the provider in `.env`, which stays on the backend and is ignored by Git.
+For Gemini, set `CHAT_PROVIDER=gemini`, privately add your existing `GOOGLE_API_KEY`
+(or `GEMINI_API_KEY`), and optionally set `GEMINI_MODEL=gemini-3.1-flash-lite`.
+For the original OpenAI setup, use `CHAT_PROVIDER=openai` and `OPENAI_API_KEY`.
+Restart the backend after changing these settings. All five travel agents, the
+request classifier and document answer writer share this provider configuration.
+The manager routing, parallel specialists, synthesis, critic and revision stay the same.
+The copied RAG indexing, embedding, reranking and image parsing pipeline still uses
+its original OpenAI integrations; changing those requires separate work and reindexing.
 
 Start the backend:
 
@@ -36,7 +44,72 @@ npm run dev
 Open http://localhost:5174. Vite proxies `/api` to port 8002.
 `npm run build` validates and builds the frontend.
 
-## Structure
+## Classroom observability
+
+**LangSmith shows the workflow.** One `@traceable` wraps the fixed demo request;
+LangGraph automatically adds the manager, specialist, model and tool spans.
+The graph itself is unchanged. Ordinary planner requests stay untraced.
+
+Set `TRAVEL_PLANNER_LANGSMITH_API_KEY` privately in the ignored `.env`, restart
+the backend, and run `.venv/bin/python scripts/trace_demo.py`. The script uses
+sample flight data and never reads uploaded documents. Inputs, outputs and
+application metadata are hidden for every span. Failed runs stay marked as failed.
+Open the `bia-july-travel-planner-demo` project in LangSmith to inspect the tree.
+
+**Helicone is the model gateway.** The path is app → Helicone → model provider.
+Set `CHAT_PROVIDER=helicone`, `HELICONE_API_KEY` and `HELICONE_MODEL` in `.env`,
+then restart. For Gemini use `gemini-3.1-flash-lite/google-ai-studio`; an existing
+OpenAI provider can use `gpt-4o-mini/openai`. `CHAT_PROVIDER=gemini` restores direct
+Gemini. There is no silent application fallback.
+
+The gateway demo uses Gemini 3.1 Flash Lite. For this unregistered model, the
+hosted BYOK gateway returns native Gemini JSON. A small adapter delegates parsing
+to the pinned Gemini integration, preserving text, tool calls and token usage;
+standard OpenAI responses keep the normal parser. This uses an internal parser
+from the pinned dependency, so rerun the adapter tests before upgrading it.
+Google's older 2.5 Flash Lite is unavailable to this account despite its quota row.
+The current project is Free tier; 3.1 Flash Lite displays limits of 15 requests/minute,
+250,000 tokens/minute and 500 requests/day. Check AI Studio before classroom use.
+
+The app sends only the Helicone key to the gateway. The upstream provider must
+already be configured in Helicone or have credits available. Adding a provider key
+to Helicone is a separate credential-sharing decision. Nothing changes billing or
+organization limits. Request and response body logging is omitted.
+
+Helicone labels each model call with `App` and `Agent`, so the dashboard can show
+status, latency and tokens by agent. This model currently shows **Cost Unsupported**
+in Helicone; use Google AI Studio for project usage rather than treating that as $0.
+Local tool execution stays in Python;
+look at LangSmith for the tool spans. The manager also handles synthesis/revision.
+The request classifier and document answer writer use the selected provider too;
+the separate RAG indexing and embedding pipeline retains its original integrations.
+
+Use Helicone's Rate Limits page to inspect actual throttling. When an active policy
+applies, responses may include `Helicone-RateLimit-Limit`, `Helicone-RateLimit-Policy`
+and `Helicone-RateLimit-Remaining`. A 429 can also mean insufficient credits, so
+check its cause. No load test or rate-limit rule is needed for this classroom demo.
+
+**Grafana shows app events and process metrics.** The standard Python logger writes
+Pino-style JSON to the console and Loki. Events include node/tool start and finish,
+routing decisions, duration and error type; they exclude prompts, tool arguments,
+results and credentials. A background queue keeps log delivery outside the response stream.
+
+Configure `GRAFANA_CLOUD_TOKEN`, `GRAFANA_LOKI_URL`, `GRAFANA_LOKI_USER`,
+`GRAFANA_PROMETHEUS_URL` and `GRAFANA_PROMETHEUS_USER` privately, then restart.
+The OpenTelemetry exporter sends metrics directly every ten seconds; no local
+Prometheus service is needed. In Grafana Explore, select Loki and query
+`{app="travel-planner"} | json`. Select Prometheus for
+`travel_planner_process_cpu_seconds_s`,
+`travel_planner_process_peak_resident_memory_bytes_By` and
+`travel_planner_http_requests`. CPU is cumulative app-process CPU time and memory
+is the app process's peak resident memory, not current memory or whole-computer usage.
+The HTTP counter increments when each response, including streaming, completes.
+
+References: [LangSmith tracing](https://docs.langchain.com/langsmith/trace-without-env-vars),
+[Helicone gateway](https://docs.helicone.ai/gateway/integrations/langchain),
+[Helicone rate limits](https://docs.helicone.ai/features/advanced-usage/custom-rate-limits).
+
+## Project files
 
 - `backend/app/data.py`: notebook's sample travel data
 - `backend/app/tools.py`: seven tools
@@ -51,7 +124,7 @@ Open http://localhost:5174. Vite proxies `/api` to port 8002.
 
 ## Notes
 
-AI requests use the configured OpenAI account and incur usage charges. The UI makes one independent trip request at a time; it does not retain chat context. New trip clears the current view. The sample data supports Singapore flights from Mumbai, Delhi and Bangalore; it is not live booking inventory. The notebook's unused duplicate `retriver` tool was omitted. The broken notebook `result['fina']` return is avoided by returning the graph's actual `final_plan`.
+AI requests use the configured provider and may incur usage charges. The UI makes one independent trip request at a time; it does not retain chat context. New trip clears the current view. The sample data supports Singapore flights from Mumbai, Delhi and Bangalore; it is not live booking inventory. The notebook's unused duplicate `retriver` tool was omitted. The broken notebook `result['fina']` return is avoided by returning the graph's actual `final_plan`.
 
 ## Verification
 
