@@ -66,7 +66,7 @@ Three small pieces, without provider factories or per-agent gateway labels:
 Copy `.env.example` to `.env`, enter credentials privately, then restart the backend.
 Use `{app="travel-planner"} | json` in Loki Explore. Prometheus names now follow the
 instrumentation packages (for example `process_cpu_time_s`, `process_memory_usage_By`
-and `http_server_duration_milliseconds_count`); use Explore's metric browser after
+and `http_server_duration_ms_count`); use Explore's metric browser after
 startup to see the exported names. CPU is cumulative process time; memory is current
 process RSS. These are not whole-computer measurements. Export runs every 10 seconds.
 Old `travel_planner_*` series remain historical data and are no longer emitted.
